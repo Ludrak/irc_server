@@ -56,7 +56,7 @@ bool							IRCServer::_init_server( void )
 	return true;
 }
 
-Client   				       *IRCServer::_acceptConnection(ASockStream &socket_client)
+Client   				       *IRCServer::_acceptConnection(SockStream &socket_client)
 {
 	std::cout << "_accept a connection" << std::endl;
 	return new Client(socket_client);

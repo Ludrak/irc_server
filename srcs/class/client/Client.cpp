@@ -4,16 +4,21 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Client::Client() : ASockStream(), AEntity()
+Client::Client() : SockStream(), AEntity()
 {
 }
 
-Client::Client(ASockStream &master) :  ASockStream(master), AEntity()
+Client::Client(SockStream &master) :  SockStream(master), AEntity()
 {
 	
 }
 
-Client::Client( const Client & src ) : ASockStream(src), AEntity(src)
+Client::Client(int socket, const sockaddr_in &addr) : SockStream(socket, addr)
+{
+
+}
+
+Client::Client( const Client & src ) : SockStream(src), AEntity(src)
 {
 	(void) src;
 }

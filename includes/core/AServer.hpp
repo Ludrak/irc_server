@@ -6,11 +6,13 @@ class Channel;
 
 # include <iostream>
 # include <string>
-# include "ASockStream.hpp"
+# include <vector>
+# include "poll.h"
+# include "SockStream.hpp"
 # include "Client.hpp"
 # include "Channel.hpp"
 
-class AServer : public ASockStream
+class AServer : public SockStream
 {
 	class AddressBindException : public std::exception
 	{
@@ -28,6 +30,25 @@ class AServer : public ASockStream
 			return "server cannot listen";
 		}
 	};
+
+	class PollException : public std::exception
+	{
+		virtual const char	*what() const throw()
+		{
+			//TODO implement errno error
+			return "failed to poll on fds";
+		}
+	};
+
+		class IncomingConnectionException : public std::exception
+	{
+		virtual const char	*what() const throw()
+		{
+			//TODO implement errno error
+			return "Incoming connection refused/failed.";
+		}
+	};
+
 	public:
 
 		AServer();
@@ -43,12 +64,14 @@ class AServer : public ASockStream
 		//add param for initialising server
 		uint					getMaxConnection( void ) const;
 		void					setMaxConnection( uint nb);
+	protected:
+		static uint				default_max_connections;
 
 	private:
-		uint					_max_connection;
 		std::list<Client>		_clients;
 		bool					_init_server( void );
-		virtual Client			*_acceptConnection(ASockStream &socket_client);
+		Client					_acceptConnection( void );
+		uint					_max_connection;
 
 };
 
