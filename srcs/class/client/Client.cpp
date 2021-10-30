@@ -8,7 +8,7 @@ Client::Client() : SockStream(), AEntity()
 {
 }
 
-Client::Client(SockStream &master) :  SockStream(master), AEntity()
+Client::Client(SockStream &master) :  SockStream(master.getSocket(), master.getSockaddr()), AEntity()
 {
 	
 }
@@ -17,12 +17,6 @@ Client::Client(int socket, const sockaddr_in &addr) : SockStream(socket, addr)
 {
 
 }
-
-Client::Client( const Client & src ) : SockStream(src), AEntity(src)
-{
-	(void) src;
-}
-
 
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------

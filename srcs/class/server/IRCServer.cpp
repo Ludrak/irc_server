@@ -11,11 +11,6 @@ IRCServer::IRCServer() : AServer()
 	std::cout << "IRCServer constructor" << std::endl;
 }
 
-IRCServer::IRCServer( const IRCServer & src ) : AServer(src)
-{
-	this->_Server_network_socket = src._Server_network_socket;
-}
-
 
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------

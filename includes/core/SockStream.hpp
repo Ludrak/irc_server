@@ -27,15 +27,16 @@ class SockStream
 		SockStream();
 		SockStream(const std::string &host, uint16_t port);
 		SockStream(int socket, const sockaddr_in &address);
-		SockStream( SockStream const & src );
 		~SockStream();
 
-		SockStream &		operator=( SockStream const & rhs );
-
-		protected:
-			int						_socket;
-			struct sockaddr_in		_addr;		
+		SockStream &				operator=( SockStream const & rhs );
+		int							getSocket( void ) const;
+		const struct sockaddr_in&	getSockaddr( void ) const;
+	protected:
+		int						_socket;
+		struct sockaddr_in		_addr;
 	private:
+		SockStream( SockStream const & src );
 		void					_createSocket(const std::string &host, uint16_t port, sa_family_t familly = AF_INET, int sock_type = SOCK_STREAM);
 
 

@@ -17,7 +17,6 @@ class Client : public SockStream, public AEntity
 		Client(AServer &master);
 		Client(SockStream &master);
 		Client(int socket, const sockaddr_in &addr);
-		Client( Client const & src );
 		~Client();
 
 		Client &		operator=( Client const & rhs );
@@ -25,6 +24,7 @@ class Client : public SockStream, public AEntity
 
 		AServer			&getServer( void ) const;
 	private:
+		Client( Client const & src );
 		//socket
 		std::string				_nickname;
 		std::string				_realname;
