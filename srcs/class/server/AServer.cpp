@@ -59,10 +59,9 @@ bool						AServer::run( void )
 
 	if (listen(this->_socket, this->_max_connection) != 0)
 		throw AServer::ListenException();
-	std::cout << "poll_fds.size = " << poll_fds.size() << std::endl;
+	std::cout << "[FT_IRC] - Clients - " << this->_clients.size() << std::endl;;
 	while (1)
 	{
-		std::cout << "_poll_fds.size = " << poll_fds.size() << std::endl;
 		if (poll(poll_fds.data(), poll_fds.size(), -1) == -1)
 			throw AServer::PollException();
 		if (poll_fds.at(0).revents & POLLIN)
@@ -75,11 +74,11 @@ bool						AServer::run( void )
 			}
 			catch (const AServer::IncomingConnectionException &e)
 			{
-				std::cerr << "RUN: " << e.what() << "\n"; 
+				std::cerr << "[FT_IRC]: " << e.what() << "\n"; 
 			}
 			poll_fds.at(0).revents = 0;
+			std::cout << "[FT_IRC] - Clients - " << this->_clients.size() << std::endl;;
 		}
-		std::cout << "nb Clients: " << this->_clients.size() << std::endl;;
 		std::vector<struct pollfd>::iterator it = poll_fds.begin();
 		for (; it != poll_fds.end(); it++)
 		{	
@@ -88,8 +87,7 @@ bool						AServer::run( void )
 				std::vector<char> buf(50);
 				if (recv(it->fd, reinterpret_cast<void *>(buf.data()), 50, MSG_DONTWAIT) < 0)
 					throw AServer::PacketReadingException();
-				std::cout << "RECV: " << std::string(buf.begin(), buf.end()) << std::endl;
-				std::cout << "FROM: " << this->_clients[it->fd]->getSocket() << std::endl;
+				std::cout << "[FT_IRC] : " << this->_clients[it->fd]->getSocket() << " : " << std::string(buf.begin(), buf.end()) << std::endl;
 				it->revents = 0;
 			}
 		}

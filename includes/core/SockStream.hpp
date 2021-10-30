@@ -17,8 +17,7 @@ class SockStream
 	{
 		virtual const char	*what() const throw()
 		{
-			//TODO implement errno error
-			return "Socket creation failed";
+			return (std::string("Socket creation failed: ").append(strerror(errno))).c_str();
 		}
 	};
 
@@ -32,12 +31,15 @@ class SockStream
 		SockStream &				operator=( SockStream const & rhs );
 		int							getSocket( void ) const;
 		const struct sockaddr_in&	getSockaddr( void ) const;
+
 	protected:
-		int						_socket;
-		struct sockaddr_in		_addr;
+		int							_socket;
+		struct sockaddr_in			_addr;
+
 	private:
 		SockStream( SockStream const & src );
-		void					_createSocket(const std::string &host, uint16_t port, sa_family_t familly = AF_INET, int sock_type = SOCK_STREAM);
+
+		void						_createSocket(const std::string &host, uint16_t port, sa_family_t familly = AF_INET, int sock_type = SOCK_STREAM);
 
 
 };

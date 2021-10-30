@@ -36,7 +36,7 @@ IRCServer &				IRCServer::operator=( IRCServer const & rhs )
 std::ostream &			operator<<( std::ostream & o, IRCServer const & i )
 {
 	o << "IRCServer = " ;
-	o << "_servver_network_socket = " << i.getNetworkSocket();
+	o << "_server_network_socket = " << i.getNetworkSocket();
 	return o;
 }
 
