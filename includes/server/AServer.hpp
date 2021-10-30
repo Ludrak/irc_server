@@ -18,11 +18,11 @@ class AServer : public ASockstream
 
 		AServer &		operator=( AServer const & rhs );
 
-		Channel				*getChannel(int ChannelId);
+		Channel				*getChannel(int		ChannelId);
 		void				load_config_file(std::string path_config_file);
 		//add param for initialising server
 		virtual bool		init_server( void ) = 0;
-		virtual Client		&acceptConnection(uint socket_client) = 0;
+		virtual Client		&acceptConnection(ASockStream &socket_client) = 0;
 
 	private:
 		std::list<Clients>	 	_clients;

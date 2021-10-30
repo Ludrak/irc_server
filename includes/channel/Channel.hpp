@@ -19,6 +19,7 @@ class Channel : public AEntities
 
 	private:
 		std::list<Clients &> 	_clients;
+		std::list<Clients &> 	_operators;
 };
 
 std::ostream &			operator<<( std::ostream & o, Channel const & i );
