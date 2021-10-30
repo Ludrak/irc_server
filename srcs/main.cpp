@@ -3,6 +3,6 @@
 int main()
 {
 	IRCServer server;
-
+	server.run();
     return (0);
 }

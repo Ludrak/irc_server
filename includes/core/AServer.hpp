@@ -12,7 +12,22 @@ class Channel;
 
 class AServer : public ASockStream
 {
-
+	class AddressBindException : public std::exception
+	{
+		virtual const char	*what() const throw()
+		{
+			//TODO implement errno error
+			return "socket binding failed";
+		}
+	};
+	class ListenException : public std::exception
+	{
+		virtual const char	*what() const throw()
+		{
+			//TODO implement errno error
+			return "server cannot listen";
+		}
+	};
 	public:
 
 		AServer();
@@ -21,15 +36,20 @@ class AServer : public ASockStream
 
 		AServer &		operator=( AServer const & rhs );
 
-		Channel				*getChannel(int		ChannelId);
-		void				load_config_file(std::string path_config_file);
-		//add param for initialising server
+		bool					run( void );
+		Channel					*getChannel(int		ChannelId);
+		void					load_config_file(std::string path_config_file);
 
+		//add param for initialising server
+		uint					getMaxConnection( void ) const;
+		void					setMaxConnection( uint nb);
 
 	private:
-		std::list<Client>	 _clients;
-		virtual bool		_init_server( void ) = 0;
-		virtual Client		*_acceptConnection(ASockStream &socket_client);
+		uint					_max_connection;
+		std::list<Client>		_clients;
+		bool					_init_server( void );
+		virtual Client			*_acceptConnection(ASockStream &socket_client);
+
 };
 
 std::ostream &			operator<<( std::ostream & o, AServer const & i );

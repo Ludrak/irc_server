@@ -5,21 +5,26 @@
 */
 
 //TODO CHeck return values
-ASockStream::ASockStream() : _socket_familly(AF_INET), _socket_type(SOCK_STREAM)
+ASockStream::ASockStream()
 {
-	this->_socket = socket(_socket_familly, _socket_type, 0);
-	fcntl(this->_socket, F_SETFL, O_NONBLOCK);
-	bzero(reinterpret_cast<void *>(&this->_serv_addr), sizeof(this->_serv_addr));
-	this->_serv_addr.sin_family = this->_socket_familly;
-	this->_serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-
+	std::cout << "default ASockStream constructor" << std::endl;
+	this->_createSocket("127.0.0.1", 8080);
 }
+
+ASockStream::ASockStream(const std::string &host, uint16_t port)
+{
+	this->_createSocket(host, port);
+}
+
+ASockStream::ASockStream(int socket, const sockaddr_in &address) : _socket(socket), _addr(address)
+{
+}
+
 
 ASockStream::ASockStream( const ASockStream & src )
 {
 	(void) src;
 }
-
 
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
@@ -27,6 +32,7 @@ ASockStream::ASockStream( const ASockStream & src )
 
 ASockStream::~ASockStream()
 {
+	close(this->_socket);
 }
 
 
@@ -56,6 +62,18 @@ std::ostream &			operator<<( std::ostream & o, ASockStream const & i )
 ** --------------------------------- METHODS ----------------------------------
 */
 
+void				ASockStream::_createSocket(const std::string &host, uint16_t port, sa_family_t family, int sock_type)
+{
+	this->_socket = socket(family, sock_type, 0);
+	if (this->_socket < 0)
+		throw ASockStream::SocketCreationException();
+	fcntl(this->_socket, F_SETFL, O_NONBLOCK);
+	
+	bzero(reinterpret_cast<void *>(&this->_addr), sizeof(this->_addr));
+	this->_addr.sin_family = family;
+	this->_addr.sin_addr.s_addr = inet_addr(host.c_str());
+	this->_addr.sin_port = htons(port);
+}
 
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
