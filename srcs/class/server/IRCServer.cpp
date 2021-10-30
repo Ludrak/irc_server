@@ -3,13 +3,17 @@
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
+//REVIEW Server name maximum 63 character
+//REVIEW nickname name maximum 9 character
 
-IRCServer::IRCServer()
+IRCServer::IRCServer() : AServer()
 {
+	std::cout << "IRCServer constructor" << std::endl;
 }
 
-IRCServer::IRCServer( const IRCServer & src )
+IRCServer::IRCServer( const IRCServer & src ) : AServer(src)
 {
+	this->_Server_network_socket = src._Server_network_socket;
 }
 
 
@@ -28,16 +32,16 @@ IRCServer::~IRCServer()
 
 IRCServer &				IRCServer::operator=( IRCServer const & rhs )
 {
-	//if ( this != &rhs )
-	//{
-		//this->_value = rhs.getValue();
-	//}
+	if ( this != &rhs )
+	{
+	}
 	return *this;
 }
 
 std::ostream &			operator<<( std::ostream & o, IRCServer const & i )
 {
-	//o << "Value = " << i.getValue();
+	o << "IRCServer = " ;
+	o << "_servver_network_socket = " << i.getNetworkSocket();
 	return o;
 }
 
@@ -46,10 +50,26 @@ std::ostream &			operator<<( std::ostream & o, IRCServer const & i )
 ** --------------------------------- METHODS ----------------------------------
 */
 
+bool							IRCServer::_init_server( void )
+{
+	std::cout << "IRCServer initialisation" << std::endl;
+	return true;
+}
+
+Client   				       *IRCServer::_acceptConnection(ASockStream &socket_client)
+{
+	std::cout << "_accept a connection" << std::endl;
+	return new Client(socket_client);
+}
+
 
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
 */
 
+int								IRCServer::getNetworkSocket( void ) const
+{
+	return this->_Server_network_socket;
+}
 
 /* ************************************************************************** */

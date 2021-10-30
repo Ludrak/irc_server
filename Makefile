@@ -13,8 +13,8 @@ LIB_DIR		= lib
 # - fill only with name of the file
 # - make will check for the file in SRC_DIR
 # - use "-" if empty
-SRCS		= main.cpp Class.cpp
-HEADERS		= Class.hpp
+SRCS		= main.cpp	IRCServer.cpp AEntity.cpp Client.cpp AServer.cpp Channel.cpp ASockStream.cpp
+HEADERS		= 			IRCServer.hpp AEntity.hpp Client.hpp AServer.hpp Channel.hpp ASockStream.hpp
 
 # Librarys (only for local archives in project folder)
 LIBRARYS	= 
@@ -37,11 +37,11 @@ PREFIX_CLEAN=[\033[1;31mCLEAN\033[0m]
 ############################################################################################
 
 
-SRC_FILES=$(shell find $(SRC_DIR) | grep -E '$(shell echo $(SRCS) | tr ' ' '|')')
-HEADER_FILES=$(shell find $(INC_DIR) | grep -E '$(shell echo $(HEADERS) | tr ' ' '|')')
-OBJS=$(addprefix $(BIN_DIR)/, $(SRC_FILES:.cpp=.o))
-CPP_IFLAGS+=$(addprefix -I,$(INC_DIR))
-CPP_LFLAGS+=$(addprefix -L,$(addprefix $(LIB_DIR), $(LIBRARYS)))
+SRC_FILES	=	$(shell find $(SRC_DIR) | grep -E '$(shell echo $(SRCS) | tr ' ' '|')')
+HEADER_FILES=	$(shell find $(INC_DIR) | grep -E '$(shell echo $(HEADERS) | tr ' ' '|')')
+OBJS		=	$(addprefix $(BIN_DIR)/, $(SRC_FILES:.cpp=.o))
+CPP_IFLAGS	+=	$(addprefix -I,$(INC_DIR)) $(addprefix -I,$(shell echo $(HEADER_FILES) | tr ' ' '\n' | rev | cut -d'/' -f2- | rev | sort | uniq))
+CPP_LFLAG	+=	$(addprefix -L,$(addprefix $(LIB_DIR), $(LIBRARYS)))
 
 #   Main rule
 all: check_sources check_headers $(NAME)

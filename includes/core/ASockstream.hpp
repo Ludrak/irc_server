@@ -1,5 +1,5 @@
-#ifndef ASOCKSTREAM_HPP
-# define ASOCKSTREAM_HPP
+#ifndef ASockStream_HPP
+# define ASockStream_HPP
 
 # include <iostream>
 # include <string>
@@ -8,17 +8,19 @@
 # include <netinet/tcp.h>
 # include <fcntl.h>
 # include <arpa/inet.h>
-class ASockstream
+class ASockStream
 {
 
 	public:
 
-		ASockstream();
-		ASockstream( ASockstream const & src );
-		~ASockstream();
+		ASockStream();
+		ASockStream( ASockStream const & src );
+		~ASockStream();
 
-		ASockstream &		operator=( ASockstream const & rhs );
+		ASockStream &		operator=( ASockStream const & rhs );
 
+		protected:
+		
 	private:
 		int						_socket;
 		int						_socket_familly;
@@ -26,6 +28,6 @@ class ASockstream
 		struct sockaddr_in		_serv_addr;
 };
 
-std::ostream &			operator<<( std::ostream & o, ASockstream const & i );
+std::ostream &			operator<<( std::ostream & o, ASockStream const & i );
 
-#endif /* ***************************************************** ASOCKSTREAM_H */
+#endif /* ***************************************************** ASockStream_H */

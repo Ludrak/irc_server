@@ -8,8 +8,9 @@ Channel::Channel()
 {
 }
 
-Channel::Channel( const Channel & src )
+Channel::Channel( const Channel & src ) : _clients(src._clients), _operators(src._operators)
 {
+
 }
 
 
@@ -32,12 +33,15 @@ Channel &				Channel::operator=( Channel const & rhs )
 	//{
 		//this->_value = rhs.getValue();
 	//}
+	(void)rhs;
 	return *this;
 }
 
 std::ostream &			operator<<( std::ostream & o, Channel const & i )
 {
-	//o << "Value = " << i.getValue();
+	o << "Channel = ";
+	o << "- id	= " << i.getUID();
+	// o << "- usernames	= " << i.getId();
 	return o;
 }
 
@@ -45,7 +49,6 @@ std::ostream &			operator<<( std::ostream & o, Channel const & i )
 /*
 ** --------------------------------- METHODS ----------------------------------
 */
-
 
 /*
 ** --------------------------------- ACCESSOR ---------------------------------

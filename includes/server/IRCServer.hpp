@@ -2,6 +2,7 @@
 # define IRCSERVER_HPP
 
 # include "AServer.hpp"
+# include "Client.hpp"
 
 class IRCServer : public AServer
 {
@@ -9,15 +10,16 @@ class IRCServer : public AServer
 	public:
 
 		IRCServer();
-		IRCServer( IRCServer const & src );
 		~IRCServer();
 
-		IRCServer &		operator=( IRCServer const & rhs );
-
+		int		getNetworkSocket( void ) const;
 	private:
+		IRCServer( IRCServer const & src );
+		IRCServer &		operator=( IRCServer const & rhs );
 		std::list<Channel>	 	_channels;
 		int						_Server_network_socket;
-
+		bool					_init_server( void );
+		Client					*_acceptConnection(ASockStream &socket_client);
 };
 
 std::ostream &			operator<<( std::ostream & o, IRCServer const & i );

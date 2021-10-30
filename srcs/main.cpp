@@ -3,5 +3,6 @@
 int main()
 {
 	IRCServer server;
+
     return (0);
 }

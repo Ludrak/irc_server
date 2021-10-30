@@ -1,29 +1,34 @@
 #ifndef CLIENT_HPP
 # define CLIENT_HPP
 
-# include "AEntitie"
-# include "ASockstream"
-# include "Server.hpp"
+# include "AEntity.hpp"
+# include "ASockStream.hpp"
 
-class Client : public AEntitie, public ASockstream
+class Client;
+
+# include "AServer.hpp"
+
+class Client : public ASockStream, public AEntity 
 {
 
 	public:
 
 		Client();
-		Client(Server &master);
+		Client(AServer &master);
+		Client(ASockStream &master);
 		Client( Client const & src );
 		~Client();
 
 		Client &		operator=( Client const & rhs );
-		typename bool	(*Client::Operations)(Client & client, std::string str) Operation;
+		typedef bool	(*Operations)(Client & client, std::string str);
 
-		Server		&getServer
+		AServer			&getServer( void ) const;
 	private:
 		//socket
 		std::string				_nickname;
-		std::map<Operations>	_op;
-		Server 					&_master;
+		std::string				_realname;
+		std::map<std::string, Operations>	_op;
+		AServer 				*_master;
 };
 
 std::ostream &			operator<<( std::ostream & o, Client const & i );

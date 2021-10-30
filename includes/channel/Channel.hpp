@@ -1,12 +1,10 @@
 #ifndef CHANNEL_HPP
 # define CHANNEL_HPP
 
-# include <iostream>
-# include <string>
-# include "AEntitie.hpp"
+# include "AEntity.hpp"
 # include "Client.hpp"
 
-class Channel : public AEntities
+class Channel : public AEntity
 {
 
 	public:
@@ -18,8 +16,8 @@ class Channel : public AEntities
 		Channel &		operator=( Channel const & rhs );
 
 	private:
-		std::list<Clients &> 	_clients;
-		std::list<Clients &> 	_operators;
+		std::list<Client *> 	_clients;
+		std::list<Client *> 	_operators;
 };
 
 std::ostream &			operator<<( std::ostream & o, Channel const & i );

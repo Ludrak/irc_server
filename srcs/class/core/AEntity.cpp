@@ -1,15 +1,16 @@
-#include "AEntitie.hpp"
+#include "AEntity.hpp"
 
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-AEntitie::AEntitie()
+AEntity::AEntity()
 {
 }
 
-AEntitie::AEntitie( const AEntitie & src )
+AEntity::AEntity( const AEntity & src )
 {
+	(void) src;
 }
 
 
@@ -17,7 +18,7 @@ AEntitie::AEntitie( const AEntitie & src )
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
 
-AEntitie::~AEntitie()
+AEntity::~AEntity()
 {
 }
 
@@ -26,26 +27,30 @@ AEntitie::~AEntitie()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
-AEntitie &				AEntitie::operator=( AEntitie const & rhs )
-{
-	//if ( this != &rhs )
-	//{
-		//this->_value = rhs.getValue();
-	//}
-	return *this;
-}
+// AEntity &				AEntity::operator=( AEntity const & rhs )
+// {
+// 	//if ( this != &rhs )
+// 	//{
+// 		//this->_value = rhs.getValue();
+// 	//}
+// 	return *this;
+// }
 
-std::ostream &			operator<<( std::ostream & o, AEntitie const & i )
-{
-	//o << "Value = " << i.getValue();
-	return o;
-}
+// std::ostream &			operator<<( std::ostream & o, AEntity const & i )
+// {
+// 	//o << "Value = " << i.getValue();
+// 	return o;
+// }
 
 
 /*
 ** --------------------------------- METHODS ----------------------------------
 */
 
+uint						AEntity::getUID( void ) const
+{
+	return this->_uid;
+}
 
 /*
 ** --------------------------------- ACCESSOR ---------------------------------

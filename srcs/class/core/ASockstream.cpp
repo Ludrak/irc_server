@@ -1,11 +1,11 @@
-#include "ASockstream.hpp"
+#include "ASockStream.hpp"
 
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
 //TODO CHeck return values
-ASockstream::ASockstream() : _socket_familly(AF_INET), _socket_type(SOCK_STREAM)
+ASockStream::ASockStream() : _socket_familly(AF_INET), _socket_type(SOCK_STREAM)
 {
 	this->_socket = socket(_socket_familly, _socket_type, 0);
 	fcntl(this->_socket, F_SETFL, O_NONBLOCK);
@@ -15,8 +15,9 @@ ASockstream::ASockstream() : _socket_familly(AF_INET), _socket_type(SOCK_STREAM)
 
 }
 
-ASockstream::ASockstream( const ASockstream & src )
+ASockStream::ASockStream( const ASockStream & src )
 {
+	(void) src;
 }
 
 
@@ -24,7 +25,7 @@ ASockstream::ASockstream( const ASockstream & src )
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
 
-ASockstream::~ASockstream()
+ASockStream::~ASockStream()
 {
 }
 
@@ -33,18 +34,20 @@ ASockstream::~ASockstream()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
-ASockstream &				ASockstream::operator=( ASockstream const & rhs )
+ASockStream &				ASockStream::operator=( ASockStream const & rhs )
 {
 	//if ( this != &rhs )
 	//{
+		(void) rhs;
 		//this->_value = rhs.getValue();
 	//}
 	return *this;
 }
 
-std::ostream &			operator<<( std::ostream & o, ASockstream const & i )
+std::ostream &			operator<<( std::ostream & o, ASockStream const & i )
 {
 	//o << "Value = " << i.getValue();
+	(void) i;
 	return o;
 }
 
