@@ -1,5 +1,5 @@
-#ifndef ASockStream_HPP
-# define ASockStream_HPP
+#ifndef SockStream_HPP
+# define SockStream_HPP
 
 # include <iostream>
 # include <string>
@@ -11,7 +11,7 @@
 # include <exception>
 # include <unistd.h>
 
-class ASockStream
+class SockStream
 {
 	class SocketCreationException : public std::exception
 	{
@@ -24,13 +24,13 @@ class ASockStream
 
 	public:
 
-		ASockStream();
-		ASockStream(const std::string &host, uint16_t port);
-		ASockStream(int socket, const sockaddr_in &address);
-		ASockStream( ASockStream const & src );
-		~ASockStream();
+		SockStream();
+		SockStream(const std::string &host, uint16_t port);
+		SockStream(int socket, const sockaddr_in &address);
+		SockStream( SockStream const & src );
+		~SockStream();
 
-		ASockStream &		operator=( ASockStream const & rhs );
+		SockStream &		operator=( SockStream const & rhs );
 
 		protected:
 			int						_socket;
@@ -41,6 +41,6 @@ class ASockStream
 
 };
 
-std::ostream &			operator<<( std::ostream & o, ASockStream const & i );
+std::ostream &			operator<<( std::ostream & o, SockStream const & i );
 
-#endif /* ***************************************************** ASockStream_H */
+#endif /* ***************************************************** SockStream_H */

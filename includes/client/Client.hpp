@@ -2,20 +2,21 @@
 # define CLIENT_HPP
 
 # include "AEntity.hpp"
-# include "ASockStream.hpp"
+# include "SockStream.hpp"
 
 class Client;
 
 # include "AServer.hpp"
 
-class Client : public ASockStream, public AEntity 
+class Client : public SockStream, public AEntity 
 {
 
 	public:
 
 		Client();
 		Client(AServer &master);
-		Client(ASockStream &master);
+		Client(SockStream &master);
+		Client(int socket, const sockaddr_in &addr);
 		Client( Client const & src );
 		~Client();
 

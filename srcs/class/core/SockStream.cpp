@@ -1,27 +1,27 @@
-#include "ASockStream.hpp"
+#include "SockStream.hpp"
 
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
 //TODO CHeck return values
-ASockStream::ASockStream()
+SockStream::SockStream()
 {
-	std::cout << "default ASockStream constructor" << std::endl;
+	std::cout << "default SockStream constructor" << std::endl;
 	this->_createSocket("127.0.0.1", 8080);
 }
 
-ASockStream::ASockStream(const std::string &host, uint16_t port)
+SockStream::SockStream(const std::string &host, uint16_t port)
 {
 	this->_createSocket(host, port);
 }
 
-ASockStream::ASockStream(int socket, const sockaddr_in &address) : _socket(socket), _addr(address)
+SockStream::SockStream(int socket, const sockaddr_in &address) : _socket(socket), _addr(address)
 {
 }
 
 
-ASockStream::ASockStream( const ASockStream & src )
+SockStream::SockStream( const SockStream & src )
 {
 	(void) src;
 }
@@ -30,7 +30,7 @@ ASockStream::ASockStream( const ASockStream & src )
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
 
-ASockStream::~ASockStream()
+SockStream::~SockStream()
 {
 	close(this->_socket);
 }
@@ -40,7 +40,7 @@ ASockStream::~ASockStream()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
-ASockStream &				ASockStream::operator=( ASockStream const & rhs )
+SockStream &				SockStream::operator=( SockStream const & rhs )
 {
 	//if ( this != &rhs )
 	//{
@@ -50,7 +50,7 @@ ASockStream &				ASockStream::operator=( ASockStream const & rhs )
 	return *this;
 }
 
-std::ostream &			operator<<( std::ostream & o, ASockStream const & i )
+std::ostream &			operator<<( std::ostream & o, SockStream const & i )
 {
 	//o << "Value = " << i.getValue();
 	(void) i;
@@ -62,11 +62,11 @@ std::ostream &			operator<<( std::ostream & o, ASockStream const & i )
 ** --------------------------------- METHODS ----------------------------------
 */
 
-void				ASockStream::_createSocket(const std::string &host, uint16_t port, sa_family_t family, int sock_type)
+void				SockStream::_createSocket(const std::string &host, uint16_t port, sa_family_t family, int sock_type)
 {
 	this->_socket = socket(family, sock_type, 0);
 	if (this->_socket < 0)
-		throw ASockStream::SocketCreationException();
+		throw SockStream::SocketCreationException();
 	fcntl(this->_socket, F_SETFL, O_NONBLOCK);
 	
 	bzero(reinterpret_cast<void *>(&this->_addr), sizeof(this->_addr));

@@ -19,7 +19,7 @@ class IRCServer : public AServer
 		std::list<Channel>	 	_channels;
 		int						_Server_network_socket;
 		bool					_init_server( void );
-		Client					*_acceptConnection(ASockStream &socket_client);
+		Client					*_acceptConnection(SockStream &socket_client);
 };
 
 std::ostream &			operator<<( std::ostream & o, IRCServer const & i );
