@@ -60,7 +60,7 @@ class AServer : public SockStream
 			}
 	};
 
-		AServer();
+		AServer(const std::string &host = "127.0.0.1", int port = 8080);
 		virtual ~AServer();
 
 		AServer &		operator=( AServer const & rhs );

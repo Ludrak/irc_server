@@ -11,7 +11,7 @@ uint		AServer::default_max_connections = 50;
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-AServer::AServer() : SockStream(), _max_connection(AServer::default_max_connections)
+AServer::AServer(const std::string &host, int port) : SockStream(host, port), _max_connection(AServer::default_max_connections)
 {
 	this->_init_server();
 }
