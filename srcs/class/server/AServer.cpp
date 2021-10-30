@@ -16,10 +16,6 @@ AServer::AServer() : SockStream(), _max_connection(AServer::default_max_connecti
 	this->_init_server();
 }
 
-AServer::AServer( const AServer & src ) : SockStream(src), _clients(src._clients), _max_connection(AServer::default_max_connections)
-{
-}
-
 
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
@@ -57,24 +53,51 @@ std::ostream &			operator<<( std::ostream & o, AServer const & i )
 
 bool						AServer::run( void )
 {
+	std::vector<struct pollfd>	poll_fds;
+	struct pollfd 				new_pfd = {.fd = this->_socket, .events = POLLIN, .revents = 0};
+	poll_fds.push_back(new_pfd);
+
 	if (listen(this->_socket, this->_max_connection) != 0)
 		throw AServer::ListenException();
-	std::vector<struct pollfd> 	poll_fds;
-	struct pollfd pfd = {.fd = this->_socket, .events = POLLIN, .revents = 0};
-	poll_fds.push_back(pfd);
 	std::cout << "poll_fds.size = " << poll_fds.size() << std::endl;
 	while (1)
 	{
-		std::cout << "poll_fds.size = " << poll_fds.size() << std::endl;
-		if (poll(reinterpret_cast<pollfd*>(&(*poll_fds.begin())), poll_fds.size(), -1) == -1)
+		std::cout << "_poll_fds.size = " << poll_fds.size() << std::endl;
+		if (poll(poll_fds.data(), poll_fds.size(), -1) == -1)
 			throw AServer::PollException();
-		if (poll_fds.at(0).revents | POLLIN)
-			this->_clients.push_back(this->_acceptConnection());
+		if (poll_fds.at(0).revents & POLLIN)
+		{
+			try {
+				new_pfd.fd = this->_acceptConnection().getSocket();
+				new_pfd.events = POLLIN; 
+				new_pfd.revents = 0;
+				poll_fds.push_back(new_pfd);
+			}
+			catch (const AServer::IncomingConnectionException &e)
+			{
+				std::cerr << "RUN: " << e.what() << "\n"; 
+			}
+			poll_fds.at(0).revents = 0;
+		}
+		std::cout << "nb Clients: " << this->_clients.size() << std::endl;;
+		std::vector<struct pollfd>::iterator it = poll_fds.begin();
+		for (; it != poll_fds.end(); it++)
+		{	
+			if (it->revents & POLLIN)
+			{
+				std::vector<char> buf(50);
+				if (recv(it->fd, reinterpret_cast<void *>(buf.data()), 50, MSG_DONTWAIT) < 0)
+					throw AServer::PacketReadingException();
+				std::cout << "RECV: " << std::string(buf.begin(), buf.end()) << std::endl;
+				std::cout << "FROM: " << this->_clients[it->fd]->getSocket() << std::endl;
+				it->revents = 0;
+			}
+		}
 	}
 	return true;
 }
 
-Client						AServer::_acceptConnection()
+SockStream						&AServer::_acceptConnection()
 {	
 	std::cout << "Incoming connection" << std::endl;
 	sockaddr_in         cli_addr;
@@ -86,7 +109,10 @@ Client						AServer::_acceptConnection()
 		throw AServer::IncomingConnectionException();
 
 	std::cout << "connection accepted" << std::endl;
-	return		Client(socket_client, cli_addr);
+	SockStream *newSock = new SockStream(socket_client, cli_addr);
+	std::pair<int, SockStream *> p = std::make_pair(socket_client, newSock);
+	this->_clients.insert(p);
+	return *newSock;
 }
 
 bool					AServer::_init_server( void )

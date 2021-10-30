@@ -8,7 +8,7 @@
 SockStream::SockStream()
 {
 	std::cout << "default SockStream constructor" << std::endl;
-	this->_createSocket("127.0.0.1", 8080);
+	this->_createSocket("192.168.1.242", 8080);
 }
 
 SockStream::SockStream(const std::string &host, uint16_t port)
@@ -62,7 +62,7 @@ std::ostream &			operator<<( std::ostream & o, SockStream const & i )
 ** --------------------------------- METHODS ----------------------------------
 */
 
-void				SockStream::_createSocket(const std::string &host, uint16_t port, sa_family_t family, int sock_type)
+void							SockStream::_createSocket(const std::string &host, uint16_t port, sa_family_t family, int sock_type)
 {
 	this->_socket = socket(family, sock_type, 0);
 	if (this->_socket < 0)
@@ -79,5 +79,14 @@ void				SockStream::_createSocket(const std::string &host, uint16_t port, sa_fam
 ** --------------------------------- ACCESSOR ---------------------------------
 */
 
+int								SockStream::getSocket( void ) const
+{
+	return this->_socket;
+}
+
+const struct sockaddr_in&		SockStream::getSockaddr( void ) const
+{
+	return this->_addr;
+}
 
 /* ************************************************************************** */

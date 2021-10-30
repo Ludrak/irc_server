@@ -7,52 +7,60 @@ class Channel;
 # include <iostream>
 # include <string>
 # include <vector>
-# include "poll.h"
+# include <poll.h>
+# include <map>
 # include "SockStream.hpp"
 # include "Client.hpp"
 # include "Channel.hpp"
 
 class AServer : public SockStream
 {
+	public:
 	class AddressBindException : public std::exception
 	{
-		virtual const char	*what() const throw()
-		{
-			//TODO implement errno error
-			return "socket binding failed";
-		}
+		public:
+			virtual const char	*what() const throw()
+			{
+				return (std::string("socket binding failed: ").append(strerror(errno))).c_str();
+			}
 	};
 	class ListenException : public std::exception
 	{
-		virtual const char	*what() const throw()
-		{
-			//TODO implement errno error
-			return "server cannot listen";
-		}
+		public:
+			virtual const char	*what() const throw()
+			{
+				return (std::string("server cannot listen: ").append(strerror(errno))).c_str();
+			}
 	};
 
 	class PollException : public std::exception
 	{
-		virtual const char	*what() const throw()
-		{
-			//TODO implement errno error
-			return "failed to poll on fds";
-		}
+		public:
+			virtual const char	*what() const throw()
+			{
+				return (std::string("failed to poll on fds: ").append(strerror(errno))).c_str();
+			}
 	};
 
-		class IncomingConnectionException : public std::exception
+	class IncomingConnectionException : public std::exception
 	{
-		virtual const char	*what() const throw()
-		{
-			//TODO implement errno error
-			return "Incoming connection refused/failed.";
-		}
+		public:
+			virtual const char	*what() const throw()
+			{
+				return (std::string("Incoming connection failed: ").append(strerror(errno))).c_str();
+			}
 	};
 
-	public:
+	class PacketReadingException : public std::exception
+	{
+		public:
+			virtual const char	*what() const throw()
+			{
+				return (std::string("fail to read incoming data: ").append(strerror(errno))).c_str();
+			}
+	};
 
 		AServer();
-		AServer( AServer const & src );
 		virtual ~AServer();
 
 		AServer &		operator=( AServer const & rhs );
@@ -68,10 +76,12 @@ class AServer : public SockStream
 		static uint				default_max_connections;
 
 	private:
-		std::list<Client>		_clients;
-		bool					_init_server( void );
-		Client					_acceptConnection( void );
-		uint					_max_connection;
+		AServer( AServer const & src );
+
+		std::map<int, SockStream *>	_clients;
+		bool						_init_server( void );
+		SockStream&					_acceptConnection( void );
+		uint						_max_connection;
 
 };
 
