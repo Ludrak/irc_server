@@ -23,6 +23,10 @@ AServer::AServer(const std::string &host, int port) : SockStream(host, port), _m
 
 AServer::~AServer()
 {
+	for (std::map<int, SockStream*>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
+	{
+		delete (*it).second;
+	}
 }
 
 /*
@@ -79,8 +83,7 @@ bool						AServer::run( void )
 			poll_fds.at(0).revents = 0;
 			std::cout << "[FT_IRC] - Clients - " << this->_clients.size() << std::endl;;
 		}
-		std::vector<struct pollfd>::iterator it = poll_fds.begin();
-		for (; it != poll_fds.end(); it++)
+		for (std::vector<struct pollfd>::iterator it = poll_fds.begin(); it != poll_fds.end(); it++)
 		{	
 			if (it->revents & POLLIN)
 			{
@@ -97,7 +100,6 @@ bool						AServer::run( void )
 
 SockStream						&AServer::_acceptConnection()
 {	
-	std::cout << "Incoming connection" << std::endl;
 	sockaddr_in         cli_addr;
 	int					socket_client;
 	socklen_t			cli_len = sizeof(cli_addr);
@@ -106,7 +108,7 @@ SockStream						&AServer::_acceptConnection()
 	if (socket_client < 0)
 		throw AServer::IncomingConnectionException();
 
-	std::cout << "connection accepted" << std::endl;
+	std::cout << "new connection accepted" << std::endl;
 	SockStream *newSock = new SockStream(socket_client, cli_addr);
 	std::pair<int, SockStream *> p = std::make_pair(socket_client, newSock);
 	this->_clients.insert(p);
