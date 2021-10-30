@@ -11,7 +11,6 @@ IRCServer::IRCServer() : AServer()
 	std::cout << "IRCServer constructor" << std::endl;
 }
 
-
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
@@ -19,27 +18,6 @@ IRCServer::IRCServer() : AServer()
 IRCServer::~IRCServer()
 {
 }
-
-
-/*
-** --------------------------------- OVERLOAD ---------------------------------
-*/
-
-IRCServer &				IRCServer::operator=( IRCServer const & rhs )
-{
-	if ( this != &rhs )
-	{
-	}
-	return *this;
-}
-
-std::ostream &			operator<<( std::ostream & o, IRCServer const & i )
-{
-	o << "IRCServer = " ;
-	o << "_server_network_socket = " << i.getNetworkSocket();
-	return o;
-}
-
 
 /*
 ** --------------------------------- METHODS ----------------------------------

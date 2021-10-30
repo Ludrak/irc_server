@@ -1,12 +1,11 @@
 #ifndef CLIENT_HPP
 # define CLIENT_HPP
 
-# include "AEntity.hpp"
+class IRCServer;
+
 # include "SockStream.hpp"
-
-class Client;
-
-# include "AServer.hpp"
+# include "AEntity.hpp"
+# include "IRCServer.hpp"
 
 class Client : public SockStream, public AEntity 
 {
@@ -14,22 +13,23 @@ class Client : public SockStream, public AEntity
 	public:
 
 		Client();
-		Client(AServer &master);
+		Client(IRCServer &master);
 		Client(SockStream &master);
 		Client(int socket, const sockaddr_in &addr);
 		~Client();
 
 		Client &		operator=( Client const & rhs );
-		typedef bool	(*Operations)(Client & client, std::string str);
+		typedef bool	(Client::*Operations)(Client & client, std::string str);
 
-		AServer			&getServer( void ) const;
+		IRCServer			&getServer( void ) const;
+
 	private:
+
 		Client( Client const & src );
-		//socket
-		std::string				_nickname;
-		std::string				_realname;
+		std::string							_nickname;
+		std::string							_realname;
 		std::map<std::string, Operations>	_op;
-		AServer 				*_master;
+		AServer 							*_master;
 };
 
 std::ostream &			operator<<( std::ostream & o, Client const & i );

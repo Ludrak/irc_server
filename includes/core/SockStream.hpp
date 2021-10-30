@@ -44,6 +44,4 @@ class SockStream
 
 };
 
-std::ostream &			operator<<( std::ostream & o, SockStream const & i );
-
 #endif /* ***************************************************** SockStream_H */

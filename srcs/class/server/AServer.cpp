@@ -30,28 +30,6 @@ AServer::~AServer()
 }
 
 /*
-** --------------------------------- OVERLOAD ---------------------------------
-*/
-
-AServer &				AServer::operator=( AServer const & rhs )
-{
-	//if ( this != &rhs )
-	//{
-		//this->_value = rhs.getValue();
-	//}
-	(void) rhs;
-	return *this;
-}
-
-std::ostream &			operator<<( std::ostream & o, AServer const & i )
-{
-	//o << "Value = " << i.getValue();
-	(void ) i;
-	return o;
-}
-
-
-/*
 ** --------------------------------- METHODS ----------------------------------
 */
 
