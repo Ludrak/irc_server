@@ -4,14 +4,14 @@
 ** -------------------------------- STATICS --------------------------------
 */
 
-uint		AServer::default_max_connections = 50;
+uint		AServer::_default_max_connections = 50;
 
 
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-AServer::AServer(const std::string &host, int port) : SockStream(host, port), _max_connection(AServer::default_max_connections)
+AServer::AServer( IProtocol & protocol, const std::string &host, int port) : SockStream(host, port, protocol), _max_connection(AServer::_default_max_connections)
 {
 	this->_init_server();
 }
@@ -32,7 +32,7 @@ AServer::~AServer()
 /*
 ** --------------------------------- METHODS ----------------------------------
 */
-
+#include "IRCProtocol.hpp"
 bool						AServer::run( void )
 {
 	std::vector<struct pollfd>	poll_fds;
@@ -41,7 +41,6 @@ bool						AServer::run( void )
 
 	if (listen(this->_socket, this->_max_connection) != 0)
 		throw AServer::ListenException();
-	std::cout << "[FT_IRC] - Clients - " << this->_clients.size() << std::endl;;
 	while (1)
 	{
 		if (poll(poll_fds.data(), poll_fds.size(), -1) == -1)
@@ -59,16 +58,34 @@ bool						AServer::run( void )
 				std::cerr << "[FT_IRC]: " << e.what() << "\n"; 
 			}
 			poll_fds.at(0).revents = 0;
-			std::cout << "[FT_IRC] - Clients - " << this->_clients.size() << std::endl;;
 		}
-		for (std::vector<struct pollfd>::iterator it = poll_fds.begin(); it != poll_fds.end(); it++)
+		std::vector<struct pollfd>::reverse_iterator it = poll_fds.rbegin();
+		for (; it != poll_fds.rend(); it++)
 		{	
 			if (it->revents & POLLIN)
 			{
-				std::vector<char> buf(50);
-				if (recv(it->fd, reinterpret_cast<void *>(buf.data()), 50, MSG_DONTWAIT) < 0)
-					throw AServer::PacketReadingException();
-				std::cout << "[FT_IRC] : " << this->_clients[it->fd]->getSocket() << " : " << std::string(buf.begin(), buf.end()) << std::endl;
+				std::vector<char> buf(RECV_BUFFER_SZ);
+				size_t byte_size = recv(it->fd, reinterpret_cast<void *>(buf.data()), RECV_BUFFER_SZ, MSG_DONTWAIT);
+				if (byte_size < 0) 
+				{
+					std::cerr << "error from client in socket " << this->_clients[it->fd]->getSocket() << std::endl;
+					continue ;
+				}
+				else if (byte_size == 0)
+				{
+					this->_onClientQuit(*this->_clients[it->fd]);
+					delete this->_clients[it->fd];
+					this->_clients.erase(it->fd);
+					poll_fds.erase( --(it.base()) );
+					continue ;
+				}
+				this->_clients[it->fd]->getRecievedData().addData(std::string (buf.begin(), buf.begin() + byte_size));
+				if (this->_clients[it->fd]->getRecievedData().isInvalid())
+					continue;
+				while (!this->_clients[it->fd]->getRecievedData().isInvalid()){
+					this->_onClientRecv(*this->_clients[it->fd], this->_clients[it->fd]->getRecievedData());
+					this->_clients[it->fd]->getRecievedData().flush();
+				}
 				it->revents = 0;
 			}
 		}
@@ -86,10 +103,10 @@ SockStream						&AServer::_acceptConnection()
 	if (socket_client < 0)
 		throw AServer::IncomingConnectionException();
 
-	std::cout << "new connection accepted" << std::endl;
-	SockStream *newSock = new SockStream(socket_client, cli_addr);
+	SockStream *newSock = new SockStream(socket_client, cli_addr, *this->_protocol);
 	std::pair<int, SockStream *> p = std::make_pair(socket_client, newSock);
 	this->_clients.insert(p);
+	this->_onClientJoin(*newSock);
 	return *newSock;
 }
 

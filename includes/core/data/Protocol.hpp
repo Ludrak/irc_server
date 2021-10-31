@@ -3,21 +3,33 @@
 # define PROTOCOL_HPP
 
 #include <string>
+#include <iostream>
+#include "IProtocol.hpp"
 
-class Protocol
+class Protocol : public IProtocol
 {
     public:
+        Protocol()
+        {}
 
-        static bool    isProtocol( const std::string &data )
-        {
-            (void) data;
-            return (false);
-        };
+        virtual ~Protocol()
+        {}
 
-        static size_t  getMaximumPackageSize ( void )
+        virtual size_t      isProtocol( const std::string &data ) const
         {
-            return (1000);
+            std::cout << "APROTOCOL" << std::endl;
+            return (data.size());
         }
+
+        virtual size_t      getMaximumPackageSize ( void ) const
+        {
+            return (10);
+        }
+
+        // virtual Protocol   *clone() const
+        // {
+        //     return (new Protocol());
+        // }
 };
 
 #endif // PROTOCOL_HPP

@@ -7,6 +7,7 @@ int		Usage( const char * executable )
 	return 1;
 }
 
+//TODO add functions allowed by subject
 int main(int ac, char ** av)
 {
 	int			port = 0;

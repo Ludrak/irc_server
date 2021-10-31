@@ -6,7 +6,7 @@
 //REVIEW Server name maximum 63 character
 //REVIEW nickname name maximum 9 character
 
-IRCServer::IRCServer(int port, const std::string & password, const std::string &host) : AServer(host, port), _password(password), _network_password("")
+IRCServer::IRCServer(int port, const std::string & password, const std::string &host) : AServer(this->_protocol, host, port), _protocol(IRCProtocol()), _forward_socket(this->_protocol), _password(password), _network_password("")
 {
 	std::cout << "IRCServer constructor" << "\n";
 	std::cout << "IRCServer host:" << host << "\n";
@@ -34,6 +34,27 @@ bool						IRCServer::setNetworkConnection(const std::string & host, int port, st
 	std::cout << "port		- " << port << std::endl; 
 	std::cout << "password	- " << password << std::endl;
 	return true;
+}
+
+/*
+** --------------------------------- EVENTS ----------------------------------
+*/
+
+
+void							IRCServer::_onClientJoin(SockStream &s)
+{
+	std::cout << "[IRC] Client " << s.getSocket() << " joined the server !" << std::endl;
+	s.setPackageProtocol(this->_protocol);
+}
+
+void							IRCServer::_onClientRecv(SockStream &s, const Package pkg)
+{
+	std::cout << "[IRC]<" << s.getSocket() << "> " << pkg.getData();
+}
+
+void							IRCServer::_onClientQuit(SockStream &s)
+{
+	std::cout << "[IRC] Client " << s.getSocket() << " disconnected." << std::endl;
 }
 
 

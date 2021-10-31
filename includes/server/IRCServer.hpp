@@ -8,6 +8,7 @@ class Client;
 # include "AServer.hpp"
 # include "Channel.hpp"
 # include "Client.hpp"
+# include "IRCProtocol.hpp"
 
 class IRCServer : public AServer
 {
@@ -15,12 +16,13 @@ class IRCServer : public AServer
 	public:
 
 		IRCServer(int port = 8080, const std::string & password = "", const std::string &host = "127.0.0.1");
-		~IRCServer();
+		virtual ~IRCServer();
 
 		Channel*				getChannel(int ChannelUID);
 		const SockStream&		getForwardSocket( void ) const;
 		bool					setNetworkConnection(const std::string & host, int port, std::string & password);
 	private:
+		IRCProtocol		_protocol;
 
 		IRCServer( IRCServer const & src );
 
@@ -28,10 +30,12 @@ class IRCServer : public AServer
 
 		std::list<Channel>	 	_channels;
 		SockStream				_forward_socket;
-		bool					_init_server( void );
 		std::string				_password;
 		std::string				_network_password;
-		Client					*_acceptConnection(SockStream &socket_client);
+
+		void					_onClientJoin(SockStream &s);
+		void					_onClientRecv(SockStream &s, const Package pkg);
+		void					_onClientQuit(SockStream &s);
 };
 
 #endif /* ******************************************************* IRCSERVER_H */

@@ -12,10 +12,10 @@ class Client : public SockStream, public AEntity
 
 	public:
 
-		Client();
+		Client(IProtocol & protocol);
 		Client(IRCServer &master);
 		Client(SockStream &master);
-		Client(int socket, const sockaddr_in &addr);
+		Client(int socket, const sockaddr_in &addr, IProtocol & protocol);
 		~Client();
 
 		Client &		operator=( Client const & rhs );
@@ -26,8 +26,10 @@ class Client : public SockStream, public AEntity
 	private:
 
 		Client( Client const & src );
-		std::string							_nickname;
-		std::string							_realname;
+
+		IProtocol				*_protocol;
+		std::string				_nickname;
+		std::string				_realname;
 		std::map<std::string, Operations>	_op;
 		AServer 							*_master;
 };
