@@ -13,6 +13,7 @@ class Channel;
 # include "Client.hpp"
 # include "Channel.hpp"
 
+
 class AServer : public SockStream
 {
 	public:
@@ -59,8 +60,7 @@ class AServer : public SockStream
 				return (std::string("fail to read incoming data: ").append(strerror(errno))).c_str();
 			}
 	};
-
-		AServer();
+		AServer(IProtocol & protocol);
 		virtual ~AServer();
 
 		AServer &		operator=( AServer const & rhs );
@@ -73,11 +73,16 @@ class AServer : public SockStream
 		uint					getMaxConnection( void ) const;
 		void					setMaxConnection( uint nb);
 	protected:
-		static uint				default_max_connections;
+		static uint				_default_max_connections;
+
+		virtual void			_onClientJoin(SockStream &s) = 0;
+		virtual void			_onClientRecv(SockStream &s, const Package pkg) = 0;
+		virtual void			_onClientQuit(SockStream &s) = 0;
 
 	private:
 		AServer( AServer const & src );
 
+		IProtocol					*_protocol;
 		std::map<int, SockStream *>	_clients;
 		bool						_init_server( void );
 		SockStream&					_acceptConnection( void );

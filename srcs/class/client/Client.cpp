@@ -4,16 +4,16 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Client::Client() : SockStream(), AEntity()
+Client::Client(IProtocol & protocol) : SockStream(protocol), AEntity(), _protocol(&protocol)
 {
 }
 
-Client::Client(SockStream &master) :  SockStream(master.getSocket(), master.getSockaddr()), AEntity()
+Client::Client(SockStream &master) :  SockStream(master.getSocket(), master.getSockaddr(), *master.getProtocol()), AEntity(), _protocol(master.getProtocol())
 {
 	
 }
 
-Client::Client(int socket, const sockaddr_in &addr) : SockStream(socket, addr)
+Client::Client(int socket, const sockaddr_in &addr, IProtocol & protocol) : SockStream(socket, addr, protocol), _protocol(&protocol)
 {
 
 }
