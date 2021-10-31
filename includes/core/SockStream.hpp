@@ -22,7 +22,7 @@ class SockStream
 	{
 		virtual const char	*what() const throw()
 		{
-			return (std::string("Socket creation failed: ").append(strerror(errno))).c_str();
+			return ("Socket creation failed: ");
 		}
 	};
 
@@ -34,26 +34,26 @@ class SockStream
 		~SockStream();
 
 		SockStream &				operator=( SockStream const & rhs );
-		int							getSocket( void ) const;
-		const struct sockaddr_in&	getSockaddr( void ) const;
-		IProtocol					*getProtocol( void ) const;
 
 		void						setPackageProtocol(IProtocol &proto);
 
 		size_t						recieve(size_t read_bufsz=RECV_BUFFER_SZ);
 		size_t						send(size_t send_bufsz=SEND_BUFFER_SZ);
-		//
+
+		int							getSocket( void ) const;
+		const struct sockaddr_in&	getSockaddr( void ) const;
+		IProtocol					*getProtocol( void ) const;
 		Package						&getRecievedData();
 		Package						&getPendingData();
 
 	protected:
-		int								_socket;
-		struct sockaddr_in				_addr;
-		IProtocol						*_protocol;
+		int							_socket;
+		struct sockaddr_in			_addr;
+		IProtocol					*_protocol;
 
 	private:
-		Package				 			_recieved_data;
-		Package							_pending_data;
+		Package				 		_recieved_data;
+		Package						_pending_data;
 
 		SockStream( SockStream const & src );
 

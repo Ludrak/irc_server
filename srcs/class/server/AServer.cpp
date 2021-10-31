@@ -32,7 +32,6 @@ AServer::~AServer()
 /*
 ** --------------------------------- METHODS ----------------------------------
 */
-#include "IRCProtocol.hpp"
 bool						AServer::run( void )
 {
 	std::vector<struct pollfd>	poll_fds;

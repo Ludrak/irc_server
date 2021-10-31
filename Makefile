@@ -13,8 +13,8 @@ LIB_DIR		= lib
 # - fill only with name of the file
 # - make will check for the file in SRC_DIR
 # - use "-" if empty
-SRCS		= main.cpp	IRCServer.cpp AEntity.cpp Client.cpp AServer.cpp Channel.cpp SockStream.cpp Package.cpp IRCProtocol.cpp Protocol.cpp
-HEADERS		= 			IRCServer.hpp AEntity.hpp Client.hpp AServer.hpp Channel.hpp SockStream.hpp Package.hpp IRCProtocol.hpp Protocol.hpp IProtocol.hpp
+SRCS		= IRCServer.cpp AEntity.cpp Client.cpp AServer.cpp Channel.cpp SockStream.cpp Package.cpp IRCProtocol.cpp Protocol.cpp main.cpp	
+HEADERS		= IRCServer.hpp AEntity.hpp Client.hpp AServer.hpp Channel.hpp SockStream.hpp Package.hpp IRCProtocol.hpp Protocol.hpp IProtocol.hpp
 
 # Librarys (only for local archives in project folder)
 LIBRARYS	= 
@@ -27,7 +27,7 @@ CPP_LFLAGS	=
 
 # Fancy prefixes 
 PREFIX_PROJECT=[\033[1;32m$(NAME)\033[0m]
-PREFIX_COMP=[\033[1;32m✔\033[0m]
+PREFIX_COMP=\033[1;30m-\033[0m-\033[1;37m>\033[0m[\033[1;32m✔\033[0m]
 PREFIX_LINK=[\033[1;32mLINK\033[0m]
 PREFIX_WARN=[\033[0;33mWARN\033[0m]
 PREFIX_DUPL=[\033[1;33mDUPLICATES\033[0m]

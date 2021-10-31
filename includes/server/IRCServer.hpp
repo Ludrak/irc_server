@@ -10,19 +10,23 @@ class Client;
 # include "Client.hpp"
 # include "IRCProtocol.hpp"
 
+# define IRC_DEFAULT_HOST "127.0.0.1"
+# define IRC_DEFAULT_PORT 8080
+# define IRC_DEFAULT_PASS ""
+
 class IRCServer : public AServer
 {
 
 	public:
-
-		IRCServer(int port = 8080, const std::string & password = "", const std::string &host = "127.0.0.1");
+		IRCServer(int port = IRC_DEFAULT_PORT, const std::string &password = IRC_DEFAULT_PASS, const std::string &host = IRC_DEFAULT_HOST);
 		virtual ~IRCServer();
 
 		Channel*				getChannel(int ChannelUID);
 		const SockStream&		getForwardSocket( void ) const;
 		bool					setNetworkConnection(const std::string & host, int port, std::string & password);
+
 	private:
-		IRCProtocol		_protocol;
+		IRCProtocol				_protocol;
 
 		IRCServer( IRCServer const & src );
 

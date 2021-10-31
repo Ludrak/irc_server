@@ -5,6 +5,7 @@
 # include <string>
 # include <list>
 # include <map>
+
 class AEntity
 {
 
@@ -17,6 +18,7 @@ class AEntity
 		AEntity &		operator=( AEntity const & rhs );
 
 		uint			getUID( void ) const;
+	
 	private:
 		uint		_uid;
 
