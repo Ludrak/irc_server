@@ -20,12 +20,6 @@ SockStream::SockStream(int socket, const sockaddr_in &address, IProtocol & proto
 {
 }
 
-
-// SockStream::SockStream( const SockStream & src ) : _protocol(src.protocol), _recieved_data(Package(*this->_protocol)), _pending_data(Package(*this->_protocol))
-// {
-// 	(void) src;
-// }
-
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
@@ -35,44 +29,19 @@ SockStream::~SockStream()
 	close(this->_socket);
 }
 
-
-/*
-** --------------------------------- OVERLOAD ---------------------------------
-*/
-
-SockStream &				SockStream::operator=( SockStream const & rhs )
-{
-	//if ( this != &rhs )
-	//{
-		(void) rhs;
-		//this->_value = rhs.getValue();
-	//}
-	return *this;
-}
-
-std::ostream &			operator<<( std::ostream & o, SockStream const & i )
-{
-	//o << "Value = " << i.getValue();
-	(void) i;
-	return o;
-}
-
-
 /*
 ** --------------------------------- METHODS ----------------------------------
 */
 
 void							SockStream::_createSocket(const std::string &host, uint16_t port, sa_family_t family, int sock_type)
 {
-	this->_socket = socket(family, sock_type, 0);
-	if (this->_socket < 0)
+	if ((this->_socket = socket(family, sock_type, 0)) < 0
+	|| fcntl(this->_socket, F_SETFL, O_NONBLOCK) < 0)
 		throw SockStream::SocketCreationException();
-	fcntl(this->_socket, F_SETFL, O_NONBLOCK);
-	
 	bzero(reinterpret_cast<void *>(&this->_addr), sizeof(this->_addr));
+	this->_addr.sin_port = htons(port);
 	this->_addr.sin_family = family;
 	this->_addr.sin_addr.s_addr = inet_addr(host.c_str());
-	this->_addr.sin_port = htons(port);
 }
 
 size_t							SockStream::recieve(size_t read_bufsz)

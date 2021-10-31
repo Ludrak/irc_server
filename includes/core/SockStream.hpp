@@ -22,8 +22,7 @@ class SockStream
 	{
 		virtual const char	*what() const throw()
 		{
-			//TODO implement errno error
-			return "Socket creation failed";
+			return (std::string("Socket creation failed: ").append(strerror(errno))).c_str();
 		}
 	};
 
@@ -58,11 +57,9 @@ class SockStream
 
 		SockStream( SockStream const & src );
 
-		void					_createSocket(const std::string &host, uint16_t port, sa_family_t familly = AF_INET, int sock_type = SOCK_STREAM);
+		void						_createSocket(const std::string &host, uint16_t port, sa_family_t familly = AF_INET, int sock_type = SOCK_STREAM);
 
 
 };
-
-std::ostream &			operator<<( std::ostream & o, SockStream const & i );
 
 #endif /* ***************************************************** SockStream_H */

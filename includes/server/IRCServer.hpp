@@ -1,7 +1,12 @@
 #ifndef IRCSERVER_HPP
 # define IRCSERVER_HPP
 
+class AServer;
+class Channel;
+class Client;
+
 # include "AServer.hpp"
+# include "Channel.hpp"
 # include "Client.hpp"
 # include "IRCProtocol.hpp"
 
@@ -10,26 +15,29 @@ class IRCServer : public AServer
 
 	public:
 
-		IRCServer();
+		IRCServer(int port = 8080, const std::string & password = "", const std::string &host = "127.0.0.1");
 		virtual ~IRCServer();
 
-		int		getNetworkSocket( void ) const;
-
+		Channel*				getChannel(int ChannelUID);
+		const SockStream&		getForwardSocket( void ) const;
+		bool					setNetworkConnection(const std::string & host, int port, std::string & password);
 	private:
 		IRCProtocol		_protocol;
 
 		IRCServer( IRCServer const & src );
-		IRCServer &		operator=( IRCServer const & rhs );
+
+		IRCServer&				operator=( IRCServer const & rhs );
+
 		std::list<Channel>	 	_channels;
-		int						_Server_network_socket;
+		SockStream				_forward_socket;
 		bool					_init_server( void );
+		std::string				_password;
+		std::string				_network_password;
 		Client					*_acceptConnection(SockStream &socket_client);
 
 		void					_onClientJoin(SockStream &s);
 		void					_onClientRecv(SockStream &s, const Package pkg);
 		void					_onClientQuit(SockStream &s);
 };
-
-std::ostream &			operator<<( std::ostream & o, IRCServer const & i );
 
 #endif /* ******************************************************* IRCSERVER_H */

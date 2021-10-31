@@ -15,6 +15,12 @@ AServer::AServer(IProtocol & protocol) : SockStream(protocol), _protocol(&protoc
 {
 	this->_init_server();
 }
+}
+
+AServer::AServer(const std::string &host, int port, IProtocol & protocol) : SockStream(host, port, protocol), _max_connection(AServer::default_max_connections)
+{
+	this->_init_server();
+}
 
 
 /*
@@ -23,29 +29,11 @@ AServer::AServer(IProtocol & protocol) : SockStream(protocol), _protocol(&protoc
 
 AServer::~AServer()
 {
+	for (std::map<int, SockStream*>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
+	{
+		delete (*it).second;
+	}
 }
-
-/*
-** --------------------------------- OVERLOAD ---------------------------------
-*/
-
-AServer &				AServer::operator=( AServer const & rhs )
-{
-	//if ( this != &rhs )
-	//{
-		//this->_value = rhs.getValue();
-	//}
-	(void) rhs;
-	return *this;
-}
-
-std::ostream &			operator<<( std::ostream & o, AServer const & i )
-{
-	//o << "Value = " << i.getValue();
-	(void ) i;
-	return o;
-}
-
 
 /*
 ** --------------------------------- METHODS ----------------------------------
@@ -73,9 +61,10 @@ bool						AServer::run( void )
 			}
 			catch (const AServer::IncomingConnectionException &e)
 			{
-				std::cerr << "RUN: " << e.what() << "\n"; 
+				std::cerr << "[FT_IRC]: " << e.what() << "\n"; 
 			}
 			poll_fds.at(0).revents = 0;
+			std::cout << "[FT_IRC] - Clients - " << this->_clients.size() << std::endl;;
 		}
 		std::vector<struct pollfd>::reverse_iterator it = poll_fds.rbegin();
 		for (; it != poll_fds.rend(); it++)
