@@ -14,12 +14,12 @@ class IRCServer : public AServer
 
 	public:
 
-		IRCServer();
+		IRCServer(int port = 8080, const std::string & password = "", const std::string &host = "127.0.0.1");
 		~IRCServer();
 
-		int					getNetworkSocket( void ) const;
-		Channel				*getChannel(int		ChannelId);
-
+		Channel*				getChannel(int ChannelUID);
+		const SockStream&		getForwardSocket( void ) const;
+		bool					setNetworkConnection(const std::string & host, int port, std::string & password);
 	private:
 
 		IRCServer( IRCServer const & src );
@@ -27,8 +27,10 @@ class IRCServer : public AServer
 		IRCServer&				operator=( IRCServer const & rhs );
 
 		std::list<Channel>	 	_channels;
-		int						_Server_network_socket;
+		SockStream				_forward_socket;
 		bool					_init_server( void );
+		std::string				_password;
+		std::string				_network_password;
 		Client					*_acceptConnection(SockStream &socket_client);
 };
 
