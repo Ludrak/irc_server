@@ -11,13 +11,7 @@ uint		AServer::_default_max_connections = 50;
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-AServer::AServer(IProtocol & protocol) : SockStream(protocol), _protocol(&protocol), _max_connection(AServer::_default_max_connections)
-{
-	this->_init_server();
-}
-}
-
-AServer::AServer(const std::string &host, int port, IProtocol & protocol) : SockStream(host, port, protocol), _max_connection(AServer::default_max_connections)
+AServer::AServer( IProtocol & protocol, const std::string &host, int port) : SockStream(host, port, protocol), _max_connection(AServer::_default_max_connections)
 {
 	this->_init_server();
 }
@@ -64,7 +58,6 @@ bool						AServer::run( void )
 				std::cerr << "[FT_IRC]: " << e.what() << "\n"; 
 			}
 			poll_fds.at(0).revents = 0;
-			std::cout << "[FT_IRC] - Clients - " << this->_clients.size() << std::endl;;
 		}
 		std::vector<struct pollfd>::reverse_iterator it = poll_fds.rbegin();
 		for (; it != poll_fds.rend(); it++)

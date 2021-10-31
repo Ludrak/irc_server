@@ -59,8 +59,7 @@ class AServer : public SockStream
 				}
 		};
 		
-		AServer(IProtocol & protocol);
-		AServer(const std::string &host = "127.0.0.1", int port = 8080);
+		AServer(IProtocol & protocol, const std::string &host = "127.0.0.1", int port = 8080);
 		virtual ~AServer();
 
 
@@ -85,7 +84,6 @@ class AServer : public SockStream
 		bool						_init_server( void );
 		SockStream&					_acceptConnection( void );
 
-		std::map<int, SockStream *>	_clients;
 		std::map<int, SockStream *>	_clients;
 		uint						_max_connection;
 

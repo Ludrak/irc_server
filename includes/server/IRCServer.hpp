@@ -30,10 +30,8 @@ class IRCServer : public AServer
 
 		std::list<Channel>	 	_channels;
 		SockStream				_forward_socket;
-		bool					_init_server( void );
 		std::string				_password;
 		std::string				_network_password;
-		Client					*_acceptConnection(SockStream &socket_client);
 
 		void					_onClientJoin(SockStream &s);
 		void					_onClientRecv(SockStream &s, const Package pkg);

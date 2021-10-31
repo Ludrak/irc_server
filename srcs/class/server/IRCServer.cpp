@@ -6,7 +6,7 @@
 //REVIEW Server name maximum 63 character
 //REVIEW nickname name maximum 9 character
 
-IRCServer::IRCServer(int port, const std::string & password, const std::string &host) : AServer(host, port, this->_protocol), _protocol(IRCProtocol()), _password(password), _network_password("")
+IRCServer::IRCServer(int port, const std::string & password, const std::string &host) : AServer(this->_protocol, host, port), _protocol(IRCProtocol()), _forward_socket(this->_protocol), _password(password), _network_password("")
 {
 	std::cout << "IRCServer constructor" << "\n";
 	std::cout << "IRCServer host:" << host << "\n";

@@ -49,9 +49,9 @@ class SockStream
 	protected:
 		int								_socket;
 		struct sockaddr_in				_addr;
+		IProtocol						*_protocol;
 
 	private:
-		IProtocol						*_protocol;
 		Package				 			_recieved_data;
 		Package							_pending_data;
 
