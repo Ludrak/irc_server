@@ -13,8 +13,8 @@
 # include <unistd.h>
 # include "Package.hpp"
 
-# define RECV_BUFFER_SZ	255
-# define SEND_BUFFER_SZ	255
+# define RECV_BUFFER_SZ	1
+# define SEND_BUFFER_SZ	1
 
 class SockStream
 {

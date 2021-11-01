@@ -1,5 +1,7 @@
 #include "IRCServer.hpp"
 
+#include <exception>
+
 int		Usage( const char * executable )
 {
 	std::cout << "Usage:" << std::endl;
@@ -51,12 +53,19 @@ int main(int ac, char ** av)
 		std::cout << "Invalid port specified\n";
 		return Usage(av[0]);
 	}
-	IRCServer server(port, password);
-	if (!server.setNetworkConnection(host, port_network, password_network))
+	try 
 	{
-		std::cout << "Bad network params" << std::endl;
-		return Usage(av[0]);
+		IRCServer server(port, password, "127.0.0.1");
+		if (!server.setNetworkConnection(host, port_network, password_network))
+		{
+			std::cout << "Bad network params" << std::endl;
+			return Usage(av[0]);
+		}
+		server.run();
 	}
-	server.run();
+	catch (std::exception &e)
+	{
+		std::cout << e.what() << std::endl;
+	}
     return (0);
 }
