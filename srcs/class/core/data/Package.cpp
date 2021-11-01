@@ -1,7 +1,7 @@
 # include "Package.hpp"
 
-Package::Package( const IProtocol &protocol, const std::string &data )
-throw(Package::SizeExeededException, Package::InvalidProtocolException)
+Package::Package( const IProtocol &protocol, const std::string &data, const SockStream *recipient )
+throw(Package::SizeExeededException, Package::InvalidProtocolException) : _recipient(recipient)
 {
     this->_protocol = &protocol;
     if (!data.empty())
@@ -34,6 +34,25 @@ bool			Package::isInvalid( void ) const
     return (this->_is_invalid);
 }
 
+void			Package::flush( void )
+{
+    size_t pk_sz = this->_protocol->isProtocol(this->_data);
+    this->nflush(pk_sz);
+    this->_checksum();
+}
+
+void			Package::nflush( uint n )
+{
+    if (n != 0)
+        this->_data = this->_data.substr(n, this->_data.size() - n);
+}
+
+bool			Package::_checksum( void )
+{
+    this->_is_invalid = (this->_protocol->isProtocol(this->_data) == 0);
+    return (this->_is_invalid);
+}
+
 void			Package::addData( const std::string &new_data ) throw(Package::SizeExeededException)
 {
     if (this->_data.size() + new_data.size() > this->_protocol->getMaximumPackageSize())
@@ -50,16 +69,12 @@ std::string		Package::getData( void ) const
     return (this->_data.substr(0, pk_sz));
 }
 
-void			Package::flush( void )
+void			Package::setRecipient( const SockStream *recipient )
 {
-    size_t pk_sz = this->_protocol->isProtocol(this->_data);
-    if (pk_sz != 0)
-        this->_data = this->_data.substr(pk_sz, this->_data.size() - pk_sz);
-    this->_checksum();
+    this->_recipient = recipient;
 }
 
-bool			Package::_checksum( void )
+SockStream      *Package::getRecipient( void ) const
 {
-    this->_is_invalid = (this->_protocol->isProtocol(this->_data) == 0);
-    return (this->_is_invalid);
+    return (const_cast<SockStream*>(this->_recipient));
 }

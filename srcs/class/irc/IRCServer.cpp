@@ -45,16 +45,37 @@ void							IRCServer::_onClientJoin(SockStream &s)
 {
 	std::cout << "[IRC] Client " << s.getSocket() << " joined the server !" << std::endl;
 	s.setPackageProtocol(this->_protocol);
+
+	Package *pack = new Package(this->_protocol, std::string("<") + std::to_string(s.getSocket()) + "> joined the server !\r\n");
+	for (std::map<int, SockStream *>::iterator it = this->getClients().begin(); it != this->getClients().end(); it++)
+	{
+		if (it->second != &s)
+			s.sendPackage(pack, *it->second);
+	}
 }
 
-void							IRCServer::_onClientRecv(SockStream &s, const Package pkg)
+void							IRCServer::_onClientRecv(SockStream &s, Package pkg)
 {
 	std::cout << "[IRC]<" << s.getSocket() << "> " << pkg.getData();
+
+	Package *pack = new Package(this->_protocol, std::string("<") + std::to_string(s.getSocket()) + ">" + pkg.getData());
+	for (std::map<int, SockStream *>::iterator it = this->getClients().begin(); it != this->getClients().end(); it++)
+	{
+		if (it->second != &s)
+			s.sendPackage(pack, *it->second);
+	}
 }
 
 void							IRCServer::_onClientQuit(SockStream &s)
 {
 	std::cout << "[IRC] Client " << s.getSocket() << " disconnected." << std::endl;
+
+	Package *pack = new Package(this->_protocol, std::string("<") + std::to_string(s.getSocket()) + "> disconnected.\r\n");
+	for (std::map<int, SockStream *>::iterator it = this->getClients().begin(); it != this->getClients().end(); it++)
+	{
+		if (it->second != &s)
+			s.sendPackage(pack, *it->second);
+	}
 }
 
 

@@ -64,6 +64,8 @@ class AServer : public SockStream
 		bool						run( void );
 		void						load_config_file(std::string path_config_file);
 
+		std::map<int, SockStream*>	&getClients();
+
 		uint						getMaxConnection( void ) const;
 		void						setMaxConnection( uint nb);
 
@@ -71,7 +73,7 @@ class AServer : public SockStream
 		static uint					_default_max_connections;
 
 		virtual void				_onClientJoin(SockStream &s) = 0;
-		virtual void				_onClientRecv(SockStream &s, const Package pkg) = 0;
+		virtual void				_onClientRecv(SockStream &s, Package pkg) = 0;
 		virtual void				_onClientQuit(SockStream &s) = 0;
 
 	private:

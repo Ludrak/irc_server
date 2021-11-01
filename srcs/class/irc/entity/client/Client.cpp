@@ -8,12 +8,12 @@ Client::Client(IProtocol & protocol) : SockStream(protocol), AEntity(), _protoco
 {
 }
 
-Client::Client(SockStream &master) :  SockStream(master.getSocket(), master.getSockaddr(), *master.getProtocol()), AEntity(), _protocol(master.getProtocol())
+Client::Client(SockStream &master) :  SockStream(NULL, master.getSocket(), master.getSockaddr(), *master.getProtocol()), AEntity(), _protocol(master.getProtocol())
 {
 	
 }
 
-Client::Client(int socket, const sockaddr_in &addr, IProtocol & protocol) : SockStream(socket, addr, protocol), _protocol(&protocol)
+Client::Client(const AServer *server, int socket, const sockaddr_in &addr, IProtocol & protocol) : SockStream(server, socket, addr, protocol), _protocol(&protocol)
 {
 
 }
