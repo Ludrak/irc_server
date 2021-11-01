@@ -70,15 +70,17 @@ bool						AServer::run( void )
 			{
 				Package	&current_pkg = **this->_clients[it->fd]->getPendingData().begin();
 				int recipient_sock = current_pkg.getRecipient()->getSocket();
-				char data[SEND_BUFFER_SZ] = { 0 };
-				std::memcpy(reinterpret_cast<void *>(data), current_pkg.getData().c_str(), current_pkg.getData().size());
 
-				size_t byte_size = send(recipient_sock, data, current_pkg.getData().size(), 0);
+				char data_buffer[SEND_BUFFER_SZ] = { 0 };
+				size_t	data_sz = current_pkg.getData().size() > SEND_BUFFER_SZ ? SEND_BUFFER_SZ : current_pkg.getData().size();
+				std::memcpy(data_buffer, current_pkg.getData().c_str(), data_sz);
+
+				size_t byte_size = send(recipient_sock, data_buffer, data_sz, 0);
 				current_pkg.nflush(byte_size);
 
-				// package sent, no need to poll out again
 				if (current_pkg.isInvalid() || current_pkg.getData().empty())
 				{
+					delete &current_pkg;
 					this->_clients[it->fd]->getPendingData().remove(&current_pkg);
 					if (this->_clients[it->fd]->getPendingData().size() == 0)
 						this->_clients[it->fd]->delPollEvent(POLLOUT);
