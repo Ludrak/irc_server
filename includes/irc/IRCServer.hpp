@@ -11,7 +11,7 @@ class Client;
 # include "IRCProtocol.hpp"
 
 # define IRC_DEFAULT_HOST "127.0.0.1"
-# define IRC_DEFAULT_PORT 8080
+# define IRC_DEFAULT_PORT 6667
 # define IRC_DEFAULT_PASS ""
 
 class IRCServer : public AServer
