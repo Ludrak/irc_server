@@ -40,6 +40,7 @@ class SockStream
 
 		SockStream &				operator=( SockStream const & rhs );
 
+		void						close( void );
 		void						setPackageProtocol(IProtocol &proto);
 
 		int							getSocket( void ) const;

@@ -74,6 +74,7 @@ class AServer : public SockStream
 
 	protected:
 		static uint					_default_max_connections;
+		std::map<int, SockStream *>	_clients;
 
 		virtual void				_onClientJoin(SockStream &s) = 0;
 		virtual void				_onClientRecv(SockStream &s, Package &pkg) = 0;
@@ -87,7 +88,6 @@ class AServer : public SockStream
 		bool						_init_server( void );
 		SockStream&					_acceptConnection( void );
 
-		std::map<int, SockStream *>	_clients;
 		uint						_max_connection;
 };
 

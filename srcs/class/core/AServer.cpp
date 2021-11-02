@@ -23,10 +23,12 @@ AServer::AServer( IProtocol & protocol, const std::string &host, int port) : Soc
 
 AServer::~AServer()
 {
+	//TODO here close all non-closed sockets
 	for (std::map<int, SockStream*>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
 	{
 		delete (*it).second;
 	}
+	this->close();
 }
 
 /*

@@ -24,6 +24,7 @@ Client::Client(int socket, const sockaddr_in &addr, IProtocol & protocol) : Sock
 
 Client::~Client()
 {
+	this->close();
 }
 
 

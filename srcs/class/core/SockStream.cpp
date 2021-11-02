@@ -26,7 +26,6 @@ SockStream::SockStream(int socket, const sockaddr_in &address, IProtocol & proto
 
 SockStream::~SockStream()
 {
-	close(this->_socket);
 }
 
 /*
@@ -42,6 +41,11 @@ void							SockStream::_createSocket(const std::string &host, uint16_t port, sa_
 	this->_addr.sin_port = htons(port);
 	this->_addr.sin_family = family;
 	this->_addr.sin_addr.s_addr = inet_addr(host.c_str());
+}
+
+void							SockStream::close( void )
+{
+	::close(this->_socket);
 }
 
 /*
