@@ -66,6 +66,10 @@ bool						AServer::run( void )
 		std::vector<struct pollfd>::reverse_iterator it = poll_fds.rbegin();
 		for (; it != poll_fds.rend(); it++)
 		{	
+			// TODO find package in AServer::_pending_data which correspond    
+			// TODO to pollfd, maybe use std::map<pollfd, Package> but it would
+			// TODO make Package::_recipient useless and we'll not be able to  
+			// TODO see package recipient until POLLOUT is set on that fd      
 			if (it->revents & POLLOUT && !this->_clients[it->fd]->getPendingData().empty())
 			{
 				Package	&current_pkg = **this->_clients[it->fd]->getPendingData().begin();
@@ -133,6 +137,25 @@ SockStream					&AServer::_acceptConnection()
 	this->_onClientJoin(*newSock);
 	return *newSock;
 }
+
+void						AServer::sendPackage( Package *pkg, SockStream &recipient)
+{
+	recipient.setPollEvent(POLLOUT);
+	pkg->setRecipient(&recipient);
+	recipient.getPendingData().push_back(pkg);
+}
+
+void						AServer::sendAll( const Package &package, const SockStream *except )
+{
+	for (std::map<int, SockStream *>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
+	{
+		if (!except || it->second != except)
+			this->sendPackage(new Package(package), *it->second);
+	}
+}
+
+
+
 
 bool						AServer::_init_server( void )
 {

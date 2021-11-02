@@ -41,7 +41,6 @@ class SockStream
 		SockStream &				operator=( SockStream const & rhs );
 
 		void						setPackageProtocol(IProtocol &proto);
-		void						sendPackage( Package *package, const SockStream &recipient);
 
 		int							getSocket( void ) const;
 		const struct sockaddr_in&	getSockaddr( void ) const;

@@ -47,23 +47,15 @@ void							IRCServer::_onClientJoin(SockStream &s)
 	s.setPackageProtocol(this->_protocol);
 
 	Package pack = Package(this->_protocol, std::string("<") + std::to_string(s.getSocket()) + "> joined the server !\r\n");
-	for (std::map<int, SockStream *>::iterator it = this->getClients().begin(); it != this->getClients().end(); it++)
-	{
-		if (it->second != &s)
-			s.sendPackage(new Package(pack), *it->second);
-	}
+	this->sendAll(pack, &s);
 }
 
-void							IRCServer::_onClientRecv(SockStream &s, Package pkg)
+void							IRCServer::_onClientRecv(SockStream &s, Package &pkg)
 {
 	std::cout << "[IRC]<" << s.getSocket() << "> " << pkg.getData();
 
 	Package pack = Package(this->_protocol, std::string("<") + std::to_string(s.getSocket()) + "> " + pkg.getData());
-	for (std::map<int, SockStream *>::iterator it = this->getClients().begin(); it != this->getClients().end(); it++)
-	{
-		if (it->second != &s)
-			s.sendPackage(new Package(pack), *it->second);
-	}
+	this->sendAll(pack, &s);
 }
 
 void							IRCServer::_onClientQuit(SockStream &s)
@@ -71,13 +63,7 @@ void							IRCServer::_onClientQuit(SockStream &s)
 	std::cout << "[IRC] Client " << s.getSocket() << " disconnected." << std::endl;
 
 	Package pack = Package(this->_protocol, std::string("<") + std::to_string(s.getSocket()) + "> disconnected.\r\n");
-	for (std::map<int, SockStream *>::iterator it = this->getClients().begin(); it != this->getClients().end(); it++)
-	{
-		if (it->second != &s) {
-			// send from it->second because s will be destroyed after _onClientQuit
-			it->second->sendPackage(new Package(pack), *it->second);
-		}
-	}
+	this->sendAll(pack, &s);
 }
 
 

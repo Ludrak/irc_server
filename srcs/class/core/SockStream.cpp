@@ -44,15 +44,6 @@ void							SockStream::_createSocket(const std::string &host, uint16_t port, sa_
 	this->_addr.sin_addr.s_addr = inet_addr(host.c_str());
 }
 
-void							SockStream::sendPackage( Package *pkg, const SockStream &recipient)
-{
-	this->setPollEvent(POLLOUT);
-	pkg->setRecipient(&recipient);
-	this->_pending_data.push_back(pkg);
-	//this->_pending_data.addData(pkg.getData());
-	//this->_pending_data.setRecipient(&recipient);
-}
-
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
 */
