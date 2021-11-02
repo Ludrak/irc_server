@@ -74,7 +74,8 @@ void							IRCServer::_onClientQuit(SockStream &s)
 	for (std::map<int, SockStream *>::iterator it = this->getClients().begin(); it != this->getClients().end(); it++)
 	{
 		if (it->second != &s) {
-			s.sendPackage(new Package(pack), *it->second);
+			// send from it->second because s will be destroyed after _onClientQuit
+			it->second->sendPackage(new Package(pack), *it->second);
 		}
 	}
 }
