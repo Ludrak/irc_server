@@ -45,16 +45,25 @@ void							IRCServer::_onClientJoin(SockStream &s)
 {
 	std::cout << "[IRC] Client " << s.getSocket() << " joined the server !" << std::endl;
 	s.setPackageProtocol(this->_protocol);
+
+	Package pack = Package(this->_protocol, std::string("<") + std::to_string(s.getSocket()) + "> joined the server !\r\n");
+	this->sendAll(pack, &s);
 }
 
-void							IRCServer::_onClientRecv(SockStream &s, const Package pkg)
+void							IRCServer::_onClientRecv(SockStream &s, Package &pkg)
 {
 	std::cout << "[IRC]<" << s.getSocket() << "> " << pkg.getData();
+
+	Package pack = Package(this->_protocol, std::string("<") + std::to_string(s.getSocket()) + "> " + pkg.getData());
+	this->sendAll(pack, &s);
 }
 
 void							IRCServer::_onClientQuit(SockStream &s)
 {
 	std::cout << "[IRC] Client " << s.getSocket() << " disconnected." << std::endl;
+
+	Package pack = Package(this->_protocol, std::string("<") + std::to_string(s.getSocket()) + "> disconnected.\r\n");
+	this->sendAll(pack, &s);
 }
 
 

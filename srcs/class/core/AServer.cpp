@@ -42,6 +42,11 @@ bool						AServer::run( void )
 		throw AServer::ListenException();
 	while (1)
 	{
+		for (std::vector<struct pollfd>::iterator it = poll_fds.begin() + 1; it != poll_fds.end(); it++)
+		{
+			it->events = this->_clients[it->fd]->getPollEvents();
+		}
+
 		if (poll(poll_fds.data(), poll_fds.size(), -1) == -1)
 			throw AServer::PollException();
 		if (poll_fds.at(0).revents & POLLIN)
@@ -61,6 +66,30 @@ bool						AServer::run( void )
 		std::vector<struct pollfd>::reverse_iterator it = poll_fds.rbegin();
 		for (; it != poll_fds.rend(); it++)
 		{	
+			// TODO find package in AServer::_pending_data which correspond    
+			// TODO to pollfd, maybe use std::map<pollfd, Package> but it would
+			// TODO make Package::_recipient useless and we'll not be able to  
+			// TODO see package recipient until POLLOUT is set on that fd      
+			if (it->revents & POLLOUT && !this->_clients[it->fd]->getPendingData().empty())
+			{
+				Package	&current_pkg = **this->_clients[it->fd]->getPendingData().begin();
+				int recipient_sock = current_pkg.getRecipient()->getSocket();
+
+				char data_buffer[SEND_BUFFER_SZ] = { 0 };
+				size_t	data_sz = current_pkg.getData().size() > SEND_BUFFER_SZ ? SEND_BUFFER_SZ : current_pkg.getData().size();
+				std::memcpy(data_buffer, current_pkg.getData().c_str(), data_sz);
+
+				size_t byte_size = send(recipient_sock, data_buffer, data_sz, 0);
+				current_pkg.nflush(byte_size);
+
+				if (current_pkg.isInvalid() || current_pkg.getData().empty())
+				{
+					delete &current_pkg;
+					this->_clients[it->fd]->getPendingData().remove(&current_pkg);
+					if (this->_clients[it->fd]->getPendingData().size() == 0)
+						this->_clients[it->fd]->delPollEvent(POLLOUT);
+				}
+			}
 			if (it->revents & POLLIN)
 			{
 				std::vector<char> buf(RECV_BUFFER_SZ);
@@ -92,7 +121,7 @@ bool						AServer::run( void )
 	return true;
 }
 
-SockStream						&AServer::_acceptConnection()
+SockStream					&AServer::_acceptConnection()
 {	
 	sockaddr_in         cli_addr;
 	int					socket_client;
@@ -109,7 +138,26 @@ SockStream						&AServer::_acceptConnection()
 	return *newSock;
 }
 
-bool					AServer::_init_server( void )
+void						AServer::sendPackage( Package *pkg, SockStream &recipient)
+{
+	recipient.setPollEvent(POLLOUT);
+	pkg->setRecipient(&recipient);
+	recipient.getPendingData().push_back(pkg);
+}
+
+void						AServer::sendAll( const Package &package, const SockStream *except )
+{
+	for (std::map<int, SockStream *>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
+	{
+		if (!except || it->second != except)
+			this->sendPackage(new Package(package), *it->second);
+	}
+}
+
+
+
+
+bool						AServer::_init_server( void )
 {
 	if (bind(this->_socket, reinterpret_cast<sockaddr *>(&this->_addr), sizeof(this->_addr)) != 0)
 		throw AServer::AddressBindException();
@@ -121,12 +169,17 @@ bool					AServer::_init_server( void )
 ** --------------------------------- ACCESSOR ---------------------------------
 */
 
-uint					AServer::getMaxConnection( void ) const
+std::map<int, SockStream*>	&AServer::getClients()
+{
+	return (this->_clients);
+}
+
+uint						AServer::getMaxConnection( void ) const
 {
 	return this->_max_connection;
 }
 
-void					AServer::setMaxConnection( uint nb)
+void						AServer::setMaxConnection( uint nb)
 {
 	this->_max_connection = nb;
 }
