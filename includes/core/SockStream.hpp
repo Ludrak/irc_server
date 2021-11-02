@@ -35,7 +35,7 @@ class SockStream
 
 		SockStream(IProtocol & protocol);
 		SockStream(const std::string &host, uint16_t port, IProtocol & protocol);
-		SockStream(const AServer *server, int socket, const sockaddr_in &address, IProtocol & protocol);
+		SockStream(int socket, const sockaddr_in &address, IProtocol & protocol);
 		~SockStream();
 
 		SockStream &				operator=( SockStream const & rhs );
@@ -52,14 +52,11 @@ class SockStream
 		void						setPollEvent(int event);
 		void						delPollEvent(int event);
 
-		AServer						*getServer() const;
-
 	protected:
 		int							_socket;
 		int							_poll_events;
 		struct sockaddr_in			_addr;
 		IProtocol					*_protocol;
-		const AServer				*_server;
 
 	private:
 		Package				 		_recieved_data;

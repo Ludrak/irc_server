@@ -131,7 +131,7 @@ SockStream					&AServer::_acceptConnection()
 	if (socket_client < 0)
 		throw AServer::IncomingConnectionException();
 
-	SockStream *newSock = new SockStream(this, socket_client, cli_addr, *this->_protocol);
+	SockStream *newSock = new SockStream(socket_client, cli_addr, *this->_protocol);
 	std::pair<int, SockStream *> p = std::make_pair(socket_client, newSock);
 	this->_clients.insert(p);
 	this->_onClientJoin(*newSock);
