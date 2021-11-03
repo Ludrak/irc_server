@@ -20,3 +20,13 @@ size_t      IRCProtocol::getMaximumPackageSize( void ) const
 {
     return (255);
 }
+
+std::string IRCProtocol::format( const std::string &data ) const
+{
+    return (data + "\r\n");
+}
+
+std::string IRCProtocol::getData( const std::string &data ) const
+{
+    return (data.substr(0, data.size() - 2));
+}
