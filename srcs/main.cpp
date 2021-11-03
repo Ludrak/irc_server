@@ -10,6 +10,8 @@ int		Usage( const char * executable )
 }
 
 //TODO add functions allowed by subject
+//TODO add logger class (maybe with a singleton?)
+
 int main(int ac, char ** av)
 {
 	int			port = 0;

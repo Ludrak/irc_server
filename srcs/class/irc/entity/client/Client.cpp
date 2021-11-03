@@ -66,6 +66,7 @@ int					Client::execute(std::string data)
 		args = data.substr(sep);
 	}
 	try {
+		//TODO at est une fonction c++11
 		(this->_op.at(command))(*this, args);
 	}
 	catch (const std::out_of_range & e)
