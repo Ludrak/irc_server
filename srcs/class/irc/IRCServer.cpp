@@ -58,6 +58,7 @@ void						IRCServer::_onClientJoin(SockStream &s)
 	std::cout << "[IRC] Client " << s.getSocket() << " joined the server !" << std::endl;
 	Package pack = Package(this->_protocol, std::string("<") + std::to_string(s.getSocket()) + "> joined the server !\r\n");
 	this->sendAll(pack, &s);
+	//TODO delete package? 
 }
 
 void							IRCServer::_onClientRecv(SockStream &s, Package &pkg)
@@ -67,15 +68,17 @@ void							IRCServer::_onClientRecv(SockStream &s, Package &pkg)
 	Package pack = Package(this->_protocol, std::string("<") + std::to_string(c.getStream().getSocket()) + "> " + pkg.getRawData());
 	this->execute(c, pkg.getData());
 	this->sendAll(pack, &s);
+	//TODO delete package? 
 }
 
 void							IRCServer::_onClientQuit(SockStream &s)
 {
 	std::cout << "[IRC] Client " << s.getSocket() << " disconnected." << std::endl;
 
-	Package pack = Package(this->_protocol, std::string("<") + std::to_string(s.getSocket()) + "> disconnected.\r\n");
+	Package pack = Package(this->_protocol, std::string("<") + std::to_string(s.getSocket()) + "> disconnected.\r\n"); // TODO why trailing \r\n?
 	//TODO remove client from lists
 	this->sendAll(pack, &s);
+	//TODO delete package? 
 }
 
 void		IRCServer::setRegistered(AClient & client)
@@ -137,8 +140,12 @@ int					IRCServer::execute(AClient & client, std::string data)
 	{
 		case Client::value_type:
 			if (this->_userCommands.count(command) == 1)
-				(this->*(this->_userCommands[command]))(dynamic_cast<Client&>(client), args);
+			{
+				//REVIEW to_string is c++11
+				uint ret = (this->*(this->_userCommands[command]))(dynamic_cast<Client&>(client), args);
+				this->sendPackage(new Package(this->_protocol, std::to_string(ret) + "\r\n"), client.getStream());
 				// std::cout << "Return: " << (this->*(this->_userCommands[command]))(dynamic_cast<Client&>(client), args) << std::endl;
+			}
 			else
 				std::cerr << "unknow command" << std::endl;
 			break;
