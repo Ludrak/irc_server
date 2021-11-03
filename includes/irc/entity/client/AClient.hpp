@@ -12,8 +12,12 @@ class AClient : public AEntity
 		AClient(IProtocol * protocol, SockStream & socket);
 		virtual ~AClient();
 
+		bool				isRegistered( void );
 		SockStream&			getStream();
 		std::string			getPassword( void );
+		std::string			getNickname( void );
+		void				setRegistered( bool registered );
+		void				setNickname(std::string nick);
 		void				setPassword(std::string password);
 
 	private:
@@ -21,6 +25,8 @@ class AClient : public AEntity
 		IProtocol*							_protocol;
 		SockStream *						_socket;
 		std::string							_givenPassword;
+		std::string							_nickname;
+		bool								_registered;
 
 };
 

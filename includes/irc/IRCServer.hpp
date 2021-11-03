@@ -10,10 +10,20 @@ class Client;
 # include "Client.hpp"
 # include "AClient.hpp"
 # include "IRCProtocol.hpp"
+# include "Parser.hpp"
 
 # define IRC_DEFAULT_HOST "127.0.0.1"
 # define IRC_DEFAULT_PORT 6667
 # define IRC_DEFAULT_PASS ""
+
+# define SUCCESS				0
+# define ERR_KICK				1
+# define ERR_NONICKNAMEGIVEN	431
+# define ERR_ERRONEUSNICKNAME	432
+# define ERR_NICKNAMEINUSE		433
+# define ERR_NICKCOLLISION		436
+# define ERR_NEEDMOREPARAMS		461
+# define ERR_ALREADYREGISTRED	462
 
 class IRCServer : public AServer
 {
@@ -27,8 +37,8 @@ class IRCServer : public AServer
 		AClient&				getClientBySockStream(SockStream & s);
 		bool					setNetworkConnection(const std::string & host, int port, std::string & password);
 
-		typedef bool	(IRCServer::*UserOperations)(Client & client, std::string str);
-		typedef bool	(IRCServer::*ServerOperations)(AClient & client, std::string str);
+		typedef uint	(IRCServer::*UserOperations)(Client & client, std::string str);
+		typedef uint	(IRCServer::*ServerOperations)(AClient & client, std::string str);
 	private:
 
 		IRCServer( IRCServer const & src );
@@ -40,22 +50,26 @@ class IRCServer : public AServer
 		std::map<std::string, UserOperations>	_userCommands;
 		std::map<std::string, ServerOperations>	_serverCommands;
 		// std::map<std::string, Operations>	_opCommands;
-
-		SockStream				_forward_socket;
+		//network
+		SockStream				_forwardSocket;
 		std::string				_password;
 		std::string				_networkSocket;
 
+		//events
 		void					_onClientJoin(SockStream &s);
 		void					_onClientRecv(SockStream &s, Package &pkg);
 		void					_onClientQuit(SockStream &s);
+		
+		void					setRegistered(AClient & client);
 /*
 ** --------------------------------- COMMANDS ---------------------------------
 */
 		void		_init_commands(void);
 		int			execute(AClient & client, std::string data);
-		bool		userCommandUser(Client & client, std::string cmd);
-		bool		userCommandPass(Client & client, std::string cmd);
-		bool		userCommandNick(Client & client, std::string cmd);
+		uint		userCommandPass(Client & client, std::string cmd);
+		uint		userCommandNick(Client & client, std::string cmd);
+		uint		userCommandUser(Client & client, std::string cmd);
+		uint		serverCommandNick(Client & client, std::string cmd);
 };
 
 #endif /* ******************************************************* IRCSERVER_H */

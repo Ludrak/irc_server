@@ -4,7 +4,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-AClient::AClient(IProtocol * protocol, SockStream & socket) : AEntity(), _protocol(protocol), _socket(&socket), _givenPassword("")
+AClient::AClient(IProtocol * protocol, SockStream & socket) : AEntity(), _protocol(protocol), _socket(&socket), _givenPassword(""), _nickname(""), _registered(false)
 {
 	this->_protocol = protocol;
 	this->_socket = &socket;
@@ -46,6 +46,12 @@ AClient &				AClient::operator=( AClient const & rhs )
 ** --------------------------------- ACCESSOR ---------------------------------
 */
 
+
+bool				AClient::isRegistered( void )
+{
+	return this->_registered;
+}
+
 SockStream&				AClient::getStream( void )
 {
 	return *this->_socket;
@@ -56,9 +62,23 @@ std::string				AClient::getPassword( void )
 	return this->_givenPassword;
 }
 
+std::string				AClient::getNickname(void)
+{
+	return this->_nickname;
+}
+
+void				AClient::setRegistered( bool registered)
+{
+	this->_registered = registered;
+}
+
 void					AClient::setPassword( std::string password) 
 {
 	this->_givenPassword = password;
 }
 
+void					AClient::setNickname(std::string nick)
+{
+	this->_nickname = nick;
+}
 /* ************************************************************************** */

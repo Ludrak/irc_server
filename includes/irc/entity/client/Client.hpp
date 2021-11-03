@@ -18,13 +18,23 @@ class Client : public AClient
 		Client &			operator=( Client const & rhs );
 
 		uint				getId( void ) const;
-		
+		void				setUsername(std::string user);
+		void				setDomaineName(std::string domaine);
+		void				setServername(std::string servername);
+		void				setRealname(std::string realName);
+		std::string			getUsername( void );
+		std::string			getDomaineName( void );
+		std::string			getServername( void );
+		std::string			getRealname( void );
+
 		enum C { value_type = 1 };
 	
 	private:
 
 		Client( Client const & src );
-		std::string							_nickname;
+		std::string							_username;
+		std::string							_domaine;
+		std::string							_servername;
 		std::string							_realname;
 		AServer*							_master;
 };

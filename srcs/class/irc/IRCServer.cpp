@@ -4,7 +4,6 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 //REVIEW Server name maximum 63 character
-//REVIEW nickname name maximum 9 character
 
 IRCServer::IRCServer(int port, const std::string & password, const std::string &host) : AServer(this->_protocol, host, port), _protocol(IRCProtocol()), _forwardSocket(this->_protocol), _password(password), _networkSocket("")
 {
@@ -79,6 +78,12 @@ void							IRCServer::_onClientQuit(SockStream &s)
 	this->sendAll(pack, &s);
 }
 
+void		IRCServer::setRegistered(AClient & client)
+{
+	client.setRegistered(true);
+	this->_ircClients.insert(make_pair(client.getNickname(), &client));
+	this->_pendingConnections.erase(std::find(this->_pendingConnections.begin(), this->_pendingConnections.end(), &client));
+}
 
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
@@ -123,16 +128,17 @@ int					IRCServer::execute(AClient & client, std::string data)
 	size_t sep = data.find(" ");
 	std::string command(data);
 	std::string args("");
-	if (sep < data.size())
+	if (sep < data.size() - 1)
 	{
 		command = data.substr(0, sep);
-		args = data.substr(sep);
+		args = data.substr(sep + 1);
 	}
 	switch (client.getId())
 	{
 		case Client::value_type:
 			if (this->_userCommands.count(command) == 1)
 				(this->*(this->_userCommands[command]))(dynamic_cast<Client&>(client), args);
+				// std::cout << "Return: " << (this->*(this->_userCommands[command]))(dynamic_cast<Client&>(client), args) << std::endl;
 			else
 				std::cerr << "unknow command" << std::endl;
 			break;
@@ -150,25 +156,60 @@ int					IRCServer::execute(AClient & client, std::string data)
 	return 1;
 }
 
-bool		IRCServer::userCommandUser(Client & client, std::string cmd)
-{
-	std::cout << "<" << client.getStream().getSocket() << "> Command <USER> with args: " << cmd << std::endl;
-	return true;
-}
-
-bool		IRCServer::userCommandPass(Client & client, std::string cmd)
+uint		IRCServer::userCommandPass(Client & client, std::string cmd)
 {
 	std::cout << "<" << client.getStream().getSocket() << "> Command <PASS> with args: " << cmd << std::endl;
+	if (client.isRegistered())
+		return ERR_ALREADYREGISTRED;
+	else if (cmd.empty())
+		return ERR_NEEDMOREPARAMS;
 	client.setPassword(cmd);
-	return true;
+	return SUCCESS;
 }
 
-bool		IRCServer::userCommandNick(Client & client, std::string cmd)
+uint		IRCServer::userCommandNick(Client & client, std::string cmd)
+{
+	std::cout << "<" << client.getStream().getSocket() << "> Command <NICK> with args: " << cmd << std::endl;
+	std::string nick = Parser::getParam(cmd, 0);
+	if (client.getPassword() != this->_password)
+		return ERR_KICK; // kickUser
+	else if (Parser::nbParam(cmd) != 1) //REVIEW normalement si 2 param venant d'un user, commande ignoré
+		return ERR_NONICKNAMEGIVEN;
+	else if (Parser::validNickname(nick) == false)
+		return ERR_ERRONEUSNICKNAME;
+	if (this->_ircClients.count(nick) != 0)
+		return ERR_NICKNAMEINUSE;
+	if (client.isRegistered()
+	&& this->_ircClients.count(client.getNickname()) != 0)
+	{
+		this->_ircClients.erase(client.getNickname());
+		this->_ircClients.insert(std::make_pair(nick, &client));
+	}
+	client.setNickname(nick);
+	return SUCCESS;
+}
+
+uint		IRCServer::userCommandUser(Client & client, std::string cmd)
+{
+	std::cout << "<" << client.getStream().getSocket() << "> Command <USER> with args: " << cmd << std::endl;
+	if (client.isRegistered())
+		return ERR_ALREADYREGISTRED;
+	else if (Parser::nbParam(cmd) < 4)
+		return ERR_NEEDMOREPARAMS;
+	client.setUsername(Parser::getParam(cmd, 0));
+	client.setDomaineName(Parser::getParam(cmd, 1));
+	client.setServername(Parser::getParam(cmd, 2));
+	client.setRealname(Parser::getParam(cmd, 3));
+	this->setRegistered(client);
+	return SUCCESS;
+}
+
+uint		IRCServer::serverCommandNick(Client & client, std::string cmd)
 {
 	std::cout << "<" << client.getStream().getSocket() << "> Command <NICK> with args: " << cmd << std::endl;
 	if (client.getPassword().empty())
 		return false;
-	return true;
+	return SUCCESS;
 }
 
 /* ************************************************************************** */
