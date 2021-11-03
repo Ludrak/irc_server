@@ -38,6 +38,7 @@ class Package
 
 		bool			isInvalid( void ) const;
 		std::string		getData( void ) const;
+		std::string		getRawData( void ) const;
 		SockStream      *getRecipient( void ) const;
 		void			setRecipient( const SockStream *recipient );
 
