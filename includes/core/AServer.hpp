@@ -62,7 +62,7 @@ class AServer : public SockStream
 		virtual ~AServer();
 
 		bool						run( void );
-		void						load_config_file(std::string path_config_file);
+		void						loadConfigFile(std::string pathConfigFile);
 
 		void						sendPackage( Package *package, SockStream &recipient);
 		void						sendAll( const Package &package, const SockStream *except = NULL);
@@ -73,7 +73,7 @@ class AServer : public SockStream
 		void						setMaxConnection( uint nb);
 
 	protected:
-		static uint					_default_max_connections;
+		static uint					_defaultMaxConnections;
 		std::map<int, SockStream *>	_clients;
 
 		virtual SockStream&			_onClientJoin(SockStream &s) = 0;
@@ -83,12 +83,12 @@ class AServer : public SockStream
 	private:
 		AServer( AServer const & src );
 
-		AServer &					operator=( AServer const & rhs );
+		AServer&					operator=( AServer const & rhs );
 
-		bool						_init_server( void );
+		bool						_initServer( void );
 		SockStream&					_acceptConnection( void );
 
-		uint						_max_connection;
+		uint						_maxConnections;
 };
 
 #endif /* ********************************************************* ASERVER_H */

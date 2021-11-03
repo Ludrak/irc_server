@@ -4,16 +4,16 @@
 ** -------------------------------- STATICS --------------------------------
 */
 
-uint		AServer::_default_max_connections = 50;
+uint		AServer::_defaultMaxConnections = 50;
 
 
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-AServer::AServer( IProtocol & protocol, const std::string &host, int port) : SockStream(host, port, protocol), _max_connection(AServer::_default_max_connections)
+AServer::AServer( IProtocol & protocol, const std::string &host, int port) : SockStream(host, port, protocol), _maxConnections(AServer::_defaultMaxConnections)
 {
-	this->_init_server();
+	this->_initServer();
 }
 
 
@@ -40,7 +40,7 @@ bool						AServer::run( void )
 	struct pollfd 				new_pfd = {.fd = this->_socket, .events = POLLIN, .revents = 0};
 	poll_fds.push_back(new_pfd);
 
-	if (listen(this->_socket, this->_max_connection) != 0)
+	if (listen(this->_socket, this->_maxConnections) != 0)
 		throw AServer::ListenException();
 	while (1)
 	{
@@ -158,7 +158,7 @@ void						AServer::sendAll( const Package &package, const SockStream *except )
 
 
 
-bool						AServer::_init_server( void )
+bool						AServer::_initServer( void )
 {
 	if (bind(this->_socket, reinterpret_cast<sockaddr *>(&this->_addr), sizeof(this->_addr)) != 0)
 		throw AServer::AddressBindException();
@@ -177,12 +177,12 @@ std::map<int, SockStream*>	&AServer::getClients()
 
 uint						AServer::getMaxConnection( void ) const
 {
-	return this->_max_connection;
+	return this->_maxConnections;
 }
 
 void						AServer::setMaxConnection( uint nb)
 {
-	this->_max_connection = nb;
+	this->_maxConnections = nb;
 }
 
 /* ************************************************************************** */

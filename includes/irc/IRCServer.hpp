@@ -33,9 +33,9 @@ class IRCServer : public AServer
 		IRCServer&				operator=( IRCServer const & rhs );
 
 		std::list<Channel>	 	_channels;
-		SockStream				_forward_socket;
+		SockStream				_forwardSocket;
 		std::string				_password;
-		std::string				_network_password;
+		std::string				_networkSocket;
 
 		SockStream&				_onClientJoin(SockStream &s);
 		void					_onClientRecv(SockStream &s, Package &pkg);
