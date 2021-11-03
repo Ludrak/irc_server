@@ -19,19 +19,24 @@ class Client : public SockStream, public AEntity
 		~Client();
 
 		Client &		operator=( Client const & rhs );
-		typedef bool	(Client::*Operations)(Client & client, std::string str);
+		typedef bool	(*Operations)(Client & client, std::string str);
 
-		IRCServer			&getServer( void ) const;
+		int					execute(std::string command);
+		// IRCServer			&getServer( void ) const;
 
 	private:
 
 		Client( Client const & src );
-
-		IProtocol				*_protocol;
-		std::string				_nickname;
-		std::string				_realname;
+		
+		void			_init_commands(void);
+		static bool		USER(Client & client, std::string cmd);
+		static bool		PASS(Client & client, std::string cmd);
+		static bool		NICK(Client & client, std::string cmd);
+		IProtocol*							_protocol;
+		std::string							_nickname;
+		std::string							_realname;
 		std::map<std::string, Operations>	_op;
-		AServer 							*_master;
+		AServer*							_master;
 };
 
 std::ostream &			operator<<( std::ostream & o, Client const & i );

@@ -37,7 +37,7 @@ class IRCServer : public AServer
 		std::string				_password;
 		std::string				_network_password;
 
-		void					_onClientJoin(SockStream &s);
+		SockStream&				_onClientJoin(SockStream &s);
 		void					_onClientRecv(SockStream &s, Package &pkg);
 		void					_onClientQuit(SockStream &s);
 };

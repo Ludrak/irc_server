@@ -136,8 +136,7 @@ SockStream					&AServer::_acceptConnection()
 	SockStream *newSock = new SockStream(socket_client, cli_addr, *this->_protocol);
 	std::pair<int, SockStream *> p = std::make_pair(socket_client, newSock);
 	this->_clients.insert(p);
-	this->_onClientJoin(*newSock);
-	return *newSock;
+	return this->_onClientJoin(*newSock);
 }
 
 void						AServer::sendPackage( Package *pkg, SockStream &recipient)
