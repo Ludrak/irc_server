@@ -17,8 +17,8 @@ class AEntity
 
 		AEntity &		operator=( AEntity const & rhs );
 
-		uint			getUID( void ) const;
-	
+		uint					getUID( void ) const;
+		virtual uint			getId( void ) const = 0;
 	private:
 		uint		_uid;
 

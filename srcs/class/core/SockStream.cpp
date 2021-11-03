@@ -26,6 +26,7 @@ SockStream::SockStream(int socket, const sockaddr_in &address, IProtocol & proto
 
 SockStream::~SockStream()
 {
+	this->close();
 }
 
 /*

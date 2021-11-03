@@ -3,39 +3,29 @@
 
 class IRCServer;
 
-# include "SockStream.hpp"
 # include "AEntity.hpp"
 # include "IRCServer.hpp"
+# include "AClient.hpp"
 
-class Client : public SockStream, public AEntity 
+class Client : public AClient
 {
 
 	public:
 
-		Client(IProtocol & protocol);
-		Client(IRCServer &master);
-		Client(SockStream &master);
-		Client(int socket, const sockaddr_in &addr, IProtocol & protocol);
-		~Client();
+		Client(IRCServer &master, SockStream & socket);
+		virtual ~Client();
 
-		Client &		operator=( Client const & rhs );
-		typedef bool	(*Operations)(Client & client, std::string str);
+		Client &			operator=( Client const & rhs );
 
-		int					execute(std::string command);
-		// IRCServer			&getServer( void ) const;
-
+		uint				getId( void ) const;
+		
+		enum C { value_type = 1 };
+	
 	private:
 
 		Client( Client const & src );
-		
-		void			_init_commands(void);
-		static bool		USER(Client & client, std::string cmd);
-		static bool		PASS(Client & client, std::string cmd);
-		static bool		NICK(Client & client, std::string cmd);
-		IProtocol*							_protocol;
 		std::string							_nickname;
 		std::string							_realname;
-		std::map<std::string, Operations>	_op;
 		AServer*							_master;
 };
 

@@ -1,43 +1,41 @@
-#include "Client.hpp"
+#include "AClient.hpp"
 
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Client::Client(IRCServer & master, SockStream & socket) : AClient(master.getProtocol(), socket)
+AClient::AClient(IProtocol * protocol, SockStream & socket) : AEntity(), _protocol(protocol), _socket(&socket), _givenPassword("")
 {
+	this->_protocol = protocol;
+	this->_socket = &socket;
 }
+
+// AClient::AClient( const AClient & src )
+// {
+// }
+
 
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
 
-Client::~Client()
+AClient::~AClient()
 {
 }
-
 
 /*
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
-Client &				Client::operator=( Client const & rhs )
+AClient &				AClient::operator=( AClient const & rhs )
 {
 	//if ( this != &rhs )
 	//{
 		//this->_value = rhs.getValue();
-		(void) rhs;
 	//}
+	(void) rhs;
 	return *this;
 }
-
-std::ostream &			operator<<( std::ostream & o, Client const & i )
-{
-	//o << "Value = " << i.getValue();
-	(void) i;
-	return o;
-}
-
 
 /*
 ** --------------------------------- METHODS ----------------------------------
@@ -48,10 +46,19 @@ std::ostream &			operator<<( std::ostream & o, Client const & i )
 ** --------------------------------- ACCESSOR ---------------------------------
 */
 
-uint				Client::getId( void ) const
+SockStream&				AClient::getStream( void )
 {
-	return Client::value_type;
+	return *this->_socket;
 }
 
+std::string				AClient::getPassword( void )
+{
+	return this->_givenPassword;
+}
+
+void					AClient::setPassword( std::string password) 
+{
+	this->_givenPassword = password;
+}
 
 /* ************************************************************************** */
