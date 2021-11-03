@@ -107,11 +107,16 @@ bool						AServer::run( void )
 				this->_clients[it->fd]->getRecievedData().addData(data_buffer);
 				if (this->_clients[it->fd]->getRecievedData().isInvalid())
 					continue;
+				it->revents = 0;
 				while (!this->_clients[it->fd]->getRecievedData().isInvalid()){
 					this->_onClientRecv(*this->_clients[it->fd], this->_clients[it->fd]->getRecievedData());
+					if (!this->_clients[it->fd])
+					{
+						poll_fds.erase( --(it.base()) );
+						break;
+					}
 					this->_clients[it->fd]->getRecievedData().flush();
 				}
-				it->revents = 0;
 			}
 		}
 	}
@@ -148,6 +153,17 @@ void						AServer::sendAll( const Package &package, const SockStream *except )
 	{
 		if (!except || it->second != except)
 			this->sendPackage(new Package(package), *it->second);
+	}
+}
+
+void						AServer::kick( SockStream &client )
+{
+	if (this->_clients[client.getSocket()] != NULL)
+	{
+		this->_onClientQuit(client);
+		int sock = client.getSocket();
+		delete &client;
+		this->_clients.erase(sock);
 	}
 }
 

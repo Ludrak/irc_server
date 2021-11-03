@@ -66,6 +66,7 @@ class AServer : public SockStream
 
 		void						sendPackage( Package *package, SockStream &recipient);
 		void						sendAll( const Package &package, const SockStream *except = NULL);
+		void						kick( SockStream &client );
 
 		std::map<int, SockStream*>	&getClients();
 
