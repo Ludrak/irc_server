@@ -4,16 +4,16 @@
 ** -------------------------------- STATICS --------------------------------
 */
 
-uint		AServer::_default_max_connections = 50;
+uint		AServer::_defaultMaxConnections = 50;
 
 
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-AServer::AServer( IProtocol & protocol, const std::string &host, int port) : SockStream(host, port, protocol), _max_connection(AServer::_default_max_connections)
+AServer::AServer( IProtocol & protocol, const std::string &host, int port) : SockStream(host, port, protocol), _maxConnections(AServer::_defaultMaxConnections)
 {
-	this->_init_server();
+	this->_initServer();
 }
 
 
@@ -40,7 +40,7 @@ bool						AServer::run( void )
 	struct pollfd 				new_pfd = {.fd = this->_socket, .events = POLLIN, .revents = 0};
 	poll_fds.push_back(new_pfd);
 
-	if (listen(this->_socket, this->_max_connection) != 0)
+	if (listen(this->_socket, this->_maxConnections) != 0)
 		throw AServer::ListenException();
 	while (1)
 	{
@@ -67,24 +67,18 @@ bool						AServer::run( void )
 		}
 		std::vector<struct pollfd>::reverse_iterator it = poll_fds.rbegin();
 		for (; it != poll_fds.rend(); it++)
-		{	
-			// TODO find package in AServer::_pending_data which correspond    
-			// TODO to pollfd, maybe use std::map<pollfd, Package> but it would
-			// TODO make Package::_recipient useless and we'll not be able to  
-			// TODO see package recipient until POLLOUT is set on that fd      
+		{
 			if (it->revents & POLLOUT && !this->_clients[it->fd]->getPendingData().empty())
 			{
 				Package	&current_pkg = **this->_clients[it->fd]->getPendingData().begin();
-				int recipient_sock = current_pkg.getRecipient()->getSocket();
+				char 	data_buffer[SEND_BUFFER_SZ] = { 0 };
+				size_t	data_sz = current_pkg.getRawData().size() > SEND_BUFFER_SZ ? SEND_BUFFER_SZ : current_pkg.getRawData().size();
+				std::memcpy(data_buffer, current_pkg.getRawData().c_str(), data_sz);
 
-				char data_buffer[SEND_BUFFER_SZ] = { 0 };
-				size_t	data_sz = current_pkg.getData().size() > SEND_BUFFER_SZ ? SEND_BUFFER_SZ : current_pkg.getData().size();
-				std::memcpy(data_buffer, current_pkg.getData().c_str(), data_sz);
-
-				size_t byte_size = send(recipient_sock, data_buffer, data_sz, 0);
+				size_t byte_size = send(current_pkg.getRecipient()->getSocket(), data_buffer, data_sz, 0);
 				current_pkg.nflush(byte_size);
 
-				if (current_pkg.isInvalid() || current_pkg.getData().empty())
+				if (current_pkg.isInvalid() || current_pkg.getRawData().empty())
 				{
 					delete &current_pkg;
 					this->_clients[it->fd]->getPendingData().remove(&current_pkg);
@@ -94,8 +88,9 @@ bool						AServer::run( void )
 			}
 			if (it->revents & POLLIN)
 			{
-				std::vector<char> buf(RECV_BUFFER_SZ);
-				size_t byte_size = recv(it->fd, reinterpret_cast<void *>(buf.data()), RECV_BUFFER_SZ, MSG_DONTWAIT);
+				char 	data_buffer[RECV_BUFFER_SZ];
+				size_t	byte_size = recv(it->fd, data_buffer, RECV_BUFFER_SZ, MSG_DONTWAIT);
+				data_buffer[byte_size] = 0;
 				if (byte_size < 0) 
 				{
 					std::cerr << "error from client in socket " << this->_clients[it->fd]->getSocket() << std::endl;
@@ -109,7 +104,7 @@ bool						AServer::run( void )
 					poll_fds.erase( --(it.base()) );
 					continue ;
 				}
-				this->_clients[it->fd]->getRecievedData().addData(std::string (buf.begin(), buf.begin() + byte_size));
+				this->_clients[it->fd]->getRecievedData().addData(data_buffer);
 				if (this->_clients[it->fd]->getRecievedData().isInvalid())
 					continue;
 				while (!this->_clients[it->fd]->getRecievedData().isInvalid()){
@@ -159,7 +154,7 @@ void						AServer::sendAll( const Package &package, const SockStream *except )
 
 
 
-bool						AServer::_init_server( void )
+bool						AServer::_initServer( void )
 {
 	if (bind(this->_socket, reinterpret_cast<sockaddr *>(&this->_addr), sizeof(this->_addr)) != 0)
 		throw AServer::AddressBindException();
@@ -178,12 +173,12 @@ std::map<int, SockStream*>	&AServer::getClients()
 
 uint						AServer::getMaxConnection( void ) const
 {
-	return this->_max_connection;
+	return this->_maxConnections;
 }
 
 void						AServer::setMaxConnection( uint nb)
 {
-	this->_max_connection = nb;
+	this->_maxConnections = nb;
 }
 
 /* ************************************************************************** */

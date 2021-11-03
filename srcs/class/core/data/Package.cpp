@@ -63,11 +63,7 @@ void			Package::addData( const std::string &new_data ) throw(Package::SizeExeede
 
 std::string		Package::getData( void ) const
 {
-	std::string data = this->getRawData();
-	if (data.size() > 2)
-	    return (data.substr(0, data.size() - 2));
-	else
-		return data;
+	return (this->_protocol->getData(this->getRawData()));
 }
 
 std::string		Package::getRawData( void ) const
