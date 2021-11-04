@@ -19,6 +19,7 @@ void    Logger::log( int level, const std::string &message )
     }
 }
 
+//TODO add color code
 void    Logger::_debug( const std::string &message )
 {
     std::cout << "[DEBUG] " << message << std::endl;

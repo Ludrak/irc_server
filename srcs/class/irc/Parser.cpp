@@ -33,9 +33,11 @@ size_t		 			Parser::nbParam(std::string command)
 	size_t nbParam = 1;
 	size_t specialParam = command.find(" :");
 	size_t param = command.find(" ");
-	while (param != std::string::npos && param < specialParam && param + 1 < command.size())
+	while (param != std::string::npos && param + 1 < command.size())
 	{
 		nbParam++;
+		if (!(param < specialParam ))
+			break ;
 		param = command.find(" ", param + 1);
 	}
 	return nbParam;
