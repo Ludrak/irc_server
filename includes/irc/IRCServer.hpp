@@ -11,6 +11,7 @@ class Client;
 # include "AClient.hpp"
 # include "IRCProtocol.hpp"
 # include "Parser.hpp"
+# include "Logger.hpp"
 
 # define IRC_DEFAULT_HOST "127.0.0.1"
 # define IRC_DEFAULT_PORT 6667
@@ -18,6 +19,9 @@ class Client;
 
 # define SUCCESS				0
 # define ERR_KICK				1
+# define ERR_NOSUCHNICK			401 //"<nickname> :No such nick/channel"
+# define ERR_NORECIPENT			411 //":No recipient given (<command>)"
+# define ERR_NOTEXTTOSEND		412 //":No text to send"
 # define ERR_NONICKNAMEGIVEN	431
 # define ERR_ERRONEUSNICKNAME	432
 # define ERR_NICKNAMEINUSE		433
@@ -44,16 +48,15 @@ class IRCServer : public AServer
 		IRCServer( IRCServer const & src );
 		IRCServer&				operator=( IRCServer const & rhs );
 
-		IRCProtocol								_protocol;
 		std::map<std::string, AClient*>			_ircClients;
 		std::list<AClient*>						_pendingConnections;
 		std::map<std::string, UserOperations>	_userCommands;
 		std::map<std::string, ServerOperations>	_serverCommands;
 		// std::map<std::string, Operations>	_opCommands;
 		//network
-		SockStream				_forwardSocket;
-		std::string				_password;
-		std::string				_networkSocket;
+		SockStream								_forwardSocket;
+		std::string								_password;
+		std::string								_networkSocket;
 
 		//events
 		void					_onClientJoin(SockStream &s);
@@ -61,6 +64,9 @@ class IRCServer : public AServer
 		void					_onClientQuit(SockStream &s);
 		
 		void					setRegistered(AClient & client);
+		void					sendMessage(AClient & client, std::string message, uint error = 0);
+		void					printServerState( void );
+
 /*
 ** --------------------------------- COMMANDS ---------------------------------
 */
@@ -69,6 +75,9 @@ class IRCServer : public AServer
 		uint		userCommandPass(Client & client, std::string cmd);
 		uint		userCommandNick(Client & client, std::string cmd);
 		uint		userCommandUser(Client & client, std::string cmd);
+		uint		userCommandPrivmsg(Client & client, std::string cmd);
+		uint		userCommandDescribe(Client & client, std::string cmd);
+
 		uint		serverCommandNick(Client & client, std::string cmd);
 };
 
