@@ -18,7 +18,7 @@ std::string 			Parser::getParam(std::string command, size_t idx)
 	{
 		--idx;
 		start = end;
-		end = command.find(" ");
+		end = command.find(" ", end + 1);
 	}
 	if (end == std::string::npos)
 		return command.substr(start);
