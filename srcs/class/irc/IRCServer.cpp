@@ -57,8 +57,7 @@ bool						IRCServer::setNetworkConnection(const std::string & host, int port, st
 void						IRCServer::_onClientJoin(SockStream &s)
 {
 	this->_pendingConnections.push_back(new Client(*this, s));
-	std::cout << "[IRC] Client " << s.getSocket() << " joined the server !" << std::endl;
-	Package pack = Package(*(this->_protocol), std::string("<") + std::to_string(s.getSocket()) + "> joined the server !\r\n");
+	Logger::log(INFO, "New connection: socket<" + std::to_string(s.getSocket()) + "> joined the server !");
 }
 
 void							IRCServer::_onClientRecv(SockStream &s, Package &pkg)

@@ -35,8 +35,10 @@ SockStream::~SockStream()
 
 void							SockStream::_createSocket(const std::string &host, uint16_t port, sa_family_t family, int sock_type)
 {
+	int option = 1; // TODO add this to a class value
 	if ((this->_socket = socket(family, sock_type, 0)) < 0
-	|| fcntl(this->_socket, F_SETFL, O_NONBLOCK) < 0)
+	|| fcntl(this->_socket, F_SETFL, O_NONBLOCK) < 0
+	|| setsockopt(this->_socket, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option)) < 0)
 		throw SockStream::SocketCreationException();
 	bzero(reinterpret_cast<void *>(&this->_addr), sizeof(this->_addr));
 	this->_addr.sin_port = htons(port);
