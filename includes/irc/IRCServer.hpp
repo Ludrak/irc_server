@@ -11,8 +11,6 @@ class Client;
 # include "AClient.hpp"
 # include "IRCProtocol.hpp"
 # include "Parser.hpp"
-# include "Logger.hpp"
-# include "ntos.hpp"
 
 # define IRC_DEFAULT_HOST "127.0.0.1"
 # define IRC_DEFAULT_PORT 6667
