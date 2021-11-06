@@ -4,13 +4,12 @@
 
 int		Usage( const char * executable )
 {
-	std::cout << "Usage:" << std::endl;
-	std::cout << "\t" << executable << " [host:port_network:password_network] <port> <password>" << std::endl;
+	Logger::info("Usage:");
+	Logger::info(std::string("\t") + executable + " [host:port_network:password_network] <port> <password>");
 	return 1;
 }
 
-//TODO add functions allowed by subject
-//TODO add logger class (maybe with a singleton?)
+//TODO see/add functions allowed by subject
 
 int main(int ac, char ** av)
 {
@@ -44,7 +43,7 @@ int main(int ac, char ** av)
 		}
 		catch (const std::invalid_argument & e)
 		{
-			std::cout << "Invalid network port specified\n";
+			Logger::error("Invalid network port specified");
 			return Usage(av[0]);
 		}
 		password_network = config.substr(sep2 + 1);
@@ -53,7 +52,7 @@ int main(int ac, char ** av)
 	}
 	if (port == 0)
 	{
-		std::cout << "Invalid port specified\n";
+		Logger::error("Invalid port specified");
 		return Usage(av[0]);
 	}
 	try 
@@ -61,14 +60,14 @@ int main(int ac, char ** av)
 		IRCServer server(port, password, "127.0.0.1");
 		if (!server.setNetworkConnection(host, port_network, password_network))
 		{
-			std::cout << "Bad network params" << std::endl;
+			Logger::error("Bad network params");
 			return Usage(av[0]);
 		}
 		server.run();
 	}
 	catch (std::exception &e)
 	{
-		std::cout << e.what() << std::endl;
+		Logger::critical(e.what());
 	}
     return (0);
 }

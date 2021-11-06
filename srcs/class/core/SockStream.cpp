@@ -7,7 +7,7 @@
 //TODO CHeck return values
 SockStream::SockStream(IProtocol & protocol) : _poll_events(POLLIN), _protocol(&protocol), _recieved_data(protocol)
 {
-	std::cout << "default SockStream constructor" << std::endl;
+	Logger::debug("default SockStream constructor");
 	this->_createSocket("127.0.0.1", 8080);
 }
 

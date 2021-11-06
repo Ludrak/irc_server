@@ -4,19 +4,22 @@
 class AServer;
 class SockStream;
 
-# include <iostream>
-# include <string>
 # include <sys/socket.h>
 # include <netinet/in.h>
 # include <netinet/tcp.h>
 # include <fcntl.h>
 # include <arpa/inet.h>
-# include <exception>
-# include <vector>
 # include <unistd.h>
 # include <poll.h>
+# include <exception>
+# include <iostream>
+# include <string>
+# include <vector>
 # include <list>
+
 # include "Package.hpp"
+# include "ntos.hpp"
+# include "Logger.hpp"
 
 # define RECV_BUFFER_SZ	255
 # define SEND_BUFFER_SZ	255

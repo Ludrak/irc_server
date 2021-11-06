@@ -45,7 +45,8 @@ HEADERS		=	SockStream.hpp \
 				Protocol.hpp \
 				IRCProtocol.hpp \
 				Parser.hpp \
-				Logger.hpp
+				Logger.hpp \ 
+				ntos.hpp
 
 # Librarys (only for local archives in project folder)
 LIBRARYS	= 

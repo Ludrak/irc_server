@@ -10,7 +10,6 @@ class Client;
 # include "AIrcClient.hpp"
 # include "IRCProtocol.hpp"
 # include "Parser.hpp"
-# include "Logger.hpp"
 # include "ANode.hpp"
 
 # define IRC_DEFAULT_HOST "127.0.0.1"
