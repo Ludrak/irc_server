@@ -12,7 +12,7 @@ class Client : public AIrcClient
 
 	public:
 
-		Client(IRCServer &master, SockStream & socket);
+		Client(SockStream & socket);
 		virtual ~Client();
 
 		Client &			operator=( Client const & rhs );

@@ -13,8 +13,39 @@ LIB_DIR		= lib
 # - fill only with name of the file
 # - make will check for the file in SRC_DIR
 # - use "-" if empty
-SRCS		= IRCServer.cpp AEntity.cpp Client.cpp AIrcClient.cpp AServer.cpp Channel.cpp SockStream.cpp Package.cpp IRCProtocol.cpp Protocol.cpp Parser.cpp Logger.cpp main.cpp	
-HEADERS		= IRCServer.hpp AEntity.hpp Client.hpp AIrcClient.hpp AServer.hpp Channel.hpp SockStream.hpp Package.hpp IRCProtocol.hpp Protocol.hpp Parser.hpp Logger.hpp IProtocol.hpp
+SRCS		=	SockStream.cpp \
+				SockManager.cpp \
+				AClient.cpp \
+				AServer.cpp \
+				ANode.cpp \
+				IRCServer.cpp \
+				AIrcClient.cpp \
+				Client.cpp \
+				AEntity.cpp \
+				Channel.cpp \
+				Package.cpp \
+				Protocol.cpp \
+				IRCProtocol.cpp \
+				Parser.cpp \
+				Logger.cpp \
+				main.cpp	
+
+HEADERS		=	SockStream.hpp \
+				SockManager.hpp \
+				AServer.hpp \
+				AClient.hpp \
+				IRCServer.hpp \
+				Client.hpp \
+				ANode.hpp \
+				AEntity.hpp \
+				AIrcClient.hpp \
+				Channel.hpp \
+				Package.hpp \
+				IProtocol.hpp \
+				Protocol.hpp \
+				IRCProtocol.hpp \
+				Parser.hpp \
+				Logger.hpp
 
 # Librarys (only for local archives in project folder)
 LIBRARYS	= 

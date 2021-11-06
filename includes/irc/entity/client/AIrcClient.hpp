@@ -9,7 +9,7 @@ class AIrcClient : public AEntity
 
 	public:
 
-		AIrcClient(IProtocol * protocol, SockStream & socket);
+		AIrcClient(SockStream & socket);
 		virtual ~AIrcClient();
 
 		bool				isRegistered( void );
@@ -21,8 +21,7 @@ class AIrcClient : public AEntity
 		void				setPassword(std::string password);
 
 	private:
-		AIrcClient &		operator=( AIrcClient const & rhs );
-		IProtocol*							_protocol;
+		AIrcClient &						operator=( AIrcClient const & rhs );
 		SockStream *						_socket;
 		std::string							_givenPassword;
 		std::string							_nickname;

@@ -4,9 +4,8 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-AIrcClient::AIrcClient(IProtocol * protocol, SockStream & socket) : AEntity(), _protocol(protocol), _socket(&socket), _givenPassword(""), _nickname(""), _registered(false)
+AIrcClient::AIrcClient(SockStream & socket) : AEntity(), _socket(&socket), _givenPassword(""), _nickname(""), _registered(false)
 {
-	this->_protocol = protocol;
 	this->_socket = &socket;
 }
 

@@ -4,9 +4,9 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 //REVIEW Server name maximum 63 character
-//REVIEW to_string is c++11 (view in all project)
+//REVIEW to_string() is c++11 (view in all project)
 
-IRCServer::IRCServer(int port, const std::string & password, const std::string &host) : AServer(*(new IRCProtocol()), host, port), _forwardSocket(*(this->_protocol)), _password(password), _networkSocket("")
+IRCServer::IRCServer(int port, const std::string & password, const std::string &host) : ASockManager(port), ANode(port), _forwardSocket(this->_protocol), _password(password), _networkSocket(""), _protocol()
 {
 	std::cout << "IRCServer constructor" << "\n";
 	std::cout << "IRCServer host:" << host << "\n";
@@ -32,7 +32,6 @@ IRCServer::~IRCServer()
 	{
 		delete (*it);
 	}
-	delete this->_protocol;
 }
 
 /*
@@ -56,7 +55,7 @@ bool						IRCServer::setNetworkConnection(const std::string & host, int port, st
 
 void						IRCServer::_onClientJoin(SockStream &s)
 {
-	this->_pendingConnections.push_back(new Client(*this, s));
+	this->_pendingConnections.push_back(new Client(s));
 	Logger::log(INFO, "New connection: socket<" + std::to_string(s.getSocket()) + "> joined the server !");
 }
 
@@ -70,7 +69,7 @@ void							IRCServer::_onClientRecv(SockStream &s, Package &pkg)
 
 void							IRCServer::_onClientQuit(SockStream &s)
 {
-	Package pack = Package(*(this->_protocol), std::string("<") + std::to_string(s.getSocket()) + "> disconnected.\r\n"); // TODO why trailing \r\n?
+	Package pack = Package(this->_protocol, std::string("<") + std::to_string(s.getSocket()) + "> disconnected.\r\n"); // TODO why trailing \r\n?
 	AIrcClient & cli = this->getClientBySockStream(s);
 	if (cli.isRegistered())
 	{
@@ -100,11 +99,11 @@ void							IRCServer::sendMessage(AIrcClient & client, std::string message, uint
 	{
 	//TODO add server prefix and destination suffix
 		std::string prefix = ":prefix ";
-		this->sendPackage(new Package(*(this->_protocol), this->_protocol->format(prefix + message + "\r\n")), client.getStream());
+		this->sendPackage(new Package(this->_protocol, this->_protocol.format(prefix + message + "\r\n")), client.getStream());
 	}
 	else
 	{
-		this->sendPackage(new Package(*(this->_protocol), this->_protocol->format(message + "\r\n")), client.getStream());
+		this->sendPackage(new Package(this->_protocol, this->_protocol.format(message + "\r\n")), client.getStream());
 	}
 }
 
@@ -133,6 +132,11 @@ AIrcClient&							IRCServer::getClientBySockStream(SockStream & s)
 			return *(*it);
 	}
 	return *(*it);
+}
+
+const IProtocol&					IRCServer::getProtocol( void ) const
+{
+	return this->_protocol;
 }
 
 /*

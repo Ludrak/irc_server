@@ -1,21 +1,13 @@
 #include "AServer.hpp"
 
 /*
-** -------------------------------- STATICS --------------------------------
-*/
-
-uint		AServer::_defaultMaxConnections = 50;
-
-
-/*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-AServer::AServer( IProtocol & protocol, const std::string &host, int port) : SockStream(host, port, protocol), _maxConnections(AServer::_defaultMaxConnections)
+AServer::AServer(int param) : ASockManager(param)
 {
-	this->_initServer();
+	std::cout << "Constructor AServer" << std::endl;
 }
-
 
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
@@ -23,178 +15,17 @@ AServer::AServer( IProtocol & protocol, const std::string &host, int port) : Soc
 
 AServer::~AServer()
 {
-	//TODO here close all non-closed sockets
-	for (std::map<int, SockStream*>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
-	{
-		delete (*it).second;
-	}
-	this->close();
-}
-
-/*
-** --------------------------------- METHODS ----------------------------------
-*/
-bool						AServer::run( void )
-{
-	std::vector<struct pollfd>	poll_fds;
-	struct pollfd 				new_pfd = {.fd = this->_socket, .events = POLLIN, .revents = 0};
-	poll_fds.push_back(new_pfd);
-
-	if (listen(this->_socket, this->_maxConnections) != 0)
-		throw AServer::ListenException();
-	while (1)
-	{
-		for (std::vector<struct pollfd>::iterator it = poll_fds.begin() + 1; it != poll_fds.end(); it++)
-		{
-			it->events = this->_clients[it->fd]->getPollEvents();
-		}
-
-		if (poll(poll_fds.data(), poll_fds.size(), -1) == -1)
-			throw AServer::PollException();
-		if (poll_fds.at(0).revents & POLLIN)
-		{
-			try {
-				new_pfd.fd = this->_acceptConnection().getSocket();
-				new_pfd.events = POLLIN; 
-				new_pfd.revents = 0;
-				poll_fds.push_back(new_pfd);
-			}
-			catch (const AServer::IncomingConnectionException &e)
-			{
-				std::cerr << "[FT_IRC]: " << e.what() << "\n"; 
-			}
-			poll_fds.at(0).revents = 0;
-		}
-		std::vector<struct pollfd>::reverse_iterator it = poll_fds.rbegin();
-		for (; it != poll_fds.rend(); it++)
-		{
-			if (it->revents & POLLOUT && !this->_clients[it->fd]->getPendingData().empty())
-			{
-				Package	&current_pkg = **this->_clients[it->fd]->getPendingData().begin();
-				char 	data_buffer[SEND_BUFFER_SZ] = { 0 };
-				size_t	data_sz = current_pkg.getRawData().size() > SEND_BUFFER_SZ ? SEND_BUFFER_SZ : current_pkg.getRawData().size();
-				std::memcpy(data_buffer, current_pkg.getRawData().c_str(), data_sz);
-
-				size_t byte_size = send(current_pkg.getRecipient()->getSocket(), data_buffer, data_sz, 0);
-				current_pkg.nflush(byte_size);
-
-				if (current_pkg.isInvalid() || current_pkg.getRawData().empty())
-				{
-					delete &current_pkg;
-					this->_clients[it->fd]->getPendingData().remove(&current_pkg);
-					if (this->_clients[it->fd]->getPendingData().size() == 0)
-						this->_clients[it->fd]->delPollEvent(POLLOUT);
-				}
-			}
-			if (it->revents & POLLIN)
-			{
-				char 	data_buffer[RECV_BUFFER_SZ];
-				size_t	byte_size = recv(it->fd, data_buffer, RECV_BUFFER_SZ, MSG_DONTWAIT);
-				data_buffer[byte_size] = 0;
-				if (byte_size < 0) 
-				{
-					std::cerr << "error from client in socket " << this->_clients[it->fd]->getSocket() << std::endl;
-					continue ;
-				}
-				else if (byte_size == 0)
-				{
-					this->_onClientQuit(*this->_clients[it->fd]);
-					delete this->_clients[it->fd];
-					this->_clients.erase(it->fd);
-					poll_fds.erase( --(it.base()) );
-					continue ;
-				}
-				this->_clients[it->fd]->getRecievedData().addData(data_buffer);
-				if (this->_clients[it->fd]->getRecievedData().isInvalid())
-					continue;
-				it->revents = 0;
-				while (!this->_clients[it->fd]->getRecievedData().isInvalid()){
-					this->_onClientRecv(*this->_clients[it->fd], this->_clients[it->fd]->getRecievedData());
-					if (!this->_clients[it->fd])
-					{
-						poll_fds.erase( --(it.base()) );
-						break;
-					}
-					this->_clients[it->fd]->getRecievedData().flush();
-				}
-			}
-		}
-	}
-	return true;
-}
-
-SockStream					&AServer::_acceptConnection()
-{	
-	sockaddr_in         cli_addr;
-	int					socket_client;
-	socklen_t			cli_len = sizeof(cli_addr);
-
-	socket_client = accept(this->_socket, reinterpret_cast<struct sockaddr *>(&cli_addr), &cli_len);
-	if (socket_client < 0)
-		throw AServer::IncomingConnectionException();
-
-	SockStream *newSock = new SockStream(socket_client, cli_addr, *this->_protocol);
-	std::pair<int, SockStream *> p = std::make_pair(socket_client, newSock);
-	this->_clients.insert(p);
-	this->_onClientJoin(*newSock);
-	return *newSock; 
-}
-
-void						AServer::sendPackage( Package *pkg, SockStream &recipient)
-{
-	recipient.setPollEvent(POLLOUT);
-	pkg->setRecipient(&recipient);
-	recipient.getPendingData().push_back(pkg);
-}
-
-void						AServer::sendAll( const Package &package, const SockStream *except )
-{
-	for (std::map<int, SockStream *>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
-	{
-		if (!except || it->second != except)
-			this->sendPackage(new Package(package), *it->second);
-	}
 }
 
 void						AServer::kick( SockStream &client )
 {
-	if (this->_clients[client.getSocket()] != NULL)
-	{
-		this->_onClientQuit(client);
-		int sock = client.getSocket();
-		delete &client;
-		this->_clients.erase(sock);
-	}
+	(void) client;
 }
 
-
-
-
-bool						AServer::_initServer( void )
+void						AServer::sendPackage( Package *pkg, SockStream &recipient)
 {
-	if (bind(this->_socket, reinterpret_cast<sockaddr *>(&this->_addr), sizeof(this->_addr)) != 0)
-		throw AServer::AddressBindException();
-	return true;
-}
-
-
-/*
-** --------------------------------- ACCESSOR ---------------------------------
-*/
-
-std::map<int, SockStream*>	&AServer::getClients()
-{
-	return (this->_clients);
-}
-
-uint						AServer::getMaxConnection( void ) const
-{
-	return this->_maxConnections;
-}
-
-void						AServer::setMaxConnection( uint nb)
-{
-	this->_maxConnections = nb;
+	(void) pkg;
+	(void) recipient;
 }
 
 /* ************************************************************************** */

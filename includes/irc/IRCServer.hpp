@@ -5,13 +5,13 @@ class AServer;
 class Channel;
 class Client;
 
-# include "AServer.hpp"
 # include "Channel.hpp"
 # include "Client.hpp"
 # include "AIrcClient.hpp"
 # include "IRCProtocol.hpp"
 # include "Parser.hpp"
 # include "Logger.hpp"
+# include "ANode.hpp"
 
 # define IRC_DEFAULT_HOST "127.0.0.1"
 # define IRC_DEFAULT_PORT 6667
@@ -29,13 +29,14 @@ class Client;
 # define ERR_NEEDMOREPARAMS		461
 # define ERR_ALREADYREGISTRED	462
 
-class IRCServer : public AServer
+class IRCServer : public ANode
 {
 
 	public:
 		IRCServer(int port = IRC_DEFAULT_PORT, const std::string &password = IRC_DEFAULT_PASS, const std::string &host = IRC_DEFAULT_HOST);
 		virtual ~IRCServer();
 
+		const IProtocol&		getProtocol( void ) const;
 		Channel*				getChannel(int ChannelUID);
 		const SockStream&		getForwardSocket( void ) const;
 		AIrcClient&				getClientBySockStream(SockStream & s);
@@ -48,8 +49,8 @@ class IRCServer : public AServer
 		IRCServer( IRCServer const & src );
 		IRCServer&				operator=( IRCServer const & rhs );
 
-		std::map<std::string, AIrcClient*>			_ircClients;
-		std::list<AIrcClient*>						_pendingConnections;
+		std::map<std::string, AIrcClient*>		_ircClients;
+		std::list<AIrcClient*>					_pendingConnections;
 		std::map<std::string, UserOperations>	_userCommands;
 		std::map<std::string, ServerOperations>	_serverCommands;
 		// std::map<std::string, Operations>	_opCommands;
@@ -57,6 +58,7 @@ class IRCServer : public AServer
 		SockStream								_forwardSocket;
 		std::string								_password;
 		std::string								_networkSocket;
+		IRCProtocol								_protocol;
 
 		//events
 		void					_onClientJoin(SockStream &s);
