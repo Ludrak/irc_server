@@ -69,7 +69,7 @@ void							IRCServer::_onClientRecv(SockStream &s, Package &pkg)
 
 void							IRCServer::_onClientQuit(SockStream &s)
 {
-	Package pack = Package(this->_protocol, std::string("<") + ntos((s.getSocket()) + "> disconnected.\r\n"); // REVIEW why trailing \r\n?
+	Package pack = Package(this->_protocol, std::string("<") + ntos(s.getSocket()) + "> disconnected.\r\n"); // REVIEW why trailing \r\n?
 	AIrcClient & cli = this->getClientBySockStream(s);
 	if (cli.isRegistered())
 	{
