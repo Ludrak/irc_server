@@ -1,16 +1,16 @@
-#ifndef ACLIENT_HPP
-# define ACLIENT_HPP
+#ifndef AIrcClient_HPP
+# define AIrcClient_HPP
 
 # include "SockStream.hpp"
 # include "AEntity.hpp"
 
-class AClient : public AEntity
+class AIrcClient : public AEntity
 {
 
 	public:
 
-		AClient(IProtocol * protocol, SockStream & socket);
-		virtual ~AClient();
+		AIrcClient(IProtocol * protocol, SockStream & socket);
+		virtual ~AIrcClient();
 
 		bool				isRegistered( void );
 		SockStream&			getStream();
@@ -21,7 +21,7 @@ class AClient : public AEntity
 		void				setPassword(std::string password);
 
 	private:
-		AClient &		operator=( AClient const & rhs );
+		AIrcClient &		operator=( AIrcClient const & rhs );
 		IProtocol*							_protocol;
 		SockStream *						_socket;
 		std::string							_givenPassword;
@@ -30,4 +30,4 @@ class AClient : public AEntity
 
 };
 
-#endif /* ********************************************************* ACLIENT_H */
+#endif /* ********************************************************* AIrcClient_H */

@@ -22,12 +22,12 @@ IRCServer::IRCServer(int port, const std::string & password, const std::string &
 IRCServer::~IRCServer()
 {
 	// delete all auth clients
-	for (std::map<std::string, AClient *>::iterator it = this->_ircClients.begin(); it != this->_ircClients.end(); ++it)
+	for (std::map<std::string, AIrcClient *>::iterator it = this->_ircClients.begin(); it != this->_ircClients.end(); ++it)
 	{
 		delete (*it).second;
 	}
 	// delete all non-auth clients
-	std::list<AClient *>::iterator it;
+	std::list<AIrcClient *>::iterator it;
 	for ( it = this->_pendingConnections.begin(); it != this->_pendingConnections.end(); ++it)
 	{
 		delete (*it);
@@ -62,7 +62,7 @@ void						IRCServer::_onClientJoin(SockStream &s)
 
 void							IRCServer::_onClientRecv(SockStream &s, Package &pkg)
 {
-	AClient& c = getClientBySockStream(s);
+	AIrcClient& c = getClientBySockStream(s);
 	this->printServerState();
 	Logger::log(DEBUG, "Server receive: " + pkg.getData());
 	this->execute(c, pkg.getData());
@@ -71,7 +71,7 @@ void							IRCServer::_onClientRecv(SockStream &s, Package &pkg)
 void							IRCServer::_onClientQuit(SockStream &s)
 {
 	Package pack = Package(*(this->_protocol), std::string("<") + std::to_string(s.getSocket()) + "> disconnected.\r\n"); // TODO why trailing \r\n?
-	AClient & cli = this->getClientBySockStream(s);
+	AIrcClient & cli = this->getClientBySockStream(s);
 	if (cli.isRegistered())
 	{
 		Logger::log(WARNING, "Client " + cli.getNickname() + " disconnected.");
@@ -87,14 +87,14 @@ void							IRCServer::_onClientQuit(SockStream &s)
 	}
 }
 
-void							IRCServer::setRegistered(AClient & client)
+void							IRCServer::setRegistered(AIrcClient & client)
 {
 	client.setRegistered(true);
 	this->_ircClients.insert(make_pair(client.getNickname(), &client));
 	this->_pendingConnections.remove(&client);
 }
 
-void							IRCServer::sendMessage(AClient & client, std::string message, uint error)
+void							IRCServer::sendMessage(AIrcClient & client, std::string message, uint error)
 {
 	if (error)
 	{
@@ -117,16 +117,16 @@ const SockStream&					IRCServer::getForwardSocket( void ) const
 	return this->_forwardSocket;
 }
 
-AClient&							IRCServer::getClientBySockStream(SockStream & s)
+AIrcClient&							IRCServer::getClientBySockStream(SockStream & s)
 {
 	//get in map of user
-	for (std::map<std::string, AClient*>::iterator it = this->_ircClients.begin(); it != this->_ircClients.end(); ++it)
+	for (std::map<std::string, AIrcClient*>::iterator it = this->_ircClients.begin(); it != this->_ircClients.end(); ++it)
 	{
 		if (&(*it).second->getStream() == &s)
 			return *(*it).second;
 	}
 	//get in  pending list
-	std::list<AClient*>::iterator it;
+	std::list<AIrcClient*>::iterator it;
 	for ( it = this->_pendingConnections.begin(); it != --this->_pendingConnections.end(); ++it)
 	{
 		if (&(*it)->getStream() == &s)
@@ -148,7 +148,7 @@ void				IRCServer::_init_commands( void )
 	this->_userCommands.insert(std::make_pair("DESCRIBE",	&IRCServer::userCommandDescribe));
 }
 
-int					IRCServer::execute(AClient & client, std::string data)
+int					IRCServer::execute(AIrcClient & client, std::string data)
 {
 	size_t sep = data.find(" ");
 	std::string command(data);
@@ -252,7 +252,7 @@ uint		IRCServer::userCommandPrivmsg(Client & client, std::string cmd)
 	std::string target_name = Parser::getParam(cmd, 0); 
 	if (this->_ircClients.count(target_name) == 0)
 		return ERR_NOSUCHNICK;
-	AClient *target = this->_ircClients[target_name];
+	AIrcClient *target = this->_ircClients[target_name];
 	Logger::log(DEBUG, "target_nick = " + target->getNickname());
 	Logger::log(DEBUG, "text = " + Parser::getParam(cmd, 1));
 	std::string msg = ":" + client.getNickname() + "!server-ident@sender-server PRIVMSG " + target->getNickname() + " :" + Parser::getParam(cmd, 1);
@@ -282,10 +282,10 @@ void			IRCServer::printServerState( void )
 {
 	Logger::log(DEBUG, "Server : p: " + std::to_string(this->_pendingConnections.size()) + ", r: " + std::to_string(this->_ircClients.size()) );
 	Logger::log(DEBUG, "pending:");
-	for (std::list<AClient *>::iterator it = this->_pendingConnections.begin(); it != this->_pendingConnections.end(); ++it)
+	for (std::list<AIrcClient *>::iterator it = this->_pendingConnections.begin(); it != this->_pendingConnections.end(); ++it)
 		Logger::log(DEBUG, "   - N: " + (*it)->getNickname() + " / P: " + (*it)->getPassword() + " / R: " + std::to_string((*it)->isRegistered()));
 	Logger::log(DEBUG, "registered:");
-	for (std::map<std::string, AClient *>::iterator it = this->_ircClients.begin(); it != this->_ircClients.end(); ++it)
+	for (std::map<std::string, AIrcClient *>::iterator it = this->_ircClients.begin(); it != this->_ircClients.end(); ++it)
 		Logger::log(DEBUG, "   - K:" + (*it).first + " / N: " + (*it).second->getNickname() + " / P: " + (*it).second->getPassword() + " / R: " + std::to_string((*it).second->isRegistered()));
 
 }

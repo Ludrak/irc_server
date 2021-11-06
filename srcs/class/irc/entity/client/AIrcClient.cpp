@@ -1,16 +1,16 @@
-#include "AClient.hpp"
+#include "AIrcClient.hpp"
 
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-AClient::AClient(IProtocol * protocol, SockStream & socket) : AEntity(), _protocol(protocol), _socket(&socket), _givenPassword(""), _nickname(""), _registered(false)
+AIrcClient::AIrcClient(IProtocol * protocol, SockStream & socket) : AEntity(), _protocol(protocol), _socket(&socket), _givenPassword(""), _nickname(""), _registered(false)
 {
 	this->_protocol = protocol;
 	this->_socket = &socket;
 }
 
-// AClient::AClient( const AClient & src )
+// AIrcClient::AIrcClient( const AIrcClient & src )
 // {
 // }
 
@@ -19,7 +19,7 @@ AClient::AClient(IProtocol * protocol, SockStream & socket) : AEntity(), _protoc
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
 
-AClient::~AClient()
+AIrcClient::~AIrcClient()
 {
 }
 
@@ -27,7 +27,7 @@ AClient::~AClient()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
-AClient &				AClient::operator=( AClient const & rhs )
+AIrcClient &				AIrcClient::operator=( AIrcClient const & rhs )
 {
 	//if ( this != &rhs )
 	//{
@@ -47,37 +47,37 @@ AClient &				AClient::operator=( AClient const & rhs )
 */
 
 
-bool				AClient::isRegistered( void )
+bool				AIrcClient::isRegistered( void )
 {
 	return this->_registered;
 }
 
-SockStream&				AClient::getStream( void )
+SockStream&				AIrcClient::getStream( void )
 {
 	return *this->_socket;
 }
 
-std::string				AClient::getPassword( void )
+std::string				AIrcClient::getPassword( void )
 {
 	return this->_givenPassword;
 }
 
-std::string				AClient::getNickname(void)
+std::string				AIrcClient::getNickname(void)
 {
 	return this->_nickname;
 }
 
-void				AClient::setRegistered( bool registered)
+void				AIrcClient::setRegistered( bool registered)
 {
 	this->_registered = registered;
 }
 
-void					AClient::setPassword( std::string password) 
+void					AIrcClient::setPassword( std::string password) 
 {
 	this->_givenPassword = password;
 }
 
-void					AClient::setNickname(std::string nick)
+void					AIrcClient::setNickname(std::string nick)
 {
 	this->_nickname = nick;
 }

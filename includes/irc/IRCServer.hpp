@@ -8,7 +8,7 @@ class Client;
 # include "AServer.hpp"
 # include "Channel.hpp"
 # include "Client.hpp"
-# include "AClient.hpp"
+# include "AIrcClient.hpp"
 # include "IRCProtocol.hpp"
 # include "Parser.hpp"
 # include "Logger.hpp"
@@ -38,18 +38,18 @@ class IRCServer : public AServer
 
 		Channel*				getChannel(int ChannelUID);
 		const SockStream&		getForwardSocket( void ) const;
-		AClient&				getClientBySockStream(SockStream & s);
+		AIrcClient&				getClientBySockStream(SockStream & s);
 		bool					setNetworkConnection(const std::string & host, int port, std::string & password);
 
 		typedef uint	(IRCServer::*UserOperations)(Client & client, std::string str);
-		typedef uint	(IRCServer::*ServerOperations)(AClient & client, std::string str);
+		typedef uint	(IRCServer::*ServerOperations)(AIrcClient & client, std::string str);
 	private:
 
 		IRCServer( IRCServer const & src );
 		IRCServer&				operator=( IRCServer const & rhs );
 
-		std::map<std::string, AClient*>			_ircClients;
-		std::list<AClient*>						_pendingConnections;
+		std::map<std::string, AIrcClient*>			_ircClients;
+		std::list<AIrcClient*>						_pendingConnections;
 		std::map<std::string, UserOperations>	_userCommands;
 		std::map<std::string, ServerOperations>	_serverCommands;
 		// std::map<std::string, Operations>	_opCommands;
@@ -63,15 +63,15 @@ class IRCServer : public AServer
 		void					_onClientRecv(SockStream &s, Package &pkg);
 		void					_onClientQuit(SockStream &s);
 		
-		void					setRegistered(AClient & client);
-		void					sendMessage(AClient & client, std::string message, uint error = 0);
+		void					setRegistered(AIrcClient & client);
+		void					sendMessage(AIrcClient & client, std::string message, uint error = 0);
 		void					printServerState( void );
 
 /*
 ** --------------------------------- COMMANDS ---------------------------------
 */
 		void		_init_commands(void);
-		int			execute(AClient & client, std::string data);
+		int			execute(AIrcClient & client, std::string data);
 		uint		userCommandPass(Client & client, std::string cmd);
 		uint		userCommandNick(Client & client, std::string cmd);
 		uint		userCommandUser(Client & client, std::string cmd);

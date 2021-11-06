@@ -5,9 +5,9 @@ class IRCServer;
 
 # include "AEntity.hpp"
 # include "IRCServer.hpp"
-# include "AClient.hpp"
+# include "AIrcClient.hpp"
 
-class Client : public AClient
+class Client : public AIrcClient
 {
 
 	public:

@@ -4,7 +4,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Client::Client(IRCServer & master, SockStream & socket) : AClient(master.getProtocol(), socket)
+Client::Client(IRCServer & master, SockStream & socket) : AIrcClient(master.getProtocol(), socket)
 {
 }
 

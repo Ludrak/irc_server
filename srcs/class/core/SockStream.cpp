@@ -39,7 +39,7 @@ void							SockStream::_createSocket(const std::string &host, uint16_t port, sa_
 	if ((this->_socket = socket(family, sock_type, 0)) < 0
 	|| fcntl(this->_socket, F_SETFL, O_NONBLOCK) < 0
 	|| setsockopt(this->_socket, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option)) < 0)
-		throw SockStream::SocketCreationException();
+		throw SockStream::SocketCreationException(); //TODO see exception custom message
 	bzero(reinterpret_cast<void *>(&this->_addr), sizeof(this->_addr));
 	this->_addr.sin_port = htons(port);
 	this->_addr.sin_family = family;
