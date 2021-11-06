@@ -61,7 +61,7 @@ bool						AServer::run( void )
 			}
 			catch (const AServer::IncomingConnectionException &e)
 			{
-				std::cerr << "[FT_IRC]: " << e.what() << "\n"; 
+				Logger::error(e.what()); 
 			}
 			poll_fds.at(0).revents = 0;
 		}
@@ -93,7 +93,7 @@ bool						AServer::run( void )
 				data_buffer[byte_size] = 0;
 				if (byte_size < 0) 
 				{
-					std::cerr << "error from client in socket " << this->_clients[it->fd]->getSocket() << std::endl;
+					Logger::error("error from client in socket " + ntos(this->_clients[it->fd]->getSocket()));
 					continue ;
 				}
 				else if (byte_size == 0)
