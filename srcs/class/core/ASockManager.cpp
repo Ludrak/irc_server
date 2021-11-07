@@ -4,9 +4,8 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-ASockManager::ASockManager(int sock_param)
+ASockManager::ASockManager()
 {
-	(void) sock_param;
 	std::cout << "Constructor ASockManager" << std::endl;
 }
 

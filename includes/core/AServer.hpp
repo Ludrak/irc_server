@@ -5,7 +5,7 @@
 class AServer : public virtual ASockManager
 {
 	public:
-		AServer(int param);
+		AServer(void);
 		virtual ~AServer();
 		void				kick( SockStream &client );
 		void				sendPackage( Package *pkg, SockStream &recipient);

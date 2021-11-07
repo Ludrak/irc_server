@@ -4,7 +4,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-AClient::AClient(int param) : ASockManager(param)
+AClient::AClient(void) : ASockManager()
 {
 	std::cout << "Constructor AClient" << std::endl;
 }

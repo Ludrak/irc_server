@@ -5,7 +5,7 @@
 class AClient : public virtual ASockManager
 {
 	public:
-		AClient(int param);
+		AClient(void);
 		virtual ~AClient();
 
 };

@@ -4,7 +4,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-AServer::AServer(int param) : ASockManager(param)
+AServer::AServer(void) : ASockManager()
 {
 	std::cout << "Constructor AServer" << std::endl;
 }

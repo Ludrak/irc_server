@@ -9,7 +9,7 @@ class ASockManager
 {
 	public:
 
-		ASockManager(int sock_param);
+		ASockManager(void);
 		virtual ~ASockManager();
 
 		void	run(void)

@@ -16,6 +16,4 @@ class Parser
 
 };
 
-std::ostream &			operator<<( std::ostream & o, Parser const & i );
-
 #endif /* ********************************************************** PARSER_H */
