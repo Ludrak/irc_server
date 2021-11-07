@@ -102,5 +102,12 @@ t_pollevent     AClient::_onPollEvent(int socket, int event)
 	return (POLL_NOTFOUND);
 }
 
+void			AClient::sendServerPackage( Package *pkg, SockStream &server_recipient )
+{
+	server_recipient.setPollEvent(POLLOUT);
+	pkg->setRecipient(&server_recipient);
+	server_recipient.getPendingData().push_back(pkg);
+}
+
 
 

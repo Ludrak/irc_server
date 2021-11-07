@@ -18,12 +18,13 @@ class AClient : public virtual ASockManager
         virtual ~AClient();
 
         bool            connectOn(const std::string host, const ushort port, IProtocol &protocol);
+        void			sendServerPackage( Package *package, SockStream &server_recipient);
     
     protected:
-        virtual void    _onConnect (const SockStream &server) = 0;
-        virtual void    _onRecv(const SockStream &server, const Package &pkg) = 0;
-        virtual void    _onQuit(const SockStream &server) = 0;
-        virtual void    _onKicked(const SockStream &server) = 0;
+        virtual void    _onConnect ( SockStream &server) = 0;
+        virtual void    _onRecv( SockStream &server,  Package &pkg) = 0;
+        virtual void    _onQuit( SockStream &server) = 0;
+        virtual void    _onKicked( SockStream &server) = 0;
 
     private:
         t_pollevent     _onPollEvent(int socket, int event);
