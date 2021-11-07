@@ -5,18 +5,21 @@
 */
 
 //TODO CHeck return values
-SockStream::SockStream(IProtocol & protocol) : _poll_events(POLLIN), _protocol(&protocol), _recieved_data(protocol)
+SockStream::SockStream(IProtocol & protocol)
+: _type(SERVER), _poll_events(POLLIN), _protocol(&protocol), _recieved_data(protocol)
 {
 	std::cout << "default SockStream constructor" << std::endl;
 	this->_createSocket("127.0.0.1", 8080);
 }
 
-SockStream::SockStream(const std::string &host, uint16_t port, IProtocol & protocol) : _poll_events(POLLIN), _protocol(&protocol), _recieved_data(protocol)
+SockStream::SockStream(const std::string &host, uint16_t port, IProtocol & protocol)
+: _type(SERVER), _poll_events(POLLIN), _protocol(&protocol), _recieved_data(protocol)
 {
 	this->_createSocket(host, port);
 }
 
-SockStream::SockStream(int socket, const sockaddr_in &address, IProtocol & protocol) : _socket(socket), _poll_events(POLLIN), _addr(address), _protocol(&protocol), _recieved_data(protocol)
+SockStream::SockStream(int socket, const sockaddr_in &address, IProtocol & protocol)
+: _socket(socket), _type(CLIENT), _poll_events(POLLIN), _addr(address), _protocol(&protocol), _recieved_data(protocol)
 {
 }
 
@@ -97,6 +100,11 @@ Package							&SockStream::getRecievedData()
 std::list<Package*>				&SockStream::getPendingData()
 {
 	return (this->_pending_data);
+}
+
+t_sock_type						SockStream::getType(void) const
+{
+	return (this->_type);
 }
 
 /* ************************************************************************** */

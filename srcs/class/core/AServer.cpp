@@ -11,9 +11,9 @@ uint		AServer::_defaultMaxConnections = 50;
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-AServer::AServer( IProtocol & protocol, const std::string &host, int port) : SockStream(host, port, protocol), _maxConnections(AServer::_defaultMaxConnections)
+AServer::AServer( const std::string &host ) : ASockManager(), _host(host), _maxConnections(AServer::_defaultMaxConnections)
 {
-	this->_initServer();
+
 }
 
 
@@ -23,122 +23,155 @@ AServer::AServer( IProtocol & protocol, const std::string &host, int port) : Soc
 
 AServer::~AServer()
 {
-	//TODO here close all non-closed sockets
-	for (std::map<int, SockStream*>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
-	{
-		delete (*it).second;
-	}
-	this->close();
 }
 
 /*
 ** --------------------------------- METHODS ----------------------------------
 */
-bool						AServer::run( void )
+
+/* Server */
+void						AServer::run()
 {
-	std::vector<struct pollfd>	poll_fds;
-	struct pollfd 				new_pfd = {.fd = this->_socket, .events = POLLIN, .revents = 0};
-	poll_fds.push_back(new_pfd);
-
-	if (listen(this->_socket, this->_maxConnections) != 0)
-		throw AServer::ListenException();
-	while (1)
+	for (std::map<int, SockStream *>::iterator it = this->_sockets.begin(); it != this->_sockets.end(); it++)
 	{
-		for (std::vector<struct pollfd>::iterator it = poll_fds.begin() + 1; it != poll_fds.end(); it++)
+		/* TODO maybe set a by port default max connection as std::map<ushort port, uint max_connections> */
+		if (listen(it->first, this->_defaultMaxConnections) != 0)
 		{
-			it->events = this->_clients[it->fd]->getPollEvents();
-		}
-
-		if (poll(poll_fds.data(), poll_fds.size(), -1) == -1)
-			throw AServer::PollException();
-		if (poll_fds.at(0).revents & POLLIN)
-		{
-			try {
-				new_pfd.fd = this->_acceptConnection().getSocket();
-				new_pfd.events = POLLIN; 
-				new_pfd.revents = 0;
-				poll_fds.push_back(new_pfd);
-			}
-			catch (const AServer::IncomingConnectionException &e)
-			{
-				std::cerr << "[FT_IRC]: " << e.what() << "\n"; 
-			}
-			poll_fds.at(0).revents = 0;
-		}
-		std::vector<struct pollfd>::reverse_iterator it = poll_fds.rbegin();
-		for (; it != poll_fds.rend(); it++)
-		{
-			if (it->revents & POLLOUT && !this->_clients[it->fd]->getPendingData().empty())
-			{
-				Package	&current_pkg = **this->_clients[it->fd]->getPendingData().begin();
-				char 	data_buffer[SEND_BUFFER_SZ] = { 0 };
-				size_t	data_sz = current_pkg.getRawData().size() > SEND_BUFFER_SZ ? SEND_BUFFER_SZ : current_pkg.getRawData().size();
-				std::memcpy(data_buffer, current_pkg.getRawData().c_str(), data_sz);
-
-				size_t byte_size = send(current_pkg.getRecipient()->getSocket(), data_buffer, data_sz, 0);
-				current_pkg.nflush(byte_size);
-
-				if (current_pkg.isInvalid() || current_pkg.getRawData().empty())
-				{
-					delete &current_pkg;
-					this->_clients[it->fd]->getPendingData().remove(&current_pkg);
-					if (this->_clients[it->fd]->getPendingData().size() == 0)
-						this->_clients[it->fd]->delPollEvent(POLLOUT);
-				}
-			}
-			if (it->revents & POLLIN)
-			{
-				char 	data_buffer[RECV_BUFFER_SZ];
-				size_t	byte_size = recv(it->fd, data_buffer, RECV_BUFFER_SZ, MSG_DONTWAIT);
-				data_buffer[byte_size] = 0;
-				if (byte_size < 0) 
-				{
-					std::cerr << "error from client in socket " << this->_clients[it->fd]->getSocket() << std::endl;
-					continue ;
-				}
-				else if (byte_size == 0)
-				{
-					this->_onClientQuit(*this->_clients[it->fd]);
-					delete this->_clients[it->fd];
-					this->_clients.erase(it->fd);
-					poll_fds.erase( --(it.base()) );
-					continue ;
-				}
-				this->_clients[it->fd]->getRecievedData().addData(data_buffer);
-				if (this->_clients[it->fd]->getRecievedData().isInvalid())
-					continue;
-				it->revents = 0;
-				while (!this->_clients[it->fd]->getRecievedData().isInvalid()){
-					this->_onClientRecv(*this->_clients[it->fd], this->_clients[it->fd]->getRecievedData());
-					if (!this->_clients[it->fd])
-					{
-						poll_fds.erase( --(it.base()) );
-						break;
-					}
-					this->_clients[it->fd]->getRecievedData().flush();
-				}
-			}
+			std::cerr << "FATAL: can't listen on " << inet_ntoa(it->second->getSockaddr().sin_addr) << ":" << ntohs(it->second->getSockaddr().sin_port) << std::endl;
+			return ;
 		}
 	}
+	ASockManager::run();
+}
+
+
+
+t_pollevent					AServer::_pollFromServer(int socket, int event)
+{
+	SockStream	*sock = this->_sockets[socket];
+
+	if (sock == NULL || sock->getType() != SERVER || ~event & POLLIN)
+		return (POLL_NOTFOUND);
+	
+	/* server socket was written, accept incomming connection */
+	sockaddr_in		client_addr;
+	socklen_t		client_addr_len;
+	int				client_sock;
+	
+	client_sock = accept(socket, reinterpret_cast<sockaddr *>(&client_addr), &client_addr_len);
+	if (client_sock <= 0)
+	{
+		std::cerr << "FATAL: accept() returned a negative value: " << strerror(errno) << std::endl;
+		return (POLL_NOACCEPT);
+	}
+	SockStream	*client_ss = new SockStream(client_sock, client_addr, *sock->getProtocol());
+	this->_sockets.insert(std::make_pair(client_sock, client_ss));
+	return (POLL_SUCCESS);
+}
+
+
+
+t_pollevent					AServer::_pollFromClients(int socket, int event)
+{
+	SockStream	*sock = this->_sockets[socket];
+
+	if (sock == NULL || sock->getType() != CLIENT)
+		return (POLL_NOTFOUND);
+	
+	/* client in sock has returned positive event */
+	if (event & POLLIN)
+	{
+		/* client socket is readable */
+		t_pollevent ev = this->_pollInClients(sock);
+		if (ev == POLL_DELETE)
+			return (POLL_DELETE);
+	}
+	if (event & POLLOUT)
+	{
+		/* client socket is writable */
+		this->_pollOutClients(sock);
+	}
+	return (POLL_SUCCESS);
+}
+
+
+
+t_pollevent					AServer::_pollInClients(SockStream *const sock)
+{
+	char	buffer[RECV_BUFFER_SZ] = { 0 };
+	size_t	byte_size = recv(sock->getSocket(), buffer, RECV_BUFFER_SZ, MSG_DONTWAIT);
+	if (byte_size < 0)
+		return (POLL_ERR);
+	else if (byte_size == 0)
+	{
+		this->_onClientQuit(*sock);
+		return (POLL_DELETE);
+	}
+	sock->getRecievedData().addData(buffer);			
+	while (!sock->getRecievedData().isInvalid()){
+		this->_onClientRecv(*sock, sock->getRecievedData());
+		if (!sock)
+			return (POLL_DELETE);
+		sock->getRecievedData().flush();
+	}
+	return (POLL_SUCCESS);
+}
+
+
+
+t_pollevent					AServer::_pollOutClients(SockStream *const sock)
+{
+	Package	&current_pkg = **sock->getPendingData().begin();
+
+	char 	buffer[SEND_BUFFER_SZ] = { 0 };
+	size_t	buffer_sz = current_pkg.getRawData().size() > SEND_BUFFER_SZ ? SEND_BUFFER_SZ : current_pkg.getRawData().size();
+	std::memcpy(buffer, current_pkg.getRawData().c_str(), buffer_sz);
+
+	size_t byte_size = send(current_pkg.getRecipient()->getSocket(), buffer, buffer_sz, 0);
+	current_pkg.nflush(byte_size);
+
+	if (current_pkg.isInvalid() || current_pkg.getRawData().empty())
+	{
+		delete &current_pkg;
+		sock->getPendingData().remove(&current_pkg);
+		if (sock->getPendingData().size() == 0)
+			sock->delPollEvent(POLLOUT);
+	}
+	return (POLL_SUCCESS);
+}
+
+
+
+
+t_pollevent					AServer::_onPollEvent(int socket, int event)
+{
+	/* trying to read events from clients first */
+	t_pollevent ev = this->_pollFromClients(socket, event);
+	if (ev != POLL_NOTFOUND)
+		return ev;
+	/* if no client has the corresponding socket, search on server sockets */
+	ev = this->_pollFromServer(socket, event);
+	if (ev != POLL_NOTFOUND)
+		return ev;
+	std::cerr << "FATAL: incomming data from unknown socket" << std::endl;
+	return (POLL_NOTFOUND);
+}
+
+
+
+bool						AServer::listenOn( ushort port, IProtocol &protocol )
+{
+	SockStream *new_sock = new SockStream(this->_host, port, protocol);
+	if (bind(new_sock->getSocket(), reinterpret_cast<const sockaddr *>(&new_sock->getSockaddr()), sizeof(new_sock->getSockaddr())) != 0)
+		throw AServer::AddressBindException();
+	this->_sockets.insert(std::make_pair(new_sock->getSocket(), new_sock));
 	return true;
 }
 
-SockStream					&AServer::_acceptConnection()
-{	
-	sockaddr_in         cli_addr;
-	int					socket_client;
-	socklen_t			cli_len = sizeof(cli_addr);
 
-	socket_client = accept(this->_socket, reinterpret_cast<struct sockaddr *>(&cli_addr), &cli_len);
-	if (socket_client < 0)
-		throw AServer::IncomingConnectionException();
 
-	SockStream *newSock = new SockStream(socket_client, cli_addr, *this->_protocol);
-	std::pair<int, SockStream *> p = std::make_pair(socket_client, newSock);
-	this->_clients.insert(p);
-	this->_onClientJoin(*newSock);
-	return *newSock; 
-}
+
+/* Clients */
 
 void						AServer::sendPackage( Package *pkg, SockStream &recipient)
 {
@@ -147,45 +180,33 @@ void						AServer::sendPackage( Package *pkg, SockStream &recipient)
 	recipient.getPendingData().push_back(pkg);
 }
 
+
+
 void						AServer::sendAll( const Package &package, const SockStream *except )
 {
-	for (std::map<int, SockStream *>::iterator it = this->_clients.begin(); it != this->_clients.end(); it++)
+	for (std::map<int, SockStream *>::iterator it = this->_sockets.begin(); it != this->_sockets.end(); it++)
 	{
 		if (!except || it->second != except)
 			this->sendPackage(new Package(package), *it->second);
 	}
 }
 
+
+
 void						AServer::kick( SockStream &client )
 {
-	if (this->_clients[client.getSocket()] != NULL)
+	if (this->_sockets[client.getSocket()] != NULL)
 	{
 		this->_onClientQuit(client);
 		int sock = client.getSocket();
 		delete &client;
-		this->_clients.erase(sock);
+		this->_sockets.erase(sock);
 	}
 }
-
-
-
-
-bool						AServer::_initServer( void )
-{
-	if (bind(this->_socket, reinterpret_cast<sockaddr *>(&this->_addr), sizeof(this->_addr)) != 0)
-		throw AServer::AddressBindException();
-	return true;
-}
-
 
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
 */
-
-std::map<int, SockStream*>	&AServer::getClients()
-{
-	return (this->_clients);
-}
 
 uint						AServer::getMaxConnection( void ) const
 {

@@ -9,8 +9,9 @@ class AServer;
 # include <poll.h>
 # include <map>
 # include "SockStream.hpp"
+# include "ASockManager.hpp"
 
-class AServer : public SockStream
+class AServer : public virtual ASockManager
 {
 	public:
 		class AddressBindException : public std::exception
@@ -58,38 +59,46 @@ class AServer : public SockStream
 				}
 		};
 		
-		AServer(IProtocol & protocol, const std::string &host = "127.0.0.1", int port = 8080);
+		AServer( const std::string &host = "127.0.0.1" );
 		virtual ~AServer();
 
-		bool						run( void );
 		void						loadConfigFile(std::string pathConfigFile);
+
+		bool						listenOn( ushort port, IProtocol &protocol );
+		void						run();
 
 		void						sendPackage( Package *package, SockStream &recipient);
 		void						sendAll( const Package &package, const SockStream *except = NULL);
 		void						kick( SockStream &client );
 
-		std::map<int, SockStream*>	&getClients();
-
 		uint						getMaxConnection( void ) const;
 		void						setMaxConnection( uint nb);
 
 	protected:
+		std::string					_host;
 		static uint					_defaultMaxConnections;
-		std::map<int, SockStream *>	_clients;
 
 		virtual void				_onClientJoin(SockStream &s) = 0;
 		virtual void				_onClientRecv(SockStream &s, Package &pkg) = 0;
 		virtual void				_onClientQuit(SockStream &s) = 0;
 
 	private:
-		AServer( AServer const & src );
+		uint						_maxConnections;
 
+		AServer( AServer const & src );
 		AServer&					operator=( AServer const & rhs );
 
-		bool						_initServer( void );
-		SockStream&					_acceptConnection( void );
 
-		uint						_maxConnections;
+		t_pollevent					_onPollEvent(int socket, int event);
+		/* branchless routing for _onPollEvent() */
+ 		__attribute__((always_inline))
+		inline t_pollevent			_pollFromServer(int socket, int event);
+		__attribute__((always_inline))
+		inline t_pollevent			_pollFromClients(int socket, int event);
+		__attribute__((always_inline))
+		inline t_pollevent			_pollInClients(SockStream *const sock);
+		__attribute__((always_inline))
+		inline t_pollevent			_pollOutClients(SockStream *const sock);
 };
 
 #endif /* ********************************************************* ASERVER_H */
