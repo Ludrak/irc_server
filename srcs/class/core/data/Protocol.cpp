@@ -9,7 +9,7 @@ Protocol::~Protocol()
 {
 }
 
-size_t      Protocol::isProtocol( const std::string &data ) const
+size_t      Protocol::checkFormat( const std::string &data ) const
 {
     return (data.size());
 }

@@ -11,7 +11,7 @@ uint		AServer::_defaultMaxConnections = 50;
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-AServer::AServer( const std::string &host ) : ASockManager(), _host(host), _maxConnections(AServer::_defaultMaxConnections)
+AServer::AServer( const std::string &host ) : ASockManager(), _host(host), _running(false), _maxConnections(AServer::_defaultMaxConnections)
 {
 
 }
@@ -32,6 +32,7 @@ AServer::~AServer()
 /* Server */
 void						AServer::run()
 {
+	this->_running = true;
 	for (std::map<int, SockStream *>::iterator it = this->_sockets.begin(); it != this->_sockets.end(); it++)
 	{
 		/* TODO maybe set a by port default max connection as std::map<ushort port, uint max_connections> */
@@ -65,6 +66,7 @@ t_pollevent					AServer::_pollFromServer(int socket, int event)
 		return (POLL_NOACCEPT);
 	}
 	SockStream	*client_ss = new SockStream(client_sock, client_addr, *sock->getProtocol());
+	client_ss->setType(REMOTE_CLIENT);
 	this->_sockets.insert(std::make_pair(client_sock, client_ss));
 	return (POLL_SUCCESS);
 }
@@ -75,7 +77,7 @@ t_pollevent					AServer::_pollFromClients(int socket, int event)
 {
 	SockStream	*sock = this->_sockets[socket];
 
-	if (sock == NULL || sock->getType() != CLIENT)
+	if (sock == NULL || sock->getType() != REMOTE_CLIENT)
 		return (POLL_NOTFOUND);
 	
 	/* client in sock has returned positive event */
@@ -153,7 +155,7 @@ t_pollevent					AServer::_onPollEvent(int socket, int event)
 	ev = this->_pollFromServer(socket, event);
 	if (ev != POLL_NOTFOUND)
 		return ev;
-	std::cerr << "FATAL: incomming data from unknown socket" << std::endl;
+	/* data wasn't addressed to server */
 	return (POLL_NOTFOUND);
 }
 
@@ -162,10 +164,16 @@ t_pollevent					AServer::_onPollEvent(int socket, int event)
 bool						AServer::listenOn( ushort port, IProtocol &protocol )
 {
 	SockStream *new_sock = new SockStream(this->_host, port, protocol);
+	new_sock->setType(SERVER);
 	if (bind(new_sock->getSocket(), reinterpret_cast<const sockaddr *>(&new_sock->getSockaddr()), sizeof(new_sock->getSockaddr())) != 0)
 		throw AServer::AddressBindException();
 	this->_sockets.insert(std::make_pair(new_sock->getSocket(), new_sock));
-	return true;
+	if (this->_running && listen(new_sock->getSocket(), this->_maxConnections) != 0)
+	{
+		std::cerr << "FATAL: can't listen on " << inet_ntoa(new_sock->getSockaddr().sin_addr) << ":" << ntohs(new_sock->getSockaddr().sin_port) << std::endl;
+		return (false);
+	}
+	return (true);
 }
 
 

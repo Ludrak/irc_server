@@ -36,7 +36,7 @@ bool			Package::isInvalid( void ) const
 
 void			Package::flush( void )
 {
-    size_t pk_sz = this->_protocol->isProtocol(this->_data);
+    size_t pk_sz = this->_protocol->checkFormat(this->_data);
     this->nflush(pk_sz);
     this->_checksum();
 }
@@ -49,7 +49,7 @@ void			Package::nflush( uint n )
 
 bool			Package::_checksum( void )
 {
-    this->_is_invalid = (this->_protocol->isProtocol(this->_data) == 0);
+    this->_is_invalid = (this->_protocol->checkFormat(this->_data) == 0);
     return (this->_is_invalid);
 }
 
@@ -68,7 +68,12 @@ std::string		Package::getData( void ) const
 
 std::string		Package::getRawData( void ) const
 {
-    size_t pk_sz = this->_protocol->isProtocol(this->_data);
+    size_t pk_sz = this->_protocol->checkFormat(this->_data);
+    if (pk_sz == 0 && !this->_data.empty())
+    {
+        std::cerr << "FATAL: invalid protocol" << std::endl;
+        return ("error");
+    }
     if (pk_sz == 0)
         return (this->_data);
     return (this->_data.substr(0, pk_sz));

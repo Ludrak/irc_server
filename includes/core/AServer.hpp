@@ -76,6 +76,8 @@ class AServer : public virtual ASockManager
 
 	protected:
 		std::string					_host;
+		bool						_running;
+
 		static uint					_defaultMaxConnections;
 
 		virtual void				_onClientJoin(SockStream &s) = 0;
@@ -90,7 +92,7 @@ class AServer : public virtual ASockManager
 
 
 		t_pollevent					_onPollEvent(int socket, int event);
-		
+
 		t_pollevent					_pollFromServer(int socket, int event);
 		t_pollevent					_pollFromClients(int socket, int event);
 		t_pollevent					_pollInClients(SockStream *const sock);

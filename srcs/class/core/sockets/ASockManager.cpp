@@ -3,7 +3,6 @@
 
 ASockManager::ASockManager()
 {
-
 }
 
 /** @param sock : allocated SockStream* */
@@ -40,7 +39,7 @@ void            ASockManager::run( void )
             return ;
         }
         
-        /* execute event handlers */
+        /* execute events handler */
         for (std::vector<struct pollfd>::reverse_iterator it = poll_fds.rbegin(); it != poll_fds.rend(); ++it)
         {
             if (it->revents != 0)
