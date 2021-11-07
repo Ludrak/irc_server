@@ -90,15 +90,11 @@ class AServer : public virtual ASockManager
 
 
 		t_pollevent					_onPollEvent(int socket, int event);
-		/* branchless routing for _onPollEvent() */
- 		__attribute__((always_inline))
-		inline t_pollevent			_pollFromServer(int socket, int event);
-		__attribute__((always_inline))
-		inline t_pollevent			_pollFromClients(int socket, int event);
-		__attribute__((always_inline))
-		inline t_pollevent			_pollInClients(SockStream *const sock);
-		__attribute__((always_inline))
-		inline t_pollevent			_pollOutClients(SockStream *const sock);
+		
+		t_pollevent					_pollFromServer(int socket, int event);
+		t_pollevent					_pollFromClients(int socket, int event);
+		t_pollevent					_pollInClients(SockStream *const sock);
+		t_pollevent					_pollOutClients(SockStream *const sock);
 };
 
 #endif /* ********************************************************* ASERVER_H */
