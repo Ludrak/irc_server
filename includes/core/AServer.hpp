@@ -5,7 +5,7 @@
 class AServer : public virtual ASockManager
 {
 	public:
-		AServer(void);
+		AServer(const std::string & host = "127.0.0.1");
 		virtual ~AServer();
 		void				kick( SockStream &client );
 		void				sendPackage( Package *pkg, SockStream &recipient);

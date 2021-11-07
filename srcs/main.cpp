@@ -60,7 +60,7 @@ int main(int ac, char ** av)
 		IRCServer server(port, password, "127.0.0.1");
 		if (!server.setNetworkConnection(host, port_network, password_network))
 		{
-			Logger::error("Bad network params");
+			Logger::error("Cannot connect to remote server.");
 			return Usage(av[0]);
 		}
 		server.run();

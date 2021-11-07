@@ -5,18 +5,21 @@
 */
 
 //TODO CHeck return values
-SockStream::SockStream(IProtocol & protocol) : _poll_events(POLLIN), _protocol(&protocol), _recieved_data(protocol)
+SockStream::SockStream(IProtocol & protocol)
+: _type(UNKNOWN), _poll_events(POLLIN), _protocol(&protocol), _recieved_data(protocol)
 {
-	Logger::debug("default SockStream constructor");
+	std::cout << "default SockStream constructor" << std::endl;
 	this->_createSocket("127.0.0.1", 8080);
 }
 
-SockStream::SockStream(const std::string &host, uint16_t port, IProtocol & protocol) : _poll_events(POLLIN), _protocol(&protocol), _recieved_data(protocol)
+SockStream::SockStream(const std::string &host, uint16_t port, IProtocol & protocol)
+: _type(UNKNOWN), _poll_events(POLLIN), _protocol(&protocol), _recieved_data(protocol)
 {
 	this->_createSocket(host, port);
 }
 
-SockStream::SockStream(int socket, const sockaddr_in &address, IProtocol & protocol) : _socket(socket), _poll_events(POLLIN), _addr(address), _protocol(&protocol), _recieved_data(protocol)
+SockStream::SockStream(int socket, const sockaddr_in &address, IProtocol & protocol)
+: _socket(socket), _type(UNKNOWN), _poll_events(POLLIN), _addr(address), _protocol(&protocol), _recieved_data(protocol)
 {
 }
 
@@ -35,11 +38,9 @@ SockStream::~SockStream()
 
 void							SockStream::_createSocket(const std::string &host, uint16_t port, sa_family_t family, int sock_type)
 {
-	int option = 1; // TODO add this to a class value
-	if ((this->_socket = socket(family, sock_type, 0)) < 0
-	|| fcntl(this->_socket, F_SETFL, O_NONBLOCK) < 0
-	|| setsockopt(this->_socket, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option)) < 0)
-		throw SockStream::SocketCreationException(); //TODO see exception custom message
+	if ((this->_socket = socket(family, sock_type, 0)) < 0)
+		throw SockStream::SocketCreationException();
+	
 	bzero(reinterpret_cast<void *>(&this->_addr), sizeof(this->_addr));
 	this->_addr.sin_port = htons(port);
 	this->_addr.sin_family = family;
@@ -97,6 +98,21 @@ Package							&SockStream::getRecievedData()
 std::list<Package*>				&SockStream::getPendingData()
 {
 	return (this->_pending_data);
+}
+
+t_sock_type						SockStream::getType(void) const
+{
+	return (this->_type);
+}
+
+
+void							SockStream::setType( const t_sock_type type )
+{
+	int option = (type == SERVER);
+	if (option && (setsockopt(this->_socket, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option) != 0
+				|| fcntl(this->_socket, F_SETFL, O_NONBLOCK) < 0)))
+		return ;
+	this->_type = type;
 }
 
 /* ************************************************************************** */

@@ -7,9 +7,11 @@ class Client;
 
 # include "Channel.hpp"
 # include "Client.hpp"
+# include "Parser.hpp"
+# include "Logger.hpp"
+# include "ntos.hpp"
 # include "AIrcClient.hpp"
 # include "IRCProtocol.hpp"
-# include "Parser.hpp"
 # include "ANode.hpp"
 
 # define IRC_DEFAULT_HOST "127.0.0.1"
@@ -35,39 +37,49 @@ class IRCServer : public ANode
 		IRCServer(int port = IRC_DEFAULT_PORT, const std::string &password = IRC_DEFAULT_PASS, const std::string &host = IRC_DEFAULT_HOST);
 		virtual ~IRCServer();
 
+		bool					setNetworkConnection(const std::string & host, int port, std::string & password);
 		const IProtocol&		getProtocol( void ) const;
 		Channel*				getChannel(int ChannelUID);
-		const SockStream&		getForwardSocket( void ) const;
 		AIrcClient&				getClientBySockStream(SockStream & s);
-		bool					setNetworkConnection(const std::string & host, int port, std::string & password);
+
+	
+	private:
 
 		typedef uint	(IRCServer::*UserOperations)(Client & client, std::string str);
 		typedef uint	(IRCServer::*ServerOperations)(AIrcClient & client, std::string str);
-	private:
-
-		IRCServer( IRCServer const & src );
-		IRCServer&				operator=( IRCServer const & rhs );
-
+	
 		std::map<std::string, AIrcClient*>		_ircClients;
 		std::list<AIrcClient*>					_pendingConnections;
 		std::map<std::string, UserOperations>	_userCommands;
 		std::map<std::string, ServerOperations>	_serverCommands;
-		// std::map<std::string, Operations>	_opCommands;
 		//network
-		SockStream								_forwardSocket;
+		int										_forwardSocket;
 		std::string								_password;
 		std::string								_networkSocket;
 		IRCProtocol								_protocol;
 
-		//events
-		void					_onClientJoin(SockStream &s);
-		void					_onClientRecv(SockStream &s, Package &pkg);
-		void					_onClientQuit(SockStream &s);
-		
-		void					setRegistered(AIrcClient & client);
-		void					sendMessage(AIrcClient & client, std::string message, uint error = 0);
-		void					printServerState( void );
+/*
+** --------------------------------- EVENTS ---------------------------------
+*/
+		void					_onClientJoin( SockStream &s );
+		void					_onClientRecv( SockStream &s, Package &pkg );
+		void					_onClientQuit( SockStream &s );
+		void					_onRecv( SockStream &server,  Package &pkg );
+		void					_onConnect ( SockStream &server );
+		void					_onQuit( SockStream &server );
+		void					_onKicked( SockStream &server );
 
+/*
+** --------------------------------- SocketAction ---------------------------------
+*/
+
+	void						_setRegistered(AIrcClient & client);
+	void						_sendMessage(AIrcClient & client, std::string message, uint error = 0);
+		
+/*
+** --------------------------------- DEBUG ---------------------------------
+*/
+		void					_printServerState( void );
 /*
 ** --------------------------------- COMMANDS ---------------------------------
 */

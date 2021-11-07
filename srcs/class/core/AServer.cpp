@@ -4,9 +4,9 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-AServer::AServer(void) : ASockManager()
+AServer::AServer(const std::string & host) : ASockManager()
 {
-	std::cout << "Constructor AServer" << std::endl;
+	Logger::debug("Constructor AServer: " + host);
 }
 
 /*

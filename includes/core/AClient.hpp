@@ -8,6 +8,8 @@ class AClient : public virtual ASockManager
 		AClient(void);
 		virtual ~AClient();
 
+        bool            connectOn(const std::string host, const ushort port, IProtocol &protocol);
+
 };
 
 #endif /* ********************************************************* ACLIENT_H */
