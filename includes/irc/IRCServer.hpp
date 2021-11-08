@@ -1,7 +1,6 @@
 #ifndef IRCSERVER_HPP
 # define IRCSERVER_HPP
 
-class AServer;
 class Channel;
 class Client;
 
@@ -10,7 +9,6 @@ class Client;
 # include "Parser.hpp"
 # include "Logger.hpp"
 # include "ntos.hpp"
-# include "AIrcClient.hpp"
 # include "IRCProtocol.hpp"
 # include "ANode.hpp"
 
@@ -34,28 +32,26 @@ class IRCServer : public ANode
 {
 
 	public:
-		IRCServer(int port = IRC_DEFAULT_PORT, const std::string &password = IRC_DEFAULT_PASS, const std::string &host = IRC_DEFAULT_HOST);
+		IRCServer(ushort port = IRC_DEFAULT_PORT, const std::string &password = IRC_DEFAULT_PASS, const std::string &host = IRC_DEFAULT_HOST);
 		virtual ~IRCServer();
 
-		bool					setNetworkConnection(const std::string & host, int port, std::string & password);
+		bool					setNetworkConnection(const std::string & host, ushort port, std::string & password);
 		const IProtocol&		getProtocol( void ) const;
 		Channel*				getChannel(int ChannelUID);
-		AIrcClient&				getClientBySockStream(SockStream & s);
+		Client*				getClientBySockStream(SockStream & s);
 
 	
 	private:
 
 		typedef uint	(IRCServer::*UserOperations)(Client & client, std::string str);
-		typedef uint	(IRCServer::*ServerOperations)(AIrcClient & client, std::string str);
+		typedef uint	(IRCServer::*ServerOperations)(AEntity & client, std::string str);
 	
-		std::map<std::string, AIrcClient*>		_ircClients;
-		std::list<AIrcClient*>					_pendingConnections;
+		ushort									_forwardSocket;
+		std::string								_password;
+		std::map<std::string, AEntity*>			_ircClients;
+		std::list<Client*>						_pendingConnections;
 		std::map<std::string, UserOperations>	_userCommands;
 		std::map<std::string, ServerOperations>	_serverCommands;
-		//network
-		int										_forwardSocket;
-		std::string								_password;
-		std::string								_networkSocket;
 		IRCProtocol								_protocol;
 
 /*
@@ -73,8 +69,8 @@ class IRCServer : public ANode
 ** --------------------------------- SocketAction ---------------------------------
 */
 
-	void						_setRegistered(AIrcClient & client);
-	void						_sendMessage(AIrcClient & client, std::string message, uint error = 0);
+	void						_setRegistered(Client & client);
+	void						_sendMessage(AEntity & client, std::string message);
 		
 /*
 ** --------------------------------- DEBUG ---------------------------------
@@ -84,14 +80,13 @@ class IRCServer : public ANode
 ** --------------------------------- COMMANDS ---------------------------------
 */
 		void		_init_commands(void);
-		int			execute(AIrcClient & client, std::string data);
-		uint		userCommandPass(Client & client, std::string cmd);
-		uint		userCommandNick(Client & client, std::string cmd);
-		uint		userCommandUser(Client & client, std::string cmd);
-		uint		userCommandPrivmsg(Client & client, std::string cmd);
-		uint		userCommandDescribe(Client & client, std::string cmd);
+		int			execute(AEntity & client, std::string data);
+		uint		_commandPASS(Client & client, std::string cmd);
+		uint		_commandNICK(Client & client, std::string cmd);
+		uint		_commandUSER(Client & client, std::string cmd);
+		uint		_commandPRIVMSG(Client & client, std::string cmd);
+		uint		_commandDESCRIBE(Client & client, std::string cmd);
 
-		uint		serverCommandNick(Client & client, std::string cmd);
 };
 
 #endif /* ******************************************************* IRCSERVER_H */

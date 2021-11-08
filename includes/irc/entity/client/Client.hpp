@@ -2,30 +2,37 @@
 # define CLIENT_HPP
 
 class IRCServer;
-
+# include "SockStream.hpp"
 # include "AEntity.hpp"
 # include "IRCServer.hpp"
-# include "AIrcClient.hpp"
 
-class Client : public AIrcClient
+class Client : public AEntity
 {
 
 	public:
 
-		Client(SockStream & socket);
+		Client(const SockStream & socket);
 		virtual ~Client();
 
 		Client &			operator=( Client const & rhs );
 
-		uint				getId( void ) const;
-		void				setUsername(std::string user);
-		void				setDomaineName(std::string domaine);
-		void				setServername(std::string servername);
-		void				setRealname(std::string realName);
 		std::string			getUsername( void );
+		void				setUsername(std::string user);
+
 		std::string			getDomaineName( void );
+		void				setDomaineName(std::string domaine);
+		
 		std::string			getServername( void );
+		void				setServername(std::string servername);
+
 		std::string			getRealname( void );
+		void				setRealname(std::string realName);
+
+		void				setRegistered( bool registered );
+		bool				isRegistered( void );
+
+		uint				getType( void ) const;
+		SockStream&			getStream();
 
 		enum C { value_type = 1 };
 	
@@ -36,7 +43,10 @@ class Client : public AIrcClient
 		std::string							_domaine;
 		std::string							_servername;
 		std::string							_realname;
-		AServer*							_master;
+		bool								_registered;
+		IRCServer*							_master;
+		ushort								_socket;
+
 };
 
 std::ostream &			operator<<( std::ostream & o, Client const & i );

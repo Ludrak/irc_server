@@ -19,7 +19,6 @@ SRCS		=	SockStream.cpp \
 				AServer.cpp \
 				ANode.cpp \
 				IRCServer.cpp \
-				AIrcClient.cpp \
 				Client.cpp \
 				AEntity.cpp \
 				Channel.cpp \
@@ -38,7 +37,6 @@ HEADERS		=	SockStream.hpp \
 				Client.hpp \
 				ANode.hpp \
 				AEntity.hpp \
-				AIrcClient.hpp \
 				Channel.hpp \
 				Package.hpp \
 				IProtocol.hpp \

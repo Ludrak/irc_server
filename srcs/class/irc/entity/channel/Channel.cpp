@@ -50,9 +50,21 @@ std::ostream &			operator<<( std::ostream & o, Channel const & i )
 ** --------------------------------- METHODS ----------------------------------
 */
 
+//TODO remove
+void				Channel::broadcastPackage(Package * pkg, const SockStream * except)
+{
+	(void) pkg;
+	(void) except;
+}
+
+
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
 */
 
+uint					Channel::getType( void ) const
+{
+	return Channel::value_type;
+}
 
 /* ************************************************************************** */

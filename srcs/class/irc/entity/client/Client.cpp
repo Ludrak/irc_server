@@ -4,8 +4,10 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Client::Client(SockStream & socket) : AIrcClient(socket)
+Client::Client(const SockStream & socket) : AEntity()
 {
+	this->_socket = socket.getSocket();
+
 }
 
 /*
@@ -48,51 +50,61 @@ std::ostream &			operator<<( std::ostream & o, Client const & i )
 ** --------------------------------- ACCESSOR ---------------------------------
 */
 
-uint					Client::getId( void ) const
+uint					Client::getType( void ) const
 {
 	return Client::value_type;
 }
 
-
-void				Client::setUsername(std::string user)
-{
-	this->_username = user;
-}
-
-void				Client::setDomaineName(std::string domaine)
-{
-	this->_domaine = domaine;
-}
-
-void				Client::setServername(std::string servername)
-{
-	this->_servername = servername;
-}
-
-void				Client::setRealname(std::string realname)
-{
-	this->_realname = realname;
-}
-
-std::string			Client::getUsername( void )
+std::string				Client::getUsername( void )
 {
 	return this->_username;
 }
 
-std::string			Client::getDomaineName( void )
+void					Client::setUsername(std::string user)
+{
+	this->_username = user;
+}
+
+std::string				Client::getDomaineName( void )
 {
 	return this->_domaine;
 }
 
-std::string			Client::getServername( void )
+void					Client::setDomaineName(std::string domaine)
+{
+	this->_domaine = domaine;
+}
+
+std::string				Client::getServername( void )
 {
 	return this->_servername;
 }
 
-std::string			Client::getRealname( void )
+void					Client::setServername(std::string servername)
 {
-	return this->_realname;
+	this->_servername = servername;
 }
 
+void					Client::setRegistered( bool registered)
+{
+	this->_registered = registered;
+}
+
+bool					Client::isRegistered( void )
+{
+	return this->_registered;
+}
+
+SockStream&				Client::getStream( void )
+{
+	SockStream* s = this->_master->getSocket(this->_socket);
+	if (s == NULL)
+	{
+		Logger::critical("Client try to get invalid socket with socketId.");
+		//TODO throw not found
+		// throw ;
+	}
+	return *s;
+}
 
 /* ************************************************************************** */

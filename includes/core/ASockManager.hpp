@@ -22,7 +22,7 @@ class ASockManager
         virtual void        run(void);
         void                addSocket(SockStream *const &sock);
         void                delSocket(SockStream *sock);
-        void                getSocket(int socket) const;
+        SockStream*			getSocket(int socket) const;
 
     protected:
         std::map<int, SockStream *>   _sockets;

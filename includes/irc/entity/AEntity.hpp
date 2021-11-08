@@ -13,14 +13,23 @@ class AEntity
 
 		AEntity();
 		AEntity( AEntity const & src );
-		~AEntity();
+		virtual ~AEntity();
 
 		AEntity &		operator=( AEntity const & rhs );
 
 		uint					getUID( void ) const;
-		virtual uint			getId( void ) const = 0;
+		virtual uint			getType( void ) const = 0;
+		
+		std::string			getNickname( void );
+		void				setNickname(std::string nick);
+	
+		std::string			getPassword( void );
+		void				setPassword(std::string password);
+
 	private:
-		uint		_uid;
+		uint				_uid;
+		std::string			_nickname;
+		std::string			_givenPassword;
 
 };
 

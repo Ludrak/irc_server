@@ -52,6 +52,27 @@ uint						AEntity::getUID( void ) const
 	return this->_uid;
 }
 
+
+std::string					AEntity::getNickname(void)
+{
+	return this->_nickname;
+}
+
+void						AEntity::setNickname(std::string nick)
+{
+	this->_nickname = nick;
+}
+
+std::string					AEntity::getPassword( void )
+{
+	return this->_givenPassword;
+}
+
+void						AEntity::setPassword( std::string password) 
+{
+	this->_givenPassword = password;
+}
+
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
 */
