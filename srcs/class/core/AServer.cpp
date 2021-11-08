@@ -33,7 +33,7 @@ AServer::~AServer()
 void						AServer::run()
 {
 	this->_running = true;
-	for (std::map<int, SockStream *>::iterator it = this->_sockets.begin(); it != this->_sockets.end(); it++)
+	for (std::map<ushort, SockStream *>::iterator it = this->_sockets.begin(); it != this->_sockets.end(); it++)
 	{
 		/* TODO maybe set a by port default max connection as std::map<ushort port, uint max_connections> */
 		if (listen(it->first, this->_defaultMaxConnections) != 0)
@@ -53,6 +53,7 @@ t_pollevent					AServer::_pollFromServer(int socket, int event)
 
 	if (sock == NULL || sock->getType() != SERVER || ~event & POLLIN)
 		return (POLL_NOTFOUND);
+
 	
 	/* server socket was written, accept incomming connection */
 	sockaddr_in		client_addr;
@@ -68,6 +69,7 @@ t_pollevent					AServer::_pollFromServer(int socket, int event)
 	SockStream	*client_ss = new SockStream(client_sock, client_addr, *sock->getProtocol());
 	client_ss->setType(REMOTE_CLIENT);
 	this->_sockets.insert(std::make_pair(client_sock, client_ss));
+	this->_onClientJoin(*client_ss);
 	return (POLL_SUCCESS);
 }
 
@@ -106,7 +108,7 @@ t_pollevent					AServer::_pollInClients(SockStream *const sock)
 		return (POLL_ERR);
 	else if (byte_size == 0)
 	{
-		this->_onClientQuit(*sock);
+		this->disconnect(*sock);
 		return (POLL_DELETE);
 	}
 	sock->getRecievedData().addData(buffer);			
@@ -190,9 +192,9 @@ void						AServer::sendPackage( Package *pkg, SockStream &recipient)
 
 
 
-void						AServer::sendAll( const Package &package, const SockStream *except )
+void						AServer::broadcastPackage( const Package &package, const SockStream *except )
 {
-	for (std::map<int, SockStream *>::iterator it = this->_sockets.begin(); it != this->_sockets.end(); it++)
+	for (std::map<ushort, SockStream *>::iterator it = this->_sockets.begin(); it != this->_sockets.end(); it++)
 	{
 		if (!except || it->second != except)
 			this->sendPackage(new Package(package), *it->second);
@@ -201,14 +203,12 @@ void						AServer::sendAll( const Package &package, const SockStream *except )
 
 
 
-void						AServer::kick( SockStream &client )
+void						AServer::disconnect( SockStream &client )
 {
 	if (this->_sockets[client.getSocket()] != NULL)
 	{
 		this->_onClientQuit(client);
-		int sock = client.getSocket();
-		delete &client;
-		this->_sockets.erase(sock);
+		this->delSocket(&client);
 	}
 }
 

@@ -46,7 +46,7 @@ class SockStream
 		SockStream(IProtocol &protocol);
 		SockStream(const std::string &host, uint16_t port, IProtocol &protocol);
 		/* client socket contructor */
-		SockStream(int socket, const sockaddr_in &address, IProtocol &protocol);
+		SockStream(ushort socket, const sockaddr_in &address, IProtocol &protocol);
 		
 		~SockStream();
 
@@ -69,7 +69,7 @@ class SockStream
 		void						setType( const t_sock_type type );
 
 	protected:
-		int							_socket;
+		ushort						_socket;
 		t_sock_type					_type;
 		int							_poll_events;
 		struct sockaddr_in			_addr;

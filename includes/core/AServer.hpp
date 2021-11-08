@@ -68,8 +68,8 @@ class AServer : public virtual ASockManager
 		void						run();
 
 		void						sendPackage( Package *package, SockStream &recipient);
-		void						sendAll( const Package &package, const SockStream *except = NULL);
-		void						kick( SockStream &client );
+		void						broadcastPackage( const Package &package, const SockStream *except = NULL);
+		void						disconnect( SockStream &client );
 
 		uint						getMaxConnection( void ) const;
 		void						setMaxConnection( uint nb);

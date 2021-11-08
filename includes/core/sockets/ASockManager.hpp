@@ -1,10 +1,7 @@
-#ifndef SOCK_MANAGER_HPP
-# define SOCK_MANAGER_HPP
+#ifndef ASOCKMANAGER_HPP
+# define ASOCKMANAGER_HPP
 
-#include <iostream>
-#include <map>
-#include <poll.h>
-#include "SockStream.hpp"
+#include "ASockHandler.hpp"
 
 typedef int t_pollevent;
 # define POLL_SUCCESS   0
@@ -13,18 +10,18 @@ typedef int t_pollevent;
 # define POLL_NOACCEPT  3
 
 
-class ASockManager
+class ASockManager : public ASockHandler
 {
     public:
         ASockManager(void);
 
         virtual void        run(void);
-        void                addSocket(SockStream *const &sock);
         void                delSocket(SockStream *sock);
-        void                getSocket(int socket) const;
+
 
     protected:
-        std::map<int, SockStream *>   _sockets;
+        std::vector<pollfd>           _poll_fds;
+        std::vector<pollfd>::iterator _poll_next_iterator;
 
         virtual t_pollevent _onPollEvent(int socket, int event) = 0;
 };

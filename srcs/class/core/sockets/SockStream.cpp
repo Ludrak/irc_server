@@ -18,7 +18,7 @@ SockStream::SockStream(const std::string &host, uint16_t port, IProtocol & proto
 	this->_createSocket(host, port);
 }
 
-SockStream::SockStream(int socket, const sockaddr_in &address, IProtocol & protocol)
+SockStream::SockStream(ushort socket, const sockaddr_in &address, IProtocol & protocol)
 : _socket(socket), _type(UNKNOWN), _poll_events(POLLIN), _addr(address), _protocol(&protocol), _recieved_data(protocol)
 {
 }
@@ -109,8 +109,8 @@ t_sock_type						SockStream::getType(void) const
 void							SockStream::setType( const t_sock_type type )
 {
 	int option = (type == SERVER);
-	if (option && (setsockopt(this->_socket, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option) != 0
-				|| fcntl(this->_socket, F_SETFL, O_NONBLOCK) < 0)))
+	if (option && (setsockopt(this->_socket, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option)) != 0
+				|| fcntl(this->_socket, F_SETFL, O_NONBLOCK) < 0))
 		return ;
 	this->_type = type;
 }
