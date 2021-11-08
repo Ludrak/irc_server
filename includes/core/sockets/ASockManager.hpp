@@ -18,7 +18,6 @@ class ASockManager : public ASockHandler
         virtual void        run(void);
         void                delSocket(SockStream *sock);
 
-
     protected:
         std::vector<pollfd>           _poll_fds;
         std::vector<pollfd>::iterator _poll_next_iterator;

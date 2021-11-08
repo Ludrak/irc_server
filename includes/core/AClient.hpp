@@ -13,6 +13,14 @@ class AClient;
 
 class AClient : public virtual ASockManager
 {
+    class ConnectionException : std::exception
+    {
+        virtual const char  *what()
+        {
+            return ("can't connect to server");
+        }
+    };
+
     public:
         AClient(void);
         virtual ~AClient();
@@ -24,7 +32,6 @@ class AClient : public virtual ASockManager
         virtual void    _onConnect ( SockStream &server) = 0;
         virtual void    _onRecv( SockStream &server,  Package &pkg) = 0;
         virtual void    _onQuit( SockStream &server) = 0;
-        virtual void    _onKicked( SockStream &server) = 0;
 
     private:
         t_pollevent     _onPollEvent(int socket, int event);

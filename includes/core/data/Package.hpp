@@ -11,7 +11,7 @@ class Package
 {
 	class SizeExeededException : public std::exception
 	{
-		virtual const char      *what( void ) const throw()
+		virtual const char	*what( void ) const throw()
 		{
 			return ("Package size exeeded");
 		}
@@ -19,7 +19,7 @@ class Package
 
 	class InvalidProtocolException : public std::exception
 	{
-		virtual const char      *what( void ) const throw()
+		virtual const char	*what( void ) const throw()
 		{
 			return ("Invalid protocol");
 		}
@@ -30,17 +30,17 @@ class Package
 		Package( Package const &src );
 		virtual ~Package();
 
-		Package&		operator=( Package const & rhs );
+		Package&			operator=( Package const & rhs );
 
-		void			addData( const std::string &new_data ) throw(Package::SizeExeededException);
-		void			flush( void );
-		void			nflush( uint n );
+		void				addData( const std::string &new_data ) throw(Package::SizeExeededException);
+		void				flush( void );
+		void				nflush( uint n );
 
-		bool			isInvalid( void ) const;
-		std::string		getData( void ) const;
-		std::string		getRawData( void ) const;
-		SockStream      *getRecipient( void ) const;
-		void			setRecipient( const SockStream *recipient );
+		bool				isInvalid( void ) const;
+		std::string			getData( void ) const;
+		std::string			getRawData( void ) const;
+		SockStream      	*getRecipient( void ) const;
+		void				setRecipient( const SockStream *recipient );
 
 	private:
 		std::string			_data;
@@ -48,7 +48,7 @@ class Package
 		const IProtocol		*_protocol;
 		const SockStream	*_recipient;
 
-		bool			_checksum( void );
+		bool				_checksum( void );
 };
 
 std::ostream &			operator<<( std::ostream & o, Package const & i );

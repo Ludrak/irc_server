@@ -56,7 +56,7 @@ class SockStream
 		void						setPackageProtocol(IProtocol &proto);
 
 		int							getSocket(void) const;
-		const struct sockaddr_in&	getSockaddr(void) const;
+		const struct sockaddr_in&	getAddress(void) const;
 		IProtocol					*getProtocol(void) const;
 		Package						&getRecievedData(void);
 		std::list<Package*>			&getPendingData(void);

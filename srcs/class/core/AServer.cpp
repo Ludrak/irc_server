@@ -38,7 +38,7 @@ void						AServer::run()
 		/* TODO maybe set a by port default max connection as std::map<ushort port, uint max_connections> */
 		if (listen(it->first, this->_defaultMaxConnections) != 0)
 		{
-			std::cerr << "FATAL: can't listen on " << inet_ntoa(it->second->getSockaddr().sin_addr) << ":" << ntohs(it->second->getSockaddr().sin_port) << std::endl;
+			std::cerr << "FATAL: can't listen on " << inet_ntoa(it->second->getAddress().sin_addr) << ":" << ntohs(it->second->getAddress().sin_port) << std::endl;
 			return ;
 		}
 	}
@@ -167,43 +167,19 @@ bool						AServer::listenOn( ushort port, IProtocol &protocol )
 {
 	SockStream *new_sock = new SockStream(this->_host, port, protocol);
 	new_sock->setType(SERVER);
-	if (bind(new_sock->getSocket(), reinterpret_cast<const sockaddr *>(&new_sock->getSockaddr()), sizeof(new_sock->getSockaddr())) != 0)
+	if (bind(new_sock->getSocket(), reinterpret_cast<const sockaddr *>(&new_sock->getAddress()), sizeof(new_sock->getAddress())) != 0)
 		throw AServer::AddressBindException();
 	this->_sockets.insert(std::make_pair(new_sock->getSocket(), new_sock));
 	if (this->_running && listen(new_sock->getSocket(), this->_maxConnections) != 0)
 	{
-		std::cerr << "FATAL: can't listen on " << inet_ntoa(new_sock->getSockaddr().sin_addr) << ":" << ntohs(new_sock->getSockaddr().sin_port) << std::endl;
+		std::cerr << "FATAL: can't listen on " << inet_ntoa(new_sock->getAddress().sin_addr) << ":" << ntohs(new_sock->getAddress().sin_port) << std::endl;
 		return (false);
 	}
 	return (true);
 }
 
 
-
-
-/* Clients */
-
-void						AServer::sendPackage( Package *pkg, SockStream &recipient)
-{
-	recipient.setPollEvent(POLLOUT);
-	pkg->setRecipient(&recipient);
-	recipient.getPendingData().push_back(pkg);
-}
-
-
-
-void						AServer::broadcastPackage( const Package &package, const SockStream *except )
-{
-	for (std::map<ushort, SockStream *>::iterator it = this->_sockets.begin(); it != this->_sockets.end(); it++)
-	{
-		if (!except || it->second != except)
-			this->sendPackage(new Package(package), *it->second);
-	}
-}
-
-
-
-void						AServer::disconnect( SockStream &client )
+void		    			AServer::disconnect( SockStream &client )
 {
 	if (this->_sockets[client.getSocket()] != NULL)
 	{
@@ -211,6 +187,7 @@ void						AServer::disconnect( SockStream &client )
 		this->delSocket(&client);
 	}
 }
+
 
 /*
 ** --------------------------------- ACCESSOR ---------------------------------

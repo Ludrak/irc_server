@@ -13,11 +13,8 @@ AClient::~AClient(void)
 bool			AClient::connectOn(const std::string host, const ushort port, IProtocol &protocol)
 {
 	SockStream  *s = new SockStream(host, port, protocol);
-	if (connect(s->getSocket(), reinterpret_cast<const sockaddr*>(&s->getSockaddr()), sizeof(s->getSockaddr())) != 0)
-	{
-		std::cerr << "can't connect on : " << inet_ntoa(s->getSockaddr().sin_addr) << ":" << ntohs(s->getSockaddr().sin_port) << ": " << strerror(errno) << std::endl;
-		return (false);
-	}
+	if (connect(s->getSocket(), reinterpret_cast<const sockaddr*>(&s->getAddress()), sizeof(s->getAddress())) != 0)
+		throw AClient::ConnectionException();
 	s->setType(CLIENT);
 	this->addSocket(s);
 	this->_onConnect(*s);
@@ -36,6 +33,7 @@ t_pollevent		AClient::_pollInClients(SockStream *const sock)
 	else if (byte_size == 0)
 	{
 		this->_onQuit(*sock);
+		this->delSocket(sock);
 		return (POLL_DELETE);
 	}
 	sock->getRecievedData().addData(buffer);			

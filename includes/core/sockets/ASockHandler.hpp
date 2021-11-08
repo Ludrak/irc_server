@@ -18,7 +18,6 @@ class ASockHandler
 
         void				sendPackage( Package *package, SockStream &recipient);
 		void				broadcastPackage( const Package &package, const SockStream *except = NULL);
-		void				disconnect( SockStream &client );
 
     protected:
         std::map<ushort, SockStream *> _sockets;

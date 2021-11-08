@@ -61,7 +61,7 @@ int								SockStream::getSocket( void ) const
 	return this->_socket;
 }
 
-const struct sockaddr_in&		SockStream::getSockaddr( void ) const
+const struct sockaddr_in&		SockStream::getAddress( void ) const
 {
 	return this->_addr;
 }
