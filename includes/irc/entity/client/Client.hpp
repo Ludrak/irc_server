@@ -11,7 +11,7 @@ class Client : public AEntity
 
 	public:
 
-		Client(const SockStream & socket);
+		Client(SockStream & socket);
 		virtual ~Client();
 
 		Client &			operator=( Client const & rhs );
@@ -34,7 +34,10 @@ class Client : public AEntity
 		uint				getType( void ) const;
 		SockStream&			getStream();
 
-		enum C { value_type = 1 };
+		enum C { 
+			value_type_client = 1,
+			value_type_server = 2 
+		};
 	
 	private:
 
@@ -44,8 +47,7 @@ class Client : public AEntity
 		std::string							_servername;
 		std::string							_realname;
 		bool								_registered;
-		IRCServer*							_master;
-		ushort								_socket;
+		SockStream*							_socket;
 
 };
 

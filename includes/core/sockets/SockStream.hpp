@@ -17,6 +17,7 @@ class SockStream;
 # include <poll.h>
 # include <list>
 # include "Package.hpp"
+# include "Logger.hpp"
 
 # define RECV_BUFFER_SZ	255
 # define SEND_BUFFER_SZ	255
@@ -46,7 +47,7 @@ class SockStream
 		SockStream(IProtocol &protocol);
 		SockStream(const std::string &host, uint16_t port, IProtocol &protocol);
 		/* client socket contructor */
-		SockStream(int socket, const sockaddr_in &address, IProtocol &protocol);
+		SockStream(ushort socket, const sockaddr_in &address, IProtocol &protocol);
 		
 		~SockStream();
 
@@ -56,7 +57,7 @@ class SockStream
 		void						setPackageProtocol(IProtocol &proto);
 
 		int							getSocket(void) const;
-		const struct sockaddr_in&	getSockaddr(void) const;
+		const struct sockaddr_in&	getAddress(void) const;
 		IProtocol					*getProtocol(void) const;
 		Package						&getRecievedData(void);
 		std::list<Package*>			&getPendingData(void);
@@ -69,7 +70,7 @@ class SockStream
 		void						setType( const t_sock_type type );
 
 	protected:
-		int							_socket;
+		ushort						_socket;
 		t_sock_type					_type;
 		int							_poll_events;
 		struct sockaddr_in			_addr;

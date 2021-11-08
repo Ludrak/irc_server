@@ -38,7 +38,7 @@ class IRCServer : public ANode
 		bool					setNetworkConnection(const std::string & host, ushort port, std::string & password);
 		const IProtocol&		getProtocol( void ) const;
 		Channel*				getChannel(int ChannelUID);
-		Client*				getClientBySockStream(SockStream & s);
+		Client*					getClientBySockStream(SockStream & s);
 
 	
 	private:
@@ -63,7 +63,6 @@ class IRCServer : public ANode
 		void					_onRecv( SockStream &server,  Package &pkg );
 		void					_onConnect ( SockStream &server );
 		void					_onQuit( SockStream &server );
-		void					_onKicked( SockStream &server );
 
 /*
 ** --------------------------------- SocketAction ---------------------------------

@@ -14,6 +14,7 @@ LIB_DIR		= lib
 # - make will check for the file in SRC_DIR
 # - use "-" if empty
 SRCS		=	SockStream.cpp \
+				SockHandler.cpp \
 				SockManager.cpp \
 				AClient.cpp \
 				AServer.cpp \
@@ -30,6 +31,7 @@ SRCS		=	SockStream.cpp \
 				main.cpp	
 
 HEADERS		=	SockStream.hpp \
+				SockHandler.hpp \
 				SockManager.hpp \
 				AServer.hpp \
 				AClient.hpp \

@@ -4,9 +4,9 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Client::Client(const SockStream & socket) : AEntity()
+Client::Client(SockStream & socket) : AEntity()
 {
-	this->_socket = socket.getSocket();
+	this->_socket = &socket;
 
 }
 
@@ -52,7 +52,9 @@ std::ostream &			operator<<( std::ostream & o, Client const & i )
 
 uint					Client::getType( void ) const
 {
-	return Client::value_type;
+	if (this->_socket->getType() == REMOTE_CLIENT)
+		return Client::value_type_client;
+	return Client::value_type_server;
 }
 
 std::string				Client::getUsername( void )
@@ -85,6 +87,17 @@ void					Client::setServername(std::string servername)
 	this->_servername = servername;
 }
 
+std::string				Client::getRealname( void )
+{
+	return this->_realname;
+}
+
+void					Client::setRealname(std::string realName)
+{
+	this->_realname = realName;
+}
+
+
 void					Client::setRegistered( bool registered)
 {
 	this->_registered = registered;
@@ -97,14 +110,13 @@ bool					Client::isRegistered( void )
 
 SockStream&				Client::getStream( void )
 {
-	SockStream* s = this->_master->getSocket(this->_socket);
-	if (s == NULL)
+	if (this->_socket == NULL)
 	{
 		Logger::critical("Client try to get invalid socket with socketId.");
 		//TODO throw not found
 		// throw ;
 	}
-	return *s;
+	return *this->_socket;
 }
 
 /* ************************************************************************** */

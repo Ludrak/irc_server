@@ -4,7 +4,6 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 //REVIEW Server name maximum 63 character
-
 IRCServer::IRCServer(ushort port, const std::string & password, const std::string &host)
 : ASockManager(), ANode(host), _forwardSocket(0), _password(password), _protocol()
 {
@@ -13,6 +12,7 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 	Logger::info("IRCServer port: " + ntos(port));
 	Logger::info("IRCServer password :" + ntos(password));
 	this->_init_commands();
+	this->listenOn(port, this->_protocol);
 }
 
 /*
@@ -66,14 +66,16 @@ void							IRCServer::_setRegistered(Client & client)
 void							IRCServer::_sendMessage(AEntity & target, std::string message)
 {
 	//TODO add server prefix
-	std::string prefix = ":prefix ";
-	Package *package = new Package(this->_protocol, this->_protocol.format(prefix + message));
 	if (target.getType() == Channel::value_type)
 	{
+		Logger::debug("Sending channle message");
+		Package *package = new Package(this->_protocol, this->_protocol.format(message));
 		reinterpret_cast<Channel*>(&target)->broadcastPackage(package);
 	}
 	else
 	{
+		Logger::debug("Sending Client message");
+		Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<Client*>(&target)->getStream());
 		this->sendPackage(package, reinterpret_cast<Client*>(&target)->getStream());
 	}
 }
@@ -86,20 +88,26 @@ void						IRCServer::_onClientJoin(SockStream & s)
 {
 	this->_pendingConnections.push_back(new Client(s));
 	Logger::info("New connection: socket<" + ntos(s.getSocket()) + "> joined the server !");
+	this->_printServerState();
 }
+
+
+
 
 void							IRCServer::_onClientRecv(SockStream & s, Package & pkg)
 {
 	Client* c = getClientBySockStream(s);
 	if (c == NULL)
 	{
+		this->_printServerState();
 		Logger::critical("SockStream without Client associated !!! " + ntos(s.getSocket()));
 		return ;
 	}
-	this->_printServerState();
 	Logger::debug("Server receive: " + pkg.getData());
 	this->execute(*c, pkg.getData());
 }
+
+
 
 void							IRCServer::_onClientQuit(SockStream &s)
 {
@@ -125,6 +133,9 @@ void							IRCServer::_onClientQuit(SockStream &s)
 	}
 }
 
+
+
+
 void						IRCServer::_onRecv( SockStream &server,  Package &pkg)
 {
 	Logger::debug("Receiving package from forward server");
@@ -136,7 +147,10 @@ void						IRCServer::_onRecv( SockStream &server,  Package &pkg)
 	}
 
 }
-		
+
+
+
+
 //Called when we connect to
 void				IRCServer::_onConnect ( SockStream &server)
 {
@@ -155,18 +169,6 @@ void				IRCServer::_onQuit( SockStream &server)
 	this->_forwardSocket = 0;
 }
 
-//Kicked from the forward		
-void				IRCServer::_onKicked( SockStream &server)
-{
-	Logger::warning("Kicked out from the forward server");
-	if (server.getSocket() != this->_forwardSocket)
-	{
-		Logger::error("Stopping connection with a remote server that's not the forward server.");
-		return ;
-	}
-	this->_forwardSocket = 0;
-}
-
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
 */
@@ -176,13 +178,12 @@ Client*							IRCServer::getClientBySockStream(SockStream & s)
 	//get in map of user
 	for (std::map<std::string, AEntity*>::iterator it = this->_ircClients.begin(); it != this->_ircClients.end(); ++it)
 	{
-		if ((it->second)->getType() == CLIENT
-			&& reinterpret_cast<Client *>(it->second)->getStream().getSocket() == s.getSocket())
+		if (reinterpret_cast<Client *>(it->second)->getStream().getSocket() == s.getSocket())
 			return reinterpret_cast<Client *>(it->second);
 	}
 	//get in  pending list
 	std::list<Client*>::iterator it;
-	for ( it = this->_pendingConnections.begin(); it != --this->_pendingConnections.end(); ++it)
+	for ( it = this->_pendingConnections.begin(); it != this->_pendingConnections.end(); ++it)
 	{
 		if ((*it)->getStream().getSocket() == s.getSocket())
 			return *it;
@@ -220,18 +221,21 @@ int					IRCServer::execute(AEntity & client, std::string data)
 	}
 	switch (client.getType())
 	{
-		case Client::value_type:
+		case Client::value_type_client:
 			if (this->_userCommands.count(command) == 1)
 			{
 				uint ret = (this->*(this->_userCommands[command]))(dynamic_cast<Client&>(client), args);
 				if (ret != 0)
-					this->_sendMessage(client, ntos(ret)); // senError
+				{
+					std::string prefix = ":" + client.getNickname() + "!server-ident@sender-server ";
+					this->_sendMessage(client, prefix + ntos(ret)); // senError
+				}
 			}
 			else
 				Logger::warning(client.getNickname() + ": unknow command");
 			break;
-		case 2:
-			Logger::info("Server command");
+		case Client::value_type_server:
+			Logger::info("remote Server command");
 			if (this->_serverCommands.count(command) == 1)
 				(this->*(this->_serverCommands[command]))(dynamic_cast<Client&>(client), args);
 			else
@@ -261,7 +265,8 @@ uint		IRCServer::_commandNICK(Client & client, std::string cmd)
 	std::string nick = Parser::getParam(cmd, 0);
 	if (client.getPassword() != this->_password)
 	{
-		this->kick(client.getStream()); // kickUser
+		//TODO handle this error without disconnecting
+		this->disconnect(client.getStream()); // kickUser
 		return SUCCESS;
 	}
 	else if (Parser::nbParam(cmd) != 1) //REVIEW normalement si 2 param venant d'un user, commande ignoré
@@ -302,18 +307,24 @@ uint		IRCServer::_commandPRIVMSG(Client & client, std::string cmd)
 	Logger::debug("<" + ntos(client.getStream().getSocket()) + "> Command<PRIVMSG> with args: " + cmd );
 	Logger::info(client.getNickname() + "<PRIVMSG>: " + cmd);
 	size_t nbParam = Parser::nbParam(cmd);
+	Logger::debug("nb param = " + ntos(nbParam)); 
 	if (nbParam == 0)
 		return ERR_NORECIPENT;
 	else if (nbParam == 1)
 		return ERR_NOTEXTTOSEND;
 	else if (nbParam > 2)
 		return SUCCESS; //REVIEW I don't know what to do here
-	std::string target_name = Parser::getParam(cmd, 0); 
+	std::string target_name = Parser::getParam(cmd, 0);
+	Logger::debug("Param target = " + target_name); 
 	if (this->_ircClients.count(target_name) == 0)
+	{
+		Logger::debug("Target not found"); 
 		return ERR_NOSUCHNICK;
+	}
 	AEntity *target = this->_ircClients[target_name];
+	std::string prefix = "";
 	std::string msg = ":" + client.getNickname() + "!server-ident@sender-server PRIVMSG " + target->getNickname() + " :" + Parser::getParam(cmd, 1);
-	Logger::debug(client.getNickname() + "send " + msg);
+	Logger::debug("to " + client.getNickname() + " send " + msg);
 	this->_sendMessage(*target, msg);
 	return SUCCESS;
 }
@@ -334,7 +345,7 @@ void			IRCServer::_printServerState( void )
 	Logger::debug("Server : p: " + ntos(this->_pendingConnections.size()) + ", r: " + ntos(this->_ircClients.size()) );
 	Logger::debug("pending:");
 	for (std::list<Client *>::iterator it = this->_pendingConnections.begin(); it != this->_pendingConnections.end(); ++it)
-		Logger::debug("   - N: " + (*it)->getNickname() + " / P: " + (*it)->getPassword() + " / R: " + ntos((*it)->isRegistered()));
+		Logger::debug("   - N: " + (*it)->getNickname() + " / P: " + (*it)->getPassword() + " / R: " + ntos((*it)->isRegistered()) + " / S: " + ntos((*it)->getStream().getSocket()));
 	Logger::debug("registered:");
 	for (std::map<std::string, AEntity *>::iterator it = this->_ircClients.begin(); it != this->_ircClients.end(); ++it)
 	{
