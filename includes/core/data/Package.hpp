@@ -9,30 +9,33 @@ class SockStream;
 
 class Package
 {
-	class SizeExeededException : public std::exception
-	{
-		virtual const char	*what( void ) const throw()
+	public:
+		class SizeExceededException : public std::exception
 		{
-			return ("Package size exeeded");
-		}
-	};
-
-	class InvalidProtocolException : public std::exception
-	{
-		virtual const char	*what( void ) const throw()
+			public:
+				virtual const char	*what( void ) const throw()
+				{
+					return ("Package size exeeded");
+				}
+		};
+//REVIEW 
+		class InvalidProtocolException : public std::exception
 		{
-			return ("Invalid protocol");
-		}
-	};
+			public:
+				virtual const char	*what( void ) const throw()
+				{
+					return ("Invalid protocol");
+				}
+		};
 
 	public:
-		Package( const IProtocol &protocol, const std::string &data="", const SockStream *recipient=NULL ) throw(Package::SizeExeededException, Package::InvalidProtocolException);
+		Package( const IProtocol &protocol, const std::string &data="", const SockStream *recipient=NULL ) throw(Package::SizeExceededException, Package::InvalidProtocolException);
 		Package( Package const &src );
 		virtual ~Package();
 
 		Package&			operator=( Package const & rhs );
 
-		void				addData( const std::string &new_data ) throw(Package::SizeExeededException);
+		void				addData( const std::string &new_data ) throw(Package::SizeExceededException);
 		void				flush( void );
 		void				nflush( uint n );
 

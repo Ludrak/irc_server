@@ -35,8 +35,9 @@ class Client : public AEntity
 		SockStream&			getStream();
 
 		enum C { 
-			value_type_client = 1,
-			value_type_server = 2 
+			value_type_unknow = 1,
+			value_type_client = 2,
+			value_type_server = 3 
 		};
 	
 	private:

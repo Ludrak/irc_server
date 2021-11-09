@@ -3,8 +3,9 @@
 
 # include "AEntity.hpp"
 # include "Client.hpp"
+# include "ASockManager.hpp"
 
-class Channel : public AEntity
+class Channel : public AEntity, public ASockHandler
 {
 
 	public:
@@ -14,12 +15,13 @@ class Channel : public AEntity
 		~Channel();
 
 		Channel &		operator=( Channel const & rhs );
+		
 		enum C { value_type = 0 };
 
 		uint				getType( void ) const;
 
-	//TODO remove
-		void	broadcastPackage(Package * pkg, const SockStream * except = NULL);
+		void				broadcastPackage(Package * pkg, const SockStream * except = NULL);
+
 	private:
 		std::list<Client *> 	_clients;
 		std::list<Client *> 	_operators;

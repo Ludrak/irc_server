@@ -4,7 +4,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Channel::Channel()
+Channel::Channel() : AEntity(), ASockHandler()
 {
 }
 

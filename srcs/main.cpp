@@ -19,7 +19,7 @@ int main(int ac, char ** av)
 	std::string	password("");
 	std::string	password_network("");
 
-	// Logger::lo
+	Logger::setLogLevel(INFO);
 	if (ac < 3 || ac > 4)
 		return Usage(av[0]);
 	else if (ac == 3)
@@ -55,9 +55,10 @@ int main(int ac, char ** av)
 		Logger::error("Invalid port specified");
 		return Usage(av[0]);
 	}
+	std::string server_host = "192.168.1.242";
 	try 
 	{
-		IRCServer server(port, password, "127.0.0.1");
+		IRCServer server(port, password, server_host);
 		if (!server.setNetworkConnection(host, port_network, password_network))
 		{
 			Logger::error("Cannot connect to remote server.");

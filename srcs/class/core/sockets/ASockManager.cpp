@@ -12,7 +12,7 @@ void            ASockManager::delSocket(const SockStream &sock)
 	{
 		if (it->fd == sock.getSocket())
 		{
-			this->_poll_next_iterator = this->_poll_fds.erase(it);
+			this->_poll_fds.erase(it);
 			break ;
 		}
 	}
@@ -43,20 +43,22 @@ void            ASockManager::run( void )
             Logger::error(std::string("poll error: ") + strerror(errno));
             return ;
         }
-        
+        size_t sz = 0;
         /* execute events handler */
         for (std::vector<struct pollfd>::iterator it = this->_poll_fds.begin(); it != this->_poll_fds.end(); ++it)
         {
             if (it->revents != 0)
             {
-                this->_poll_next_iterator = it;
-				size_t sz = this->_sockets.size();
-                this->_onPollEvent(it->fd, it->events);
-            	it = this->_poll_next_iterator;
+				sz = this->_sockets.size();
+				try {
+                	this->_onPollEvent(it->fd, it->events);
+				}
+				catch (Package::SizeExceededException & e)
+				{
+					Logger::warning(e.what());
+				}
                 if (this->_sockets.size() != sz)
-                {
                     break;
-                }
             }
         }
     }

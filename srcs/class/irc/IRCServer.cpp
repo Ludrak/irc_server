@@ -8,6 +8,7 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 : ASockManager(), ANode(host), _forwardSocket(0), _password(password), _protocol()
 {
 	Logger::debug("IRCServer constructor");
+	Logger::info("IRCServer host: " );
 	Logger::info("IRCServer host: " + ntos(host));
 	Logger::info("IRCServer port: " + ntos(port));
 	Logger::info("IRCServer password :" + ntos(password));
@@ -104,7 +105,8 @@ void							IRCServer::_onClientRecv(SockStream & s, Package & pkg)
 		return ;
 	}
 	Logger::debug("Server receive: " + pkg.getData());
-	this->execute(*c, pkg.getData());
+	if (! pkg.getData().empty())
+		this->execute(*c, pkg.getData());
 }
 
 
@@ -127,7 +129,7 @@ void							IRCServer::_onClientQuit(SockStream &s)
 	}
 	else
 	{
-		Logger::warning("unknow client " + ntos(s.getSocket()) + " disconnected.");
+		Logger::warning("unknown client " + ntos(s.getSocket()) + " disconnected.");
 		delete cli;
 		this->_pendingConnections.remove(cli);
 	}
@@ -232,17 +234,17 @@ int					IRCServer::execute(AEntity & client, std::string data)
 				}
 			}
 			else
-				Logger::warning(client.getNickname() + ": unknow command");
+				Logger::warning(client.getNickname() + ": unknown command");
 			break;
 		case Client::value_type_server:
 			Logger::info("remote Server command");
 			if (this->_serverCommands.count(command) == 1)
 				(this->*(this->_serverCommands[command]))(dynamic_cast<Client&>(client), args);
 			else
-				Logger::warning("unknow command");
+				Logger::warning("unknown command");
 			break;
 		default:
-			Logger::error("unknow client type");
+			Logger::error("unknown client type");
 			break;
 	}
 	return 1;

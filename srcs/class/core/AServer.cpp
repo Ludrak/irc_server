@@ -98,8 +98,9 @@ t_pollevent					AServer::_pollFromClients(int socket, int event)
 
 t_pollevent					AServer::_pollInClients(SockStream & sock)
 {
-	char	buffer[RECV_BUFFER_SZ] = { 0 };
+	char	buffer[RECV_BUFFER_SZ + 1] = { 0 };
 	size_t	byte_size = recv(sock.getSocket(), buffer, RECV_BUFFER_SZ, MSG_DONTWAIT);
+	buffer[byte_size] = '\0';
 	if (byte_size < 0)
 		return (POLL_ERR);
 	else if (byte_size == 0)

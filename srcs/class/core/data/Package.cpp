@@ -1,7 +1,7 @@
 # include "Package.hpp"
 
 Package::Package( const IProtocol &protocol, const std::string &data, const SockStream *recipient )
-throw(Package::SizeExeededException, Package::InvalidProtocolException) : _recipient(recipient)
+throw(Package::SizeExceededException, Package::InvalidProtocolException) : _recipient(recipient)
 {
     this->_protocol = &protocol;
     if (!data.empty())
@@ -53,10 +53,10 @@ bool			Package::_checksum( void )
     return (this->_is_invalid);
 }
 
-void			Package::addData( const std::string &new_data ) throw(Package::SizeExeededException)
+void			Package::addData( const std::string &new_data ) throw(Package::SizeExceededException)
 {
     if (this->_data.size() + new_data.size() > this->_protocol->getMaximumPackageSize())
-        throw Package::SizeExeededException();
+        throw Package::SizeExceededException();
     this->_data += new_data;
     this->_checksum();
 }
