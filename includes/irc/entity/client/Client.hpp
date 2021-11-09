@@ -28,13 +28,15 @@ class Client : public AEntity
 		std::string			getRealname( void );
 		void				setRealname(std::string realName);
 
-		void				setRegistered( bool registered );
+		void				setRegisteredAsClient( bool registered );
+		void				setRegisteredAsServer( bool registered );
 		bool				isRegistered( void );
 
 		uint				getType( void ) const;
 		SockStream&			getStream();
 
 		enum C { 
+			value_type_unknown = 0,
 			value_type_client = 1,
 			value_type_server = 2 
 		};
@@ -48,6 +50,7 @@ class Client : public AEntity
 		std::string							_realname;
 		bool								_registered;
 		SockStream*							_socket;
+		int									_type;
 
 };
 

@@ -115,4 +115,9 @@ void							SockStream::setType( const t_sock_type type )
 	this->_type = type;
 }
 
+std::string						SockStream::getIP()
+{
+	return (inet_ntoa(this->_addr.sin_addr) + std::string(":") + ntos(ntohs(this->_addr.sin_port)));
+}
+
 /* ************************************************************************** */

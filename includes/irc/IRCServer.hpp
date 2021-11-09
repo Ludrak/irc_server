@@ -4,6 +4,7 @@
 class Channel;
 class Client;
 
+# include <string>
 # include "Channel.hpp"
 # include "Client.hpp"
 # include "Parser.hpp"
@@ -43,15 +44,15 @@ class IRCServer : public ANode
 	
 	private:
 
-		typedef uint	(IRCServer::*UserOperations)(Client & client, std::string str);
-		typedef uint	(IRCServer::*ServerOperations)(AEntity & client, std::string str);
-	
+		typedef uint	(IRCServer::*Operations)(Client & client, std::string str);
+
 		ushort									_forwardSocket;
 		std::string								_password;
 		std::map<std::string, AEntity*>			_ircClients;
 		std::list<Client*>						_pendingConnections;
-		std::map<std::string, UserOperations>	_userCommands;
-		std::map<std::string, ServerOperations>	_serverCommands;
+		std::map<std::string, Operations>		_userCommands;
+		std::map<std::string, Operations>		_serverCommands;
+		std::map<std::string, Operations>		_unregisteredCommands;
 		IRCProtocol								_protocol;
 
 /*
@@ -68,7 +69,7 @@ class IRCServer : public ANode
 ** --------------------------------- SocketAction ---------------------------------
 */
 
-	void						_setRegistered(Client & client);
+	void						_setRegistered(Client & client, int type);
 	void						_sendMessage(AEntity & client, std::string message);
 		
 /*
@@ -79,10 +80,11 @@ class IRCServer : public ANode
 ** --------------------------------- COMMANDS ---------------------------------
 */
 		void		_init_commands(void);
-		int			execute(AEntity & client, std::string data);
+		int			execute(AEntity & executor, std::string data);
 		uint		_commandPASS(Client & client, std::string cmd);
 		uint		_commandNICK(Client & client, std::string cmd);
 		uint		_commandUSER(Client & client, std::string cmd);
+		uint		_commandSERVER(Client & client, std::string cmd);
 		uint		_commandPRIVMSG(Client & client, std::string cmd);
 		uint		_commandDESCRIBE(Client & client, std::string cmd);
 

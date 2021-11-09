@@ -56,12 +56,22 @@ bool						IRCServer::setNetworkConnection(const std::string & host, ushort port,
 	return true;
 }
 
-void							IRCServer::_setRegistered(Client & client)
+void							IRCServer::_setRegistered(Client & client, int type)
 {
-	client.setRegistered(true);
-	this->_ircClients.insert(make_pair(client.getNickname(), &client));
-	this->_pendingConnections.remove(&client);
+	if (type == Client::value_type_client)
+	{
+		client.setRegisteredAsClient(true);
+		this->_ircClients.insert(make_pair(client.getNickname(), &client));
+		this->_pendingConnections.remove(&client);
+	}
+	else if (type == Client::value_type_server)
+	{
+		client.setRegisteredAsServer(true);
+		this->_ircClients.insert(make_pair(client.getNickname(), &client));
+		this->_pendingConnections.remove(&client);
+	}
 }
+
 
 void							IRCServer::_sendMessage(AEntity & target, std::string message)
 {
@@ -103,7 +113,7 @@ void							IRCServer::_onClientRecv(SockStream & s, Package & pkg)
 		Logger::critical("SockStream without Client associated !!! " + ntos(s.getSocket()));
 		return ;
 	}
-	Logger::debug("Server receive: " + pkg.getData());
+	Logger::info("recv [" + s.getIP() + "] : " + pkg.getData());
 	this->execute(*c, pkg.getData());
 }
 
@@ -202,11 +212,18 @@ const IProtocol&					IRCServer::getProtocol( void ) const
 
 void				IRCServer::_init_commands( void )
 {
+	this->_unregisteredCommands.insert(std::make_pair("USER",	&IRCServer::_commandUSER));
+	this->_unregisteredCommands.insert(std::make_pair("PASS",	&IRCServer::_commandPASS));
+	this->_unregisteredCommands.insert(std::make_pair("NICK",	&IRCServer::_commandNICK));
+	this->_unregisteredCommands.insert(std::make_pair("SERVER",	&IRCServer::_commandSERVER));
+
 	this->_userCommands.insert(std::make_pair("USER",	&IRCServer::_commandUSER));
 	this->_userCommands.insert(std::make_pair("PASS",	&IRCServer::_commandPASS));
 	this->_userCommands.insert(std::make_pair("NICK",	&IRCServer::_commandNICK));
 	this->_userCommands.insert(std::make_pair("PRIVMSG",	&IRCServer::_commandPRIVMSG));
 	this->_userCommands.insert(std::make_pair("DESCRIBE",	&IRCServer::_commandDESCRIBE));
+
+	this->_serverCommands.insert(std::make_pair("SERVER",	&IRCServer::_commandSERVER));
 }
 
 int					IRCServer::execute(AEntity & client, std::string data)
@@ -232,17 +249,37 @@ int					IRCServer::execute(AEntity & client, std::string data)
 				}
 			}
 			else
-				Logger::warning(client.getNickname() + ": unknow command");
+				Logger::warning(client.getNickname() + ": unknown command");
 			break;
 		case Client::value_type_server:
-			Logger::info("remote Server command");
 			if (this->_serverCommands.count(command) == 1)
-				(this->*(this->_serverCommands[command]))(dynamic_cast<Client&>(client), args);
+			{
+				uint ret = (this->*(this->_serverCommands[command]))(dynamic_cast<Client&>(client), args);
+				if (ret != 0)
+				{
+					std::string prefix = ":" + client.getNickname() + "!server-ident@sender-server ";
+					this->_sendMessage(client, prefix + ntos(ret)); // senError
+				}
+			}
 			else
-				Logger::warning("unknow command");
+				Logger::warning("unknown command");
+			break;
+		case Client::value_type_unknown:
+			Logger::debug("yet unidentified client");
+			if (this->_unregisteredCommands.count(command) == 1)
+			{
+				uint ret = (this->*(this->_unregisteredCommands[command]))(dynamic_cast<Client&>(client), args);
+				if (ret != 0)
+				{
+					std::string prefix = ":" + client.getNickname() + "!server-ident@sender-server ";
+					this->_sendMessage(client, prefix + ntos(ret)); // senError
+				}
+			}
+			else
+				Logger::warning(client.getNickname() + ": unknown command");
 			break;
 		default:
-			Logger::error("unknow client type");
+			Logger::error("unknown client type");
 			break;
 	}
 	return 1;
@@ -296,10 +333,36 @@ uint		IRCServer::_commandUSER(Client & client, std::string cmd)
 	client.setDomaineName(Parser::getParam(cmd, 1));
 	client.setServername(Parser::getParam(cmd, 2));
 	client.setRealname(Parser::getParam(cmd, 3));
-	this->_setRegistered(client);
+	this->_setRegistered(client, Client::value_type_client);
 	Logger::info("new user registered: " + client.getNickname());
 	return SUCCESS;
 }
+
+
+uint		IRCServer::_commandSERVER(Client & client, std::string cmd)
+{
+	//TODO see what to do when no param specified
+	if (Parser::nbParam(cmd) < 4)
+		return SUCCESS;
+	std::string	serverName = Parser::getParam(cmd, 0);
+	int			hopCount = std::stoi(Parser::getParam(cmd, 1));
+	std::string	token = Parser::getParam(cmd, 2);
+	std::string	info = Parser::getParam(cmd, 3);
+	client.setNickname(serverName);
+	if (hopCount == 0) // new server joining the network
+	{
+
+		// relay to everybody
+	}
+	else // relayed server connected to another server
+	{
+
+	}
+	return (0);
+}
+
+
+
 //TODO Parser::get param => error including on space
 //TODO implement channels here and list of nickname/channels
 uint		IRCServer::_commandPRIVMSG(Client & client, std::string cmd)

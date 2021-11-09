@@ -4,7 +4,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Client::Client(SockStream & socket) : AEntity()
+Client::Client(SockStream & socket) : AEntity(), _type(Client::value_type_unknown)
 {
 	this->_socket = &socket;
 
@@ -52,9 +52,7 @@ std::ostream &			operator<<( std::ostream & o, Client const & i )
 
 uint					Client::getType( void ) const
 {
-	if (this->_socket->getType() == REMOTE_CLIENT)
-		return Client::value_type_client;
-	return Client::value_type_server;
+	return (this->_type);
 }
 
 std::string				Client::getUsername( void )
@@ -98,9 +96,16 @@ void					Client::setRealname(std::string realName)
 }
 
 
-void					Client::setRegistered( bool registered)
+void					Client::setRegisteredAsClient( bool registered)
 {
 	this->_registered = registered;
+	this->_type = Client::value_type_client;
+}
+
+void					Client::setRegisteredAsServer( bool registered)
+{
+	this->_registered = registered;
+	this->_type = Client::value_type_server;
 }
 
 bool					Client::isRegistered( void )

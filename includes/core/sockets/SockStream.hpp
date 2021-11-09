@@ -18,6 +18,7 @@ class SockStream;
 # include <list>
 # include "Package.hpp"
 # include "Logger.hpp"
+# include "ntos.hpp"
 
 # define RECV_BUFFER_SZ	255
 # define SEND_BUFFER_SZ	255
@@ -68,6 +69,8 @@ class SockStream
 
 		t_sock_type					getType(void) const;
 		void						setType( const t_sock_type type );
+
+		std::string					getIP(void);
 
 	protected:
 		ushort						_socket;
