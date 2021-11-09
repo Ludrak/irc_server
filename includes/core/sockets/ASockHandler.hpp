@@ -14,7 +14,7 @@ class ASockHandler
     public:
         ASockHandler(void);
 
-		void            	addSocket(SockStream *sock);
+		void            	addSocket(SockStream &sock);
 
         virtual void        delSocket(const SockStream &sock);
         SockStream          *getSocket(const ushort socket);

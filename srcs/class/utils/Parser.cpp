@@ -78,6 +78,27 @@ bool					Parser::validNickname(std::string nick)
 	return true;
 }
 
+bool					Parser::validChannelName(std::string channelName)
+{
+	//REVIEW see for more correct parsing
+	if (channelName.size() < 2 || channelName.size() > 50)
+		return false;
+	if (!((channelName.at(0) == '&') 
+		|| (channelName.at(0) == '#') 
+		|| (channelName.at(0) == '+') 
+		|| (channelName.at(0) == '!')))
+		return false;
+	for (std::string::size_type i = 1; i < channelName.size(); ++i)
+	{
+		if (channelName[i] == ','
+		||	channelName[i] == ' '
+		||	channelName[i] == 0x07)
+			return false;
+	}
+	return true;
+}
+
+
 bool					Parser::isSpecial(char c)
 {
 	if ((c >= 91 && c <= 96) || (c >= 123 && c <= 125))

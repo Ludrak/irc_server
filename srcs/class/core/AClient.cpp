@@ -16,7 +16,7 @@ bool			AClient::connectOn(const std::string host, const ushort port, IProtocol &
 	if (connect(s->getSocket(), reinterpret_cast<const sockaddr*>(&s->getAddress()), sizeof(s->getAddress())) != 0)
 		throw AClient::ConnectionException();
 	s->setType(CLIENT);
-	this->addSocket(s);
+	this->addSocket(*s);
 	this->_onConnect(*s);
 	return (true);
 }

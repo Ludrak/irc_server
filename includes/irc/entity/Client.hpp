@@ -6,6 +6,8 @@ class IRCServer;
 # include "AEntity.hpp"
 # include "IRCServer.hpp"
 
+# define NB_CLIENT_REGISTRATION_MAX 12
+
 class Client : public AEntity
 {
 
@@ -34,11 +36,8 @@ class Client : public AEntity
 		uint				getType( void ) const;
 		SockStream&			getStream();
 
-		enum C { 
-			value_type_unknow = 1,
-			value_type_client = 2,
-			value_type_server = 3 
-		};
+		uint				leaveAllChannels( void );
+
 	
 	private:
 

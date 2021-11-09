@@ -19,7 +19,7 @@ int main(int ac, char ** av)
 	std::string	password("");
 	std::string	password_network("");
 
-	Logger::setLogLevel(INFO);
+	Logger::setLogLevel(DEBUG);
 	if (ac < 3 || ac > 4)
 		return Usage(av[0]);
 	else if (ac == 3)

@@ -64,7 +64,7 @@ t_pollevent					AServer::_pollFromServer(int socket, int event)
 	}
 	SockStream	*client_ss = new SockStream(client_sock, client_addr, *sock->getProtocol());
 	client_ss->setType(REMOTE_CLIENT);
-	this->addSocket(client_ss);
+	this->addSocket(*client_ss);
 	this->_onClientJoin(*client_ss);
 	return (POLL_SUCCESS);
 }

@@ -7,14 +7,9 @@ ASockHandler::ASockHandler()
 }
 
 /** @param sock : allocated SockStream* */
-void            ASockHandler::addSocket(SockStream *sock)
+void            ASockHandler::addSocket(SockStream &sock)
 {
-	if (sock == NULL)
-	{
-		Logger::critical("Try adding a NULL socket.");
-		return ;
-	}
-    this->_sockets.insert(std::make_pair(sock->getSocket(), sock));
+    this->_sockets.insert(std::make_pair(sock.getSocket(), &sock));
 }
 
 void            ASockHandler::delSocket(const SockStream &sock)

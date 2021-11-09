@@ -4,6 +4,7 @@
 class Channel;
 class Client;
 
+# include "StatusCode.hpp"
 # include "Channel.hpp"
 # include "Client.hpp"
 # include "Parser.hpp"
@@ -16,18 +17,6 @@ class Client;
 # define IRC_DEFAULT_PORT 6667
 # define IRC_DEFAULT_PASS ""
 
-# define SUCCESS				0
-# define ERR_KICK				1
-# define ERR_NOSUCHNICK			401 //"<nickname> :No such nick/channel"
-# define ERR_NORECIPENT			411 //":No recipient given (<command>)"
-# define ERR_NOTEXTTOSEND		412 //":No text to send"
-# define ERR_NONICKNAMEGIVEN	431
-# define ERR_ERRONEUSNICKNAME	432
-# define ERR_NICKNAMEINUSE		433
-# define ERR_NICKCOLLISION		436
-# define ERR_NEEDMOREPARAMS		461
-# define ERR_ALREADYREGISTRED	462
-
 class IRCServer : public ANode
 {
 
@@ -35,10 +24,10 @@ class IRCServer : public ANode
 		IRCServer(ushort port = IRC_DEFAULT_PORT, const std::string &password = IRC_DEFAULT_PASS, const std::string &host = IRC_DEFAULT_HOST);
 		virtual ~IRCServer();
 
-		bool					setNetworkConnection(const std::string & host, ushort port, std::string & password);
-		const IProtocol&		getProtocol( void ) const;
-		Channel*				getChannel(int ChannelUID);
-		Client*					getClientBySockStream(SockStream & s);
+		bool								setNetworkConnection(const std::string & host, ushort port, std::string & password);
+		const IProtocol&					getProtocol( void ) const;
+		Channel*							getChannel(int ChannelUID);
+		Client*								getClientBySockStream(SockStream & s);
 
 	
 	private:
@@ -69,7 +58,7 @@ class IRCServer : public ANode
 */
 
 	void						_setRegistered(Client & client);
-	void						_sendMessage(AEntity & client, std::string message);
+	void						_sendMessage(AEntity & client, std::string message, SockStream * except = NULL);
 		
 /*
 ** --------------------------------- DEBUG ---------------------------------

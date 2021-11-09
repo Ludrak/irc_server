@@ -56,7 +56,7 @@ void							SockStream::close( void )
 ** --------------------------------- ACCESSOR ---------------------------------
 */
 
-int								SockStream::getSocket( void ) const
+ushort							SockStream::getSocket( void ) const
 {
 	return this->_socket;
 }

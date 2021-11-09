@@ -4,7 +4,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Client::Client(SockStream & socket) : AEntity()
+Client::Client(SockStream & socket) : AEntity(NB_CLIENT_REGISTRATION_MAX)
 {
 	this->_socket = &socket;
 
@@ -45,6 +45,12 @@ std::ostream &			operator<<( std::ostream & o, Client const & i )
 ** --------------------------------- METHODS ----------------------------------
 */
 
+uint					Client::leaveAllChannels( void )
+{
+	Logger::debug("client " + this->getNickname() + " leave all is channels");
+	//TODO implement it later
+	return SUCCESS;
+}
 
 /*
 ** --------------------------------- ACCESSOR ---------------------------------

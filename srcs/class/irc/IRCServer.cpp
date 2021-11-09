@@ -64,14 +64,14 @@ void							IRCServer::_setRegistered(Client & client)
 	this->_pendingConnections.remove(&client);
 }
 
-void							IRCServer::_sendMessage(AEntity & target, std::string message)
+void							IRCServer::_sendMessage(AEntity & target, std::string message, SockStream * except)
 {
 	//TODO add server prefix
-	if (target.getType() == Channel::value_type)
+	if (target.getType() == AEntity::value_type_channel)
 	{
 		Logger::debug("Sending channle message");
-		Package *package = new Package(this->_protocol, this->_protocol.format(message));
-		reinterpret_cast<Channel*>(&target)->broadcastPackage(package);
+		Package pkg = Package(this->_protocol, this->_protocol.format(message));
+		reinterpret_cast<Channel*>(&target)->broadcastPackage(pkg, except);
 	}
 	else
 	{
@@ -180,7 +180,8 @@ Client*							IRCServer::getClientBySockStream(SockStream & s)
 	//get in map of user
 	for (std::map<std::string, AEntity*>::iterator it = this->_ircClients.begin(); it != this->_ircClients.end(); ++it)
 	{
-		if (reinterpret_cast<Client *>(it->second)->getStream().getSocket() == s.getSocket())
+		if ((it->second->getType() != AEntity::value_type_channel)
+			&& reinterpret_cast<Client *>(it->second)->getStream().getSocket() == s.getSocket())
 			return reinterpret_cast<Client *>(it->second);
 	}
 	//get in  pending list
@@ -329,7 +330,10 @@ uint		IRCServer::_commandPRIVMSG(Client & client, std::string cmd)
 	std::string prefix = "";
 	std::string msg = ":" + client.getNickname() + "!server-ident@sender-server PRIVMSG " + target->getNickname() + " :" + Parser::getParam(cmd, 1);
 	Logger::debug("to " + client.getNickname() + " send " + msg);
-	this->_sendMessage(*target, msg);
+	if (target->getType() == AEntity::value_type_channel)
+		this->_sendMessage(*target, msg, &client.getStream());
+	else
+		this->_sendMessage(*target, msg);
 	return SUCCESS;
 }
 
@@ -346,10 +350,45 @@ uint		IRCServer::_commandDESCRIBE(Client & client, std::string cmd)
 uint		IRCServer::_commandJOIN(Client & client, std::string cmd)
 {
 	Logger::debug("<" + ntos(client.getStream().getSocket()) + "> Command<JOIN> with args: " + cmd );
+	size_t nbParam = Parser::nbParam(cmd);
+	if ( nbParam == 0)
+		return ERR_NEEDMOREPARAMS;
+	// this->_sendMessage(client, client.getNickname() + cmd);
+	std::list<std::string> channels(Parser::paramToList(Parser::getParam(cmd, 0)));
+	if (channels.size() == 1 && channels.front().compare("0") == 0)
+		return client.leaveAllChannels();
+	if (client.isFull())
+		return ERR_TOOMANYCHANNELS;
+	std::list<std::string> keys(Parser::paramToList(Parser::getParam(cmd, 1)));
 
-	// if (Parser::nbParam(cmd) != 2)
-		// this->_sendMessage(client, client.getNickname() + cmd);
-		//TODO implement it
+	std::list<std::string>::iterator itk = keys.begin();
+	for (std::list<std::string>::iterator itc = channels.begin(); itc != channels.end(); ++itc)
+	{
+		if (itk != keys.end())
+			Logger::debug("client " + client.getNickname() + ": ask to join channel: " + *itc + " with key: " + *itk++);
+		else
+			Logger::debug("client " + client.getNickname() + ": ask to join channel: " + *itc);
+		if (this->_ircClients.count(*itc) == false)
+		{
+			//Channel don't exist
+			if ( Parser::validChannelName(*itc) == false)
+				return ERR_NOSUCHCHANNEL;
+			Logger::info("Creating a new channel: " + *itc);
+			Channel* new_chan =  new Channel(*itc);
+			new_chan->addClient(client);
+			this->_ircClients.insert(std::make_pair(*itc, new_chan));
+			//TODO send JOIN as success
+			return SUCCESS;
+		}
+		AEntity* aChannel = this->_ircClients.find(*itc)->second;
+		if (aChannel->getType() != AEntity::value_type_channel)
+			return ERR_NOSUCHCHANNEL;
+		else
+		{
+			Logger::info("Adding " + client.getNickname() + " on channel: " + *itc);
+			return dynamic_cast<Channel*>(aChannel)->addClient(client);
+		}
+	}
 	return SUCCESS;
 }
 
@@ -364,7 +403,7 @@ void			IRCServer::_printServerState( void )
 	Logger::debug("registered:");
 	for (std::map<std::string, AEntity *>::iterator it = this->_ircClients.begin(); it != this->_ircClients.end(); ++it)
 	{
-		if (it->second->getType() == Channel::value_type)
+		if (it->second->getType() == Channel::value_type_channel)
 			Logger::debug("Channel K:" + it->first + " / N: " + it->second->getNickname() + " / P: " + it->second->getPassword());
 		else
 		{

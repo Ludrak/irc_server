@@ -4,8 +4,9 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-AEntity::AEntity()
+AEntity::AEntity(uint registrationsMax) : _nbRegistrations(0), _nbRegistrationsMax(registrationsMax)
 {
+
 }
 
 AEntity::AEntity( const AEntity & src )
@@ -71,6 +72,40 @@ std::string					AEntity::getPassword( void )
 void						AEntity::setPassword( std::string password) 
 {
 	this->_givenPassword = password;
+}
+
+
+bool						AEntity::incRegistration( void )
+{
+	if (this->_nbRegistrations >= this->_nbRegistrationsMax)
+		return false;
+	this->_nbRegistrations++;
+	return true;
+}
+
+bool						AEntity::decRegistration( void )
+{
+	if (this->_nbRegistrations == 0)
+		return false;
+	this->_nbRegistrations--;
+	return true;
+}
+
+uint						AEntity::getNbRegistrations( void ) const
+{
+	return this->_nbRegistrations;
+}
+
+uint						AEntity::getNbRegistrationsMax( void ) const
+{
+	return this->_nbRegistrationsMax;
+}
+
+bool						AEntity::isFull( void ) const
+{
+	if (this->_nbRegistrations == this->_nbRegistrationsMax)
+		return true;
+	return false;
 }
 
 /*

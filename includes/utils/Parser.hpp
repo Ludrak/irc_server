@@ -12,6 +12,7 @@ class Parser
 		static std::list<std::string>	paramToList(std::string param);
 		static size_t				 	nbParam(std::string command);
 		static bool						validNickname(std::string nick);
+		static bool						validChannelName(std::string channelName);
 		static bool						isSpecial(char c);
 	private:
 
