@@ -51,7 +51,7 @@ void            ASockManager::run( void )
             {
 				sz = this->_sockets.size();
 				try {
-                	this->_onPollEvent(it->fd, it->events);
+                	this->_onPollEvent(it->fd, it->revents);
 				}
 				catch (Package::SizeExceededException & e)
 				{

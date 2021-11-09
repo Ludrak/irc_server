@@ -99,15 +99,18 @@ t_pollevent					AServer::_pollFromClients(int socket, int event)
 t_pollevent					AServer::_pollInClients(SockStream & sock)
 {
 	char	buffer[RECV_BUFFER_SZ + 1] = { 0 };
-	size_t	byte_size = recv(sock.getSocket(), buffer, RECV_BUFFER_SZ, MSG_DONTWAIT);
-	buffer[byte_size] = '\0';
+	ssize_t	byte_size = recv(sock.getSocket(), buffer, RECV_BUFFER_SZ, MSG_DONTWAIT);
 	if (byte_size < 0)
-		return (POLL_ERR);
-	else if (byte_size == 0)
+	{
+		Logger::error(std::string("recv() failed : ") + strerror(errno) + std::string(" on socket <" + ntos(sock.getSocket()) + ">."));
+		return POLL_ERR;
+	}
+	else if (byte_size == 0) 
 	{
 		this->disconnect(sock);
 		return (POLL_DELETE);
 	}
+	buffer[byte_size] = '\0';
 	sock.getRecievedData().addData(buffer);			
 	while (!sock.getRecievedData().isInvalid()){
 		int socket = sock.getSocket();
@@ -179,18 +182,9 @@ bool						AServer::listenOn( ushort port, IProtocol &protocol )
 
 void		    			AServer::disconnect( SockStream &client )
 {
-		Logger::info("disconnect client:" + ntos(client.getSocket()));
-	if (this->_sockets[client.getSocket()] != NULL)
-	{
-		this->_onClientQuit(client);
-		Logger::info("on quit passed");
-		this->delSocket(client);
-		Logger::info("del SOcket passed");
-	}
-	else
-	{
-		Logger::info("disco NULL");
-	}
+	Logger::info("disconnecting client:" + ntos(client.getSocket()));
+	this->_onClientQuit(client);
+	this->delSocket(client);
 }
 
 

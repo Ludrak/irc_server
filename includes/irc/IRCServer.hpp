@@ -85,6 +85,7 @@ class IRCServer : public ANode
 		uint		_commandUSER(Client & client, std::string cmd);
 		uint		_commandPRIVMSG(Client & client, std::string cmd);
 		uint		_commandDESCRIBE(Client & client, std::string cmd);
+		uint		_commandJOIN(Client & client, std::string cmd);
 
 };
 

@@ -4,7 +4,7 @@
 ** --------------------------------- STATIC ----------------------------------
 */
 
-std::string 			Parser::getParam(std::string command, size_t idx)
+std::string 				Parser::getParam(std::string command, size_t idx)
 {
 	size_t nbParam = Parser::nbParam(command);
 	if (nbParam == 0 || idx >= nbParam)
@@ -23,8 +23,29 @@ std::string 			Parser::getParam(std::string command, size_t idx)
 	if (end == std::string::npos)
 		return command.substr(start);
 	else
-		return command.substr(start, end - start);
+		return (command.substr(start, end - start));
 }
+
+
+std::list<std::string>	Parser::paramToList(std::string param)
+{
+	if (param.empty())
+		return std::list<std::string>();
+	size_t start = 0;
+	size_t end = 0;
+	std::list<std::string> param_list;
+	while (end != std::string::npos)
+	{
+		end = param.find(",", start);
+		if (end == std::string::npos)
+			param_list.push_back(param.substr(start));
+		else
+			param_list.push_back(param.substr(start, end - start));
+		start = end + 1;
+	}
+	return param_list;
+}
+
 
 size_t		 			Parser::nbParam(std::string command)
 {

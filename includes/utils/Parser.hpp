@@ -3,15 +3,16 @@
 
 # include <iostream>
 # include <string>
+# include <list>
 
 class Parser
 {
-
 	public:
-		static std::string 		getParam(std::string command, size_t idx);
-		static size_t		 	nbParam(std::string command);
-		static bool				validNickname(std::string nick);
-		static bool				isSpecial(char c);
+		static std::string				getParam(std::string command, size_t idx);
+		static std::list<std::string>	paramToList(std::string param);
+		static size_t				 	nbParam(std::string command);
+		static bool						validNickname(std::string nick);
+		static bool						isSpecial(char c);
 	private:
 
 };

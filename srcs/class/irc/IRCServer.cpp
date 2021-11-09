@@ -209,6 +209,7 @@ void				IRCServer::_init_commands( void )
 	this->_userCommands.insert(std::make_pair("NICK",	&IRCServer::_commandNICK));
 	this->_userCommands.insert(std::make_pair("PRIVMSG",	&IRCServer::_commandPRIVMSG));
 	this->_userCommands.insert(std::make_pair("DESCRIBE",	&IRCServer::_commandDESCRIBE));
+	this->_userCommands.insert(std::make_pair("JOIN",	&IRCServer::_commandJOIN));
 }
 
 int					IRCServer::execute(AEntity & client, std::string data)
@@ -229,8 +230,9 @@ int					IRCServer::execute(AEntity & client, std::string data)
 				uint ret = (this->*(this->_userCommands[command]))(dynamic_cast<Client&>(client), args);
 				if (ret != 0)
 				{
+					//TODO
 					std::string prefix = ":" + client.getNickname() + "!server-ident@sender-server ";
-					this->_sendMessage(client, prefix + ntos(ret)); // senError
+					this->_sendMessage(client, prefix + ntos(ret) + std::string(" ") + client.getNickname() + " :No such nick/channel"); // senError
 				}
 			}
 			else
@@ -334,6 +336,17 @@ uint		IRCServer::_commandPRIVMSG(Client & client, std::string cmd)
 uint		IRCServer::_commandDESCRIBE(Client & client, std::string cmd)
 {
 	Logger::debug("<" + ntos(client.getStream().getSocket()) + "> Command<DESCRIBE> with args: " + cmd );
+	// if (Parser::nbParam(cmd) != 2)
+		// this->_sendMessage(client, client.getNickname() + cmd);
+		//TODO implement it
+	return SUCCESS;
+}
+//TODO add paramToList to every needed
+
+uint		IRCServer::_commandJOIN(Client & client, std::string cmd)
+{
+	Logger::debug("<" + ntos(client.getStream().getSocket()) + "> Command<JOIN> with args: " + cmd );
+
 	// if (Parser::nbParam(cmd) != 2)
 		// this->_sendMessage(client, client.getNickname() + cmd);
 		//TODO implement it
