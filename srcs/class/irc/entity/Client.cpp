@@ -45,10 +45,36 @@ std::ostream &			operator<<( std::ostream & o, Client const & i )
 ** --------------------------------- METHODS ----------------------------------
 */
 
+uint					Client::joinChannel( Channel & chan )
+{
+	uint ret = chan.addClient(*this);
+	if (ret != SUCCESS)
+		return ret;
+	Logger::debug("Adding <" + chan.getNickname() + "> to <" + this->getNickname() + "> channel list");
+	this->_channels.push_back(&chan);
+	return SUCCESS;
+}
+
+uint					Client::leaveChannel( Channel & chan )
+{
+	uint ret = chan.removeClient(*this);
+	if (ret != SUCCESS)
+		return ret;
+	Logger::debug("Removing <" + chan.getNickname() + "> to <" + this->getNickname() + "> channel list");
+	this->_channels.remove(&chan);
+	return SUCCESS;
+}
+
+		
 uint					Client::leaveAllChannels( void )
 {
-	Logger::debug("client " + this->getNickname() + " leave all is channels");
-	//TODO implement it later
+	Logger::debug("client " + this->getNickname() + " leaving all his channels.");
+	for (std::list<Channel *>::iterator it = this->_channels.begin() ; it != this->_channels.end(); ++it)
+	{
+		(*it)->removeClient(*this);
+	}
+	this->_channels.clear();
+	Logger::info("<" + this->getNickname() + "> had leave all his channels.");
 	return SUCCESS;
 }
 

@@ -46,9 +46,9 @@ bool							IRCServer::setNetworkConnection(const std::string & host, ushort port
 {
 	// this->_forword_socket = new SockStream(host, port);
 	Logger::info("Try connecting to network:"); 
-	Logger::info("- host		: " + ntos(host)); 
-	Logger::info("- port		: " + ntos(port)); 
-	Logger::info("- password	: " + ntos(password));
+	Logger::info("- host	: " + ntos(host)); 
+	Logger::info("- port	: " + ntos(port)); 
+	Logger::info("- password: " + ntos(password));
 	if (this->connectOn(host, port, this->_protocol) == false)
 	{
 		Logger::error("Cannot connect to network");
@@ -146,6 +146,7 @@ void							IRCServer::_onClientQuit(SockStream &s)
 	if (cli->isRegistered())
 	{
 		Logger::warning("Client " + cli->getNickname() + " disconnected.");
+		cli->leaveAllChannels();
 		std::string nick = cli->getNickname();
 		delete this->_ircClients[nick];
 		this->_ircClients.erase(nick);
@@ -255,7 +256,7 @@ int								IRCServer::execute(AEntity & client, std::string data)
 					Logger::error("Error while executing command");
 			}
 			else
-				Logger::warning(client.getNickname() + ": unknown command");
+				Logger::warning("<" + client.getNickname() + ">: unknown command <" + command + ">");
 			break;
 		case Client::value_type_server:
 			Logger::info("remote Server command");

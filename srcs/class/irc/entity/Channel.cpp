@@ -61,6 +61,9 @@ uint				Channel::addClient(Client & client)
 		return ERR_CHANNELISFULL;
 	this->_clients.push_back(&client);
 	this->addSocket(client.getStream());
+	Logger::info("<" + client.getNickname() + "> join channel <" + this->getNickname() + ">");
+	//TODO send here the message to everyone saying someone is added to channel
+	//TODO this involve adding a protocol to Channel (this will be necessary for TLS ? ) 
 	return SUCCESS;
 }
 
@@ -74,6 +77,7 @@ uint					Channel::removeClient(Client & client)
 		Logger::critical("client registration should already be tested here");
 	this->_clients.remove(&client);
 	this->delSocket(client.getStream());
+	Logger::info("<" + client.getNickname() + "> leave channel <" + this->getNickname() + ">");
 	return SUCCESS;
 }
 

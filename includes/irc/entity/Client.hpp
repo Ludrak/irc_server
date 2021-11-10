@@ -36,12 +36,16 @@ class Client : public AEntity
 		uint				getType( void ) const;
 		SockStream&			getStream();
 
+
+		uint				joinChannel( Channel & chan );
+		uint				leaveChannel( Channel & chan );
 		uint				leaveAllChannels( void );
 
 	
 	private:
 
 		Client( Client const & src );
+		std::list<Channel *>				_channels;
 		std::string							_username;
 		std::string							_domaine;
 		std::string							_servername;

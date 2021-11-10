@@ -1,6 +1,9 @@
 # include "IRCServer.hpp"
 
-uint		IRCServer::_commandPASS(Client & client, std::string cmd)
+//TODO implement PART command
+
+
+uint						IRCServer::_commandPASS(Client & client, std::string cmd)
 {
 	Logger::debug("<" + ntos(client.getStream().getSocket()) + "> Command<PASS> with args: " + cmd );
 	if (client.isRegistered())
@@ -11,7 +14,7 @@ uint		IRCServer::_commandPASS(Client & client, std::string cmd)
 	return SUCCESS;
 }
 
-uint		IRCServer::_commandNICK(Client & client, std::string cmd)
+uint						IRCServer::_commandNICK(Client & client, std::string cmd)
 {
 	Logger::debug("<" + ntos(client.getStream().getSocket()) + "> Command<NICK> with args: " + cmd );
 	std::string nick = Parser::getParam(cmd, 0);
@@ -37,7 +40,7 @@ uint		IRCServer::_commandNICK(Client & client, std::string cmd)
 	return SUCCESS;
 }
 
-uint		IRCServer::_commandUSER(Client & client, std::string cmd)
+uint						IRCServer::_commandUSER(Client & client, std::string cmd)
 {
 	Logger::debug("<" + ntos(client.getStream().getSocket()) + "> Command<USER> with args: " + cmd );
 	if (client.isRegistered())
@@ -74,6 +77,14 @@ uint		IRCServer::_commandPRIVMSG(Client & client, std::string cmd)
 		return this->_reply(client, ERR_NOSUCHNICK, target_name);
 	}
 	AEntity *target = this->_ircClients[target_name];
+	if (target->getType() == AEntity::value_type_channel)
+	{
+		//target is channel
+		if (reinterpret_cast<Channel *>(target)->isRegistered(client) == false)
+		{
+			return this->_reply(client, ERR_CANNOTSENDTOCHAN, target->getNickname());
+		}
+	}
 	std::string prefix = "";
 	std::string msg = ":" + client.getNickname() + "!server-ident@sender-server PRIVMSG " + target->getNickname() + " :" + Parser::getParam(cmd, 1);
 	Logger::debug("to " + client.getNickname() + " send " + msg);
@@ -93,9 +104,12 @@ uint		IRCServer::_commandDESCRIBE(Client & client, std::string cmd)
 	return SUCCESS;
 }
 //TODO add paramToList to every needed
-
+//TODO add command OP only for displaying server state 
 uint		IRCServer::_commandJOIN(Client & client, std::string cmd)
 {
+	//TODO handle all number of param
+	//TODO handle key for a channel
+	//TODO add a method get prefix to AEntity
 	Logger::debug("<" + ntos(client.getStream().getSocket()) + "> Command<JOIN> with args: " + cmd );
 	size_t nbParam = Parser::nbParam(cmd);
 	if ( nbParam == 0)
@@ -125,9 +139,9 @@ uint		IRCServer::_commandJOIN(Client & client, std::string cmd)
 			}
 			Logger::info("Creating a new channel: " + *itc);
 			Channel* new_chan =  new Channel(*itc);
-			new_chan->addClient(client);
+			client.joinChannel(*new_chan);
 			this->_ircClients.insert(std::make_pair(*itc, new_chan));
-			//TODO send JOIN as success
+			this->_sendMessage(client, ":" + client.getNickname() + " test@sender-server JOIN :" + new_chan->getNickname());
 			// this->_
 			// this->_reply(client, SUCCESS);
 			continue ;
@@ -138,9 +152,16 @@ uint		IRCServer::_commandJOIN(Client & client, std::string cmd)
 		else
 		{
 			//Channel Exist
-			Logger::info("Adding " + client.getNickname() + " on channel: " + *itc);
-			dynamic_cast<Channel*>(aChannel)->addClient(client);
-			//TODO send JOIN as success
+			Channel *chan = dynamic_cast<Channel*>(aChannel);
+			if (chan->isRegistered(client) == false)
+			{
+				Logger::info("Adding " + client.getNickname() + " on channel: " + *itc);
+				client.joinChannel(*chan);
+				//TODO check  return value
+				//TODO send JOIN as success
+				Package pkg(this->_protocol, this->_protocol.format(":" + client.getNickname() + " test@sender-server JOIN :" + aChannel->getNickname()));
+				chan->broadcastPackage(pkg);
+			}
 		}
 	}
 	return SUCCESS;
