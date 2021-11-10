@@ -55,7 +55,8 @@ int main(int ac, char ** av)
 		Logger::error("Invalid port specified");
 		return Usage(av[0]);
 	}
-	std::string server_host = "192.168.1.242";
+	// std::string server_host = "192.168.1.242";
+	std::string server_host = "127.0.0.1";
 	try 
 	{
 		IRCServer server(port, password, server_host);

@@ -29,6 +29,7 @@ class IRCServer : public ANode
 		Channel*							getChannel(int ChannelUID);
 		Client*								getClientBySockStream(SockStream & s);
 
+		static std::string					statusMessages[MAX_STATUS_MESSAGES + 1];
 	
 	private:
 
@@ -57,6 +58,7 @@ class IRCServer : public ANode
 ** --------------------------------- SocketAction ---------------------------------
 */
 
+	bool						_reply(Client & client, ushort statusCode, std::string target = "", std::string target2 = "");
 	void						_setRegistered(Client & client);
 	void						_sendMessage(AEntity & client, std::string message, SockStream * except = NULL);
 		
@@ -67,14 +69,16 @@ class IRCServer : public ANode
 /*
 ** --------------------------------- COMMANDS ---------------------------------
 */
-		void		_init_commands(void);
-		int			execute(AEntity & client, std::string data);
-		uint		_commandPASS(Client & client, std::string cmd);
-		uint		_commandNICK(Client & client, std::string cmd);
-		uint		_commandUSER(Client & client, std::string cmd);
-		uint		_commandPRIVMSG(Client & client, std::string cmd);
-		uint		_commandDESCRIBE(Client & client, std::string cmd);
-		uint		_commandJOIN(Client & client, std::string cmd);
+		void					_initCommands(void);
+		void					_initStatusMessages( void );
+
+		int						execute(AEntity & client, std::string data);
+		uint					_commandPASS(Client & client, std::string cmd);
+		uint					_commandNICK(Client & client, std::string cmd);
+		uint					_commandUSER(Client & client, std::string cmd);
+		uint					_commandPRIVMSG(Client & client, std::string cmd);
+		uint					_commandDESCRIBE(Client & client, std::string cmd);
+		uint					_commandJOIN(Client & client, std::string cmd);
 
 };
 

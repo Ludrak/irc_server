@@ -64,15 +64,58 @@ size_t		 			Parser::nbParam(std::string command)
 	return nbParam;
 }
 
+
+std::string				Parser::formatReply(std::string message, std::string target, std::string target2)
+{
+	if (message.empty())
+		return message;
+	
+	size_t first_idx = message.find("[target]");
+
+	if (first_idx == std::string::npos)
+	{
+		if (!target.empty())
+			Logger::critical("Unexpected target given for command: " + message);	
+		return message;
+	}
+	else
+	{
+		//insert target in message
+		if (target.empty())
+			Logger::critical("Expected target but no one is given for command: " + message);	
+		message.erase(first_idx, std::string("[target]").size());
+		message.insert(first_idx, target);
+	}
+
+	size_t second_idx = message.find("[target2]");
+
+	if (second_idx == std::string::npos)
+	{
+		if (!target2.empty())
+			Logger::critical("Unexpected target2 given for command: " + message);	
+		return message;
+	}
+	else
+	{
+		//insert target in message
+		if (target2.empty())
+			Logger::critical("Expected target2 but no one is given for command: " + message);	
+		message.erase(second_idx, std::string("[target2]").size());
+		message.insert(second_idx, target2);
+	}
+	return message;
+}
+
+
 bool					Parser::validNickname(std::string nick)
 {
 	if (nick.empty() || nick.size() > 9)
 		return false;
-	if (!(isalpha(nick.at(0)) || isSpecial(nick.at(0))))
+	if (!(isalpha(nick.at(0)) || _isSpecial(nick.at(0))))
 		return false;
 	for (std::string::size_type i = 1; i < nick.size(); ++i)
 	{
-		if (!(isalnum(nick[i]) || isSpecial(nick[i]) || nick[i] == '-'))
+		if (!(isalnum(nick[i]) || _isSpecial(nick[i]) || nick[i] == '-'))
 			return false;
 	}
 	return true;
@@ -99,7 +142,7 @@ bool					Parser::validChannelName(std::string channelName)
 }
 
 
-bool					Parser::isSpecial(char c)
+bool					Parser::_isSpecial(char c)
 {
 	if ((c >= 91 && c <= 96) || (c >= 123 && c <= 125))
 		return true;

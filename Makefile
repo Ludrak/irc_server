@@ -26,6 +26,7 @@ SRCS		=	SockStream.cpp \
 				Package.cpp \
 				Protocol.cpp \
 				IRCProtocol.cpp \
+				commands.cpp \
 				Parser.cpp \
 				Logger.cpp \
 				main.cpp	

@@ -1,5 +1,7 @@
 #include "IRCServer.hpp"
 
+std::string				IRCServer::statusMessages[] = {};
+
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
@@ -7,12 +9,13 @@
 IRCServer::IRCServer(ushort port, const std::string & password, const std::string &host)
 : ASockManager(), ANode(host), _forwardSocket(0), _password(password), _protocol()
 {
+	this->_initStatusMessages();
+	this->_initCommands();
 	Logger::debug("IRCServer constructor");
 	Logger::info("IRCServer host: " );
 	Logger::info("IRCServer host: " + ntos(host));
 	Logger::info("IRCServer port: " + ntos(port));
 	Logger::info("IRCServer password :" + ntos(password));
-	this->_init_commands();
 	this->listenOn(port, this->_protocol);
 }
 
@@ -39,7 +42,7 @@ IRCServer::~IRCServer()
 ** --------------------------------- METHODS ----------------------------------
 */
 
-bool						IRCServer::setNetworkConnection(const std::string & host, ushort port, std::string & password)
+bool							IRCServer::setNetworkConnection(const std::string & host, ushort port, std::string & password)
 {
 	// this->_forword_socket = new SockStream(host, port);
 	Logger::info("Try connecting to network:"); 
@@ -57,6 +60,26 @@ bool						IRCServer::setNetworkConnection(const std::string & host, ushort port,
 	return true;
 }
 
+bool							IRCServer::_reply(Client & client, ushort statusCode, std::string target, std::string target2)
+{
+	if (statusCode > MAX_STATUS_MESSAGES)
+	{
+		Logger::critical("Try to send an invalid statusCode: " + ntos(statusCode));
+		return !SUCCESS;
+	}
+	Logger::debug("Replying code: " + ntos(statusCode));
+	Logger::debug("Raw response: " + IRCServer::statusMessages[statusCode]);
+	Logger::debug("target: " + target);
+	Logger::debug("target2: " + target2);
+	std::string reply = Parser::formatReply(IRCServer::statusMessages[statusCode], target, target2);
+	Logger::debug("Formated response: " + reply);
+	std::string prefix = ":" + client.getNickname() + "!server-ident@sender-server ";
+
+	this->_sendMessage(client, prefix + ntos(statusCode) + " " + reply);
+	return SUCCESS;
+}
+
+
 void							IRCServer::_setRegistered(Client & client)
 {
 	client.setRegistered(true);
@@ -69,13 +92,13 @@ void							IRCServer::_sendMessage(AEntity & target, std::string message, SockSt
 	//TODO add server prefix
 	if (target.getType() == AEntity::value_type_channel)
 	{
-		Logger::debug("Sending channle message");
+		Logger::debug("Sending message to channel");
 		Package pkg = Package(this->_protocol, this->_protocol.format(message));
 		reinterpret_cast<Channel*>(&target)->broadcastPackage(pkg, except);
 	}
 	else
 	{
-		Logger::debug("Sending Client message");
+		Logger::debug("Sending message to target");
 		Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<Client*>(&target)->getStream());
 		this->sendPackage(package, reinterpret_cast<Client*>(&target)->getStream());
 	}
@@ -194,7 +217,7 @@ Client*							IRCServer::getClientBySockStream(SockStream & s)
 	return NULL;
 }
 
-const IProtocol&					IRCServer::getProtocol( void ) const
+const IProtocol&				IRCServer::getProtocol( void ) const
 {
 	return this->_protocol;
 }
@@ -203,7 +226,7 @@ const IProtocol&					IRCServer::getProtocol( void ) const
 ** --------------------------------- COMMANDS ---------------------------------
 */
 
-void				IRCServer::_init_commands( void )
+void							IRCServer::_initCommands( void )
 {
 	this->_userCommands.insert(std::make_pair("USER",	&IRCServer::_commandUSER));
 	this->_userCommands.insert(std::make_pair("PASS",	&IRCServer::_commandPASS));
@@ -213,7 +236,7 @@ void				IRCServer::_init_commands( void )
 	this->_userCommands.insert(std::make_pair("JOIN",	&IRCServer::_commandJOIN));
 }
 
-int					IRCServer::execute(AEntity & client, std::string data)
+int								IRCServer::execute(AEntity & client, std::string data)
 {
 	size_t sep = data.find(" ");
 	std::string command(data);
@@ -228,13 +251,8 @@ int					IRCServer::execute(AEntity & client, std::string data)
 		case Client::value_type_client:
 			if (this->_userCommands.count(command) == 1)
 			{
-				uint ret = (this->*(this->_userCommands[command]))(dynamic_cast<Client&>(client), args);
-				if (ret != 0)
-				{
-					//TODO
-					std::string prefix = ":" + client.getNickname() + "!server-ident@sender-server ";
-					this->_sendMessage(client, prefix + ntos(ret) + std::string(" ") + client.getNickname() + " :No such nick/channel"); // senError
-				}
+				if ((this->*(this->_userCommands[command]))(dynamic_cast<Client&>(client), args) != SUCCESS)
+					Logger::error("Error while executing command");
 			}
 			else
 				Logger::warning(client.getNickname() + ": unknown command");
@@ -251,145 +269,6 @@ int					IRCServer::execute(AEntity & client, std::string data)
 			break;
 	}
 	return 1;
-}
-
-uint		IRCServer::_commandPASS(Client & client, std::string cmd)
-{
-	Logger::debug("<" + ntos(client.getStream().getSocket()) + "> Command<PASS> with args: " + cmd );
-	if (client.isRegistered())
-		return ERR_ALREADYREGISTRED;
-	else if (cmd.empty())
-		return ERR_NEEDMOREPARAMS;
-	client.setPassword(cmd);
-	return SUCCESS;
-}
-
-uint		IRCServer::_commandNICK(Client & client, std::string cmd)
-{
-	Logger::debug("<" + ntos(client.getStream().getSocket()) + "> Command<NICK> with args: " + cmd );
-	std::string nick = Parser::getParam(cmd, 0);
-	if (client.getPassword() != this->_password)
-	{
-		//TODO handle this error without disconnecting
-		this->disconnect(client.getStream()); // kickUser
-		return SUCCESS;
-	}
-	else if (Parser::nbParam(cmd) != 1) //REVIEW normalement si 2 param venant d'un user, commande ignoré
-		return ERR_NONICKNAMEGIVEN;
-	else if (Parser::validNickname(nick) == false)
-		return ERR_ERRONEUSNICKNAME;
-	if (this->_ircClients.count(nick) != 0)
-		return ERR_NICKNAMEINUSE;
-	if (client.isRegistered()
-	&& this->_ircClients.count(client.getNickname()) != 0)
-	{
-		this->_ircClients.erase(client.getNickname());
-		this->_ircClients.insert(std::make_pair(nick, &client));
-	}
-	client.setNickname(nick);
-	return SUCCESS;
-}
-
-uint		IRCServer::_commandUSER(Client & client, std::string cmd)
-{
-	Logger::debug("<" + ntos(client.getStream().getSocket()) + "> Command<USER> with args: " + cmd );
-	if (client.isRegistered())
-		return ERR_ALREADYREGISTRED;
-	else if (Parser::nbParam(cmd) < 4)
-		return ERR_NEEDMOREPARAMS;
-	client.setUsername(Parser::getParam(cmd, 0));
-	client.setDomaineName(Parser::getParam(cmd, 1));
-	client.setServername(Parser::getParam(cmd, 2));
-	client.setRealname(Parser::getParam(cmd, 3));
-	this->_setRegistered(client);
-	Logger::info("new user registered: " + client.getNickname());
-	return SUCCESS;
-}
-//TODO Parser::get param => error including on space
-//TODO implement channels here and list of nickname/channels
-uint		IRCServer::_commandPRIVMSG(Client & client, std::string cmd)
-{
-	Logger::debug("<" + ntos(client.getStream().getSocket()) + "> Command<PRIVMSG> with args: " + cmd );
-	Logger::info(client.getNickname() + "<PRIVMSG>: " + cmd);
-	size_t nbParam = Parser::nbParam(cmd);
-	Logger::debug("nb param = " + ntos(nbParam)); 
-	if (nbParam == 0)
-		return ERR_NORECIPENT;
-	else if (nbParam == 1)
-		return ERR_NOTEXTTOSEND;
-	else if (nbParam > 2)
-		return SUCCESS; //REVIEW I don't know what to do here
-	std::string target_name = Parser::getParam(cmd, 0);
-	Logger::debug("Param target = " + target_name); 
-	if (this->_ircClients.count(target_name) == 0)
-	{
-		Logger::debug("Target not found"); 
-		return ERR_NOSUCHNICK;
-	}
-	AEntity *target = this->_ircClients[target_name];
-	std::string prefix = "";
-	std::string msg = ":" + client.getNickname() + "!server-ident@sender-server PRIVMSG " + target->getNickname() + " :" + Parser::getParam(cmd, 1);
-	Logger::debug("to " + client.getNickname() + " send " + msg);
-	if (target->getType() == AEntity::value_type_channel)
-		this->_sendMessage(*target, msg, &client.getStream());
-	else
-		this->_sendMessage(*target, msg);
-	return SUCCESS;
-}
-
-uint		IRCServer::_commandDESCRIBE(Client & client, std::string cmd)
-{
-	Logger::debug("<" + ntos(client.getStream().getSocket()) + "> Command<DESCRIBE> with args: " + cmd );
-	// if (Parser::nbParam(cmd) != 2)
-		// this->_sendMessage(client, client.getNickname() + cmd);
-		//TODO implement it
-	return SUCCESS;
-}
-//TODO add paramToList to every needed
-
-uint		IRCServer::_commandJOIN(Client & client, std::string cmd)
-{
-	Logger::debug("<" + ntos(client.getStream().getSocket()) + "> Command<JOIN> with args: " + cmd );
-	size_t nbParam = Parser::nbParam(cmd);
-	if ( nbParam == 0)
-		return ERR_NEEDMOREPARAMS;
-	// this->_sendMessage(client, client.getNickname() + cmd);
-	std::list<std::string> channels(Parser::paramToList(Parser::getParam(cmd, 0)));
-	if (channels.size() == 1 && channels.front().compare("0") == 0)
-		return client.leaveAllChannels();
-	if (client.isFull())
-		return ERR_TOOMANYCHANNELS;
-	std::list<std::string> keys(Parser::paramToList(Parser::getParam(cmd, 1)));
-
-	std::list<std::string>::iterator itk = keys.begin();
-	for (std::list<std::string>::iterator itc = channels.begin(); itc != channels.end(); ++itc)
-	{
-		if (itk != keys.end())
-			Logger::debug("client " + client.getNickname() + ": ask to join channel: " + *itc + " with key: " + *itk++);
-		else
-			Logger::debug("client " + client.getNickname() + ": ask to join channel: " + *itc);
-		if (this->_ircClients.count(*itc) == false)
-		{
-			//Channel don't exist
-			if ( Parser::validChannelName(*itc) == false)
-				return ERR_NOSUCHCHANNEL;
-			Logger::info("Creating a new channel: " + *itc);
-			Channel* new_chan =  new Channel(*itc);
-			new_chan->addClient(client);
-			this->_ircClients.insert(std::make_pair(*itc, new_chan));
-			//TODO send JOIN as success
-			return SUCCESS;
-		}
-		AEntity* aChannel = this->_ircClients.find(*itc)->second;
-		if (aChannel->getType() != AEntity::value_type_channel)
-			return ERR_NOSUCHCHANNEL;
-		else
-		{
-			Logger::info("Adding " + client.getNickname() + " on channel: " + *itc);
-			return dynamic_cast<Channel*>(aChannel)->addClient(client);
-		}
-	}
-	return SUCCESS;
 }
 
 /* ************************************DEBUG********************************** */
@@ -413,5 +292,66 @@ void			IRCServer::_printServerState( void )
 	}
 	
 }
+
+//TODO add strerror to socket binding failed
+void			IRCServer::_initStatusMessages( void )
+{
+	/* Errors */
+
+	IRCServer::statusMessages[ERR_NOSUCHNICK]			=	"[target] :No such nick/channel";
+	IRCServer::statusMessages[ERR_NOSUCHSERVER]			=	"[target] :No such server";
+	IRCServer::statusMessages[ERR_NOSUCHCHANNEL]		=	"[target] :No such channel";
+	IRCServer::statusMessages[ERR_CANNOTSENDTOCHAN]		=	"[target] :Cannot send to channel";
+	IRCServer::statusMessages[ERR_TOOMANYCHANNELS]		=	"[target] :You have joined too many channels";
+	IRCServer::statusMessages[ERR_WASNOSUCHNICK]		=	"[target] :There was no such nickname";
+	IRCServer::statusMessages[ERR_TOOMANYTARGETS]		=	"[target] :<error code> recipients. <abort message>";
+	IRCServer::statusMessages[ERR_NOSUCHSERVICE]		=	"[target] :No such service";
+	IRCServer::statusMessages[ERR_NOORIGIN]				=	":No origin specified";//NO TARGET
+	IRCServer::statusMessages[ERR_NORECIPENT]			=	":No recipient given ([target])";
+	IRCServer::statusMessages[ERR_NOTEXTTOSEND]			=	":No text to send";//NO TARGET
+	IRCServer::statusMessages[ERR_NOTOPLEVEL]			=	"[target] :No toplevel domain specified";
+	IRCServer::statusMessages[ERR_WILDTOPLEVEL]			=	"[target] :Wildcard in toplevel domaind";
+	IRCServer::statusMessages[ERR_BADMASK]				=	"[target] :Bad Server/host mask";
+	IRCServer::statusMessages[ERR_UNKNOWNCOMMAND]		=	"[target] :Unknown command";
+	IRCServer::statusMessages[ERR_NOMOTD]				=	":MOTD File is missing";//NO TARGET
+	IRCServer::statusMessages[ERR_NOADMININFO]			=	"[target] :No administrative info available";
+	IRCServer::statusMessages[ERR_FILEERROR]			=	":File error doing <file op> on <file>"; // NO TARGET
+	IRCServer::statusMessages[ERR_NONICKNAMEGIVEN]		=	":No nickname given"; // NO TARGET
+	IRCServer::statusMessages[ERR_ERRONEUSNICKNAME]		=	"[target] :Erroneous nickname";
+	IRCServer::statusMessages[ERR_NICKNAMEINUSE]		=	"[target] :Nickname is already in use";
+	IRCServer::statusMessages[ERR_NICKCOLLISION]		=	"[target] :Nickname collision KILL from <user>@<host>";
+	IRCServer::statusMessages[ERR_UNAVAILRESOURCE]		=	"[target] :Nick/channel is temporarily unavailable";
+	IRCServer::statusMessages[ERR_USERNOTINCHANNEL]		=	"[target] [target2] :They aren't on that channel"; //2 TARGET
+	IRCServer::statusMessages[ERR_NOTONCHANNEL]			=	"[target] :You're not on that channel";
+	IRCServer::statusMessages[ERR_USERONCHANNEL]		=	"[target] [target2] :is already on channel"; // 2 TARGET
+	IRCServer::statusMessages[ERR_NOLOGIN]				=	"[target] :User not logged in";
+	IRCServer::statusMessages[ERR_SUMMONDISABLED]		=	":SUMMON has been disabled";//NO TARGET //TODO implement command
+	IRCServer::statusMessages[ERR_USERSDISABLED]		=	":USERS has been disabled";//NO TARGET //TODO implement command
+	IRCServer::statusMessages[ERR_NOTREGISTERED]		=	":You have not registered";//NO TARGET //TODO implement command
+	IRCServer::statusMessages[ERR_NEEDMOREPARAMS]		=	"[target] :Not enough parameters";
+	IRCServer::statusMessages[ERR_ALREADYREGISTRED]		=	":Unauthorized command (already registered)"; // NO TARGET
+	IRCServer::statusMessages[ERR_NOPERMFORHOST]		=	":Your host isn't among the privileged"; // NO TARGET
+	IRCServer::statusMessages[ERR_PASSWDMISMATCH]		=	":Password incorrect"; // NO TARGET
+	IRCServer::statusMessages[ERR_YOUREBANNEDCREEP]		=	":You are banned from this server"; // NO TARGET
+	IRCServer::statusMessages[ERR_YOUWILLBEBANNED]		=	""; // NO TARGET
+	IRCServer::statusMessages[ERR_KEYSET]				=	"[target] :Channel key already set";
+	IRCServer::statusMessages[ERR_CHANNELISFULL]		=	"[target] :Cannot join channel (+l)";
+	IRCServer::statusMessages[ERR_UNKNOWNMODE]			=	"[target] :is unknown mode char to me for <channel>";
+	IRCServer::statusMessages[ERR_INVITEONLYCHAN]		=	"[target] :Cannot join channel (+i)";
+	IRCServer::statusMessages[ERR_BANNEDFROMCHAN]		=	"[target] :Cannot join channel (+b)";
+	IRCServer::statusMessages[ERR_BADCHANNELKEY]		=	"[target] :Cannot join channel (+k)";
+	IRCServer::statusMessages[ERR_BADCHANMASK]			=	"[target] :Bad Channel Mask";
+	IRCServer::statusMessages[ERR_NOCHANMODES]			=	"[target] :Channel doesn't support modes";
+	IRCServer::statusMessages[ERR_BANLISTFULL]			=	"[target] [target2] :Channel list is full"; //2 TARGET
+	IRCServer::statusMessages[ERR_NOPRIVILEGES]			=	":Permission Denied- You're not an IRC operator"; //NO TARGET
+	IRCServer::statusMessages[ERR_CHANOPRIVSNEEDED]		=	"[target] :You're not channel operator";
+	IRCServer::statusMessages[ERR_CANTKILLSERVER]		=	":You can't kill a server!"; //NO TARGET //TODO implment it
+	IRCServer::statusMessages[ERR_RESTRICTED]			=	":Your connection is restricted!"; //NO TARGET
+	IRCServer::statusMessages[ERR_UNIQOPPRIVSNEEDED]	=	":You're not the original channel operator"; //NO TARGET
+	IRCServer::statusMessages[ERR_NOOPERHOST]			=	"[target] :No O-lines for your host";
+	IRCServer::statusMessages[ERR_UMODEUNKNOWNFLAG]		=	"[target] :Unknown MODE flag";
+	IRCServer::statusMessages[ERR_USERSDONTMATCH]		=	"[target] :Cannot change mode for other users";
+}
+
 
 /* ************************************************************************** */
