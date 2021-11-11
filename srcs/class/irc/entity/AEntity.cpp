@@ -4,7 +4,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-AEntity::AEntity(uint registrationsMax) : _nbRegistrations(0), _nbRegistrationsMax(registrationsMax)
+AEntity::AEntity(uint registrationsMax) : _nbRegistrations(0), _nbRegistrationsMax(registrationsMax), _mode(0)
 {
 
 }
@@ -77,7 +77,7 @@ void						AEntity::setPassword( std::string password)
 
 bool						AEntity::incRegistration( void )
 {
-	if (this->_nbRegistrations >= this->_nbRegistrationsMax)
+	if (this->isEnable(M_REGISTRATION_LIMITED) && this->_nbRegistrations >= this->_nbRegistrationsMax)
 		return false;
 	this->_nbRegistrations++;
 	return true;
@@ -106,6 +106,27 @@ bool						AEntity::isFull( void ) const
 	if (this->_nbRegistrations == this->_nbRegistrationsMax)
 		return true;
 	return false;
+}
+
+
+void						AEntity::toogleMode(uint modeMask)
+{
+	this->_mode ^= modeMask;
+}
+
+void						AEntity::enableMode(uint modeMask)
+{
+	this->_mode |= modeMask;
+}
+
+void						AEntity::disableMode(uint modeMask)
+{
+	this->_mode &= ~modeMask;
+}
+
+bool						AEntity::isEnable(uint modeMask)
+{
+	return (this->_mode & modeMask);	
 }
 
 /*

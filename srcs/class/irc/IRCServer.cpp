@@ -235,6 +235,7 @@ void							IRCServer::_initCommands( void )
 	this->_userCommands.insert(std::make_pair("PRIVMSG",	&IRCServer::_commandPRIVMSG));
 	this->_userCommands.insert(std::make_pair("DESCRIBE",	&IRCServer::_commandDESCRIBE));
 	this->_userCommands.insert(std::make_pair("JOIN",	&IRCServer::_commandJOIN));
+	this->_userCommands.insert(std::make_pair("MODE",	&IRCServer::_commandMODE));
 }
 
 int								IRCServer::execute(AEntity & client, std::string data)
@@ -284,7 +285,16 @@ void			IRCServer::_printServerState( void )
 	for (std::map<std::string, AEntity *>::iterator it = this->_ircClients.begin(); it != this->_ircClients.end(); ++it)
 	{
 		if (it->second->getType() == Channel::value_type_channel)
-			Logger::debug("Channel K:" + it->first + " / N: " + it->second->getNickname() + " / P: " + it->second->getPassword());
+		{
+			Channel *chan = reinterpret_cast<Channel *>(it->second);
+			Logger::debug("Channel K:" + it->first + " / N: " + chan->getNickname() + " / P: " + chan->getPassword());
+			if (chan->getCreator() == NULL)
+				Logger::debug("Channel creator: NULL");
+			else
+				Logger::debug("Channel creator: " + chan->getCreator()->getNickname());
+			Logger::debug("Channel moderated: " + ntos(chan->isEnable(M_MODERATED)) );
+
+		}
 		else
 		{
 			Client * cli = reinterpret_cast<Client *>(it->second);
@@ -337,7 +347,7 @@ void			IRCServer::_initStatusMessages( void )
 	IRCServer::statusMessages[ERR_YOUWILLBEBANNED]		=	""; // NO TARGET
 	IRCServer::statusMessages[ERR_KEYSET]				=	"[target] :Channel key already set";
 	IRCServer::statusMessages[ERR_CHANNELISFULL]		=	"[target] :Cannot join channel (+l)";
-	IRCServer::statusMessages[ERR_UNKNOWNMODE]			=	"[target] :is unknown mode char to me for <channel>";
+	IRCServer::statusMessages[ERR_UNKNOWNMODE]			=	"[target] :is unknown mode char to me for [target2]";//2TARGET
 	IRCServer::statusMessages[ERR_INVITEONLYCHAN]		=	"[target] :Cannot join channel (+i)";
 	IRCServer::statusMessages[ERR_BANNEDFROMCHAN]		=	"[target] :Cannot join channel (+b)";
 	IRCServer::statusMessages[ERR_BADCHANNELKEY]		=	"[target] :Cannot join channel (+k)";

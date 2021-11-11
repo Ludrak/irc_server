@@ -7,6 +7,8 @@
 # include <map>
 # include "StatusCode.hpp"
 
+# define M_REGISTRATION_LIMITED		1 << 0
+
 class AEntity
 {
 	public:
@@ -28,10 +30,17 @@ class AEntity
 		
 		bool				incRegistration( void );
 		bool				decRegistration( void );
+
 		uint				getNbRegistrations( void ) const;
 		uint				getNbRegistrationsMax( void ) const;
 
 		bool				isFull( void ) const;
+
+		/* mode */
+		void				toogleMode(uint modeMask);
+		void				enableMode(uint modeMask);
+		void				disableMode(uint modeMask);
+		bool				isEnable(uint modeMask);
 
 		enum C { 
 			value_type_channel = 0,
@@ -45,6 +54,7 @@ class AEntity
 		uint				_nbRegistrationsMax;
 
 	private:
+		uint				_mode;
 		uint				_uid;
 		std::string			_nickname;
 		std::string			_givenPassword;

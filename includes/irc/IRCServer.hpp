@@ -79,6 +79,9 @@ class IRCServer : public ANode
 		uint					_commandPRIVMSG(Client & client, std::string cmd);
 		uint					_commandDESCRIBE(Client & client, std::string cmd);
 		uint					_commandJOIN(Client & client, std::string cmd);
+		uint					_commandMODE(Client & client, std::string cmd);
+		uint					_commandMODEclient(Client & client, std::string cmd); //Not use this in array of methods
+		uint					_commandMODEchannel(Client & client, Channel& target, size_t nbParam, std::string cmd);//Not use this in array of methods
 
 };
 
