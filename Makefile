@@ -26,7 +26,6 @@ SRCS		=	SockStream.cpp \
 				Package.cpp \
 				Protocol.cpp \
 				IRCProtocol.cpp \
-				commands.cpp \
 				Parser.cpp \
 				Logger.cpp \
 				main.cpp	
@@ -50,6 +49,13 @@ HEADERS		=	SockStream.hpp \
 				StatusCode.hpp \
 				ntos.hpp
 
+COMMANDS	=	commandJOIN.cpp \
+				commandMODE.cpp \
+				commandNICK.cpp \
+				commandPASS.cpp \
+				commandPRIVMSG.cpp \
+				commandUSER.cpp
+
 # Librarys (only for local archives in project folder)
 LIBRARYS	= 
 
@@ -71,7 +77,7 @@ PREFIX_CLEAN=[\033[1;31mCLEAN\033[0m]
 ############################################################################################
 
 
-SRC_FILES	=	$(shell find $(SRC_DIR) | grep -E '$(shell echo $(SRCS) | tr ' ' '|')')
+SRC_FILES	=	$(shell find $(SRC_DIR) | grep -E '$(shell echo $(SRCS) $(COMMANDS) | tr ' ' '|')')
 HEADER_FILES=	$(shell find $(INC_DIR) | grep -E '$(shell echo $(HEADERS) | tr ' ' '|')')
 OBJS		=	$(addprefix $(BIN_DIR)/, $(SRC_FILES:.cpp=.o))
 CPP_IFLAGS	+=	$(addprefix -I,$(INC_DIR)) $(addprefix -I,$(shell echo $(HEADER_FILES) | tr ' ' '\n' | rev | cut -d'/' -f2- | rev | sort | uniq))

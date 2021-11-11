@@ -229,17 +229,18 @@ const IProtocol&				IRCServer::getProtocol( void ) const
 
 void							IRCServer::_initCommands( void )
 {
+//TODO implement PART command
 	this->_userCommands.insert(std::make_pair("USER",	&IRCServer::_commandUSER));
 	this->_userCommands.insert(std::make_pair("PASS",	&IRCServer::_commandPASS));
 	this->_userCommands.insert(std::make_pair("NICK",	&IRCServer::_commandNICK));
 	this->_userCommands.insert(std::make_pair("PRIVMSG",	&IRCServer::_commandPRIVMSG));
-	this->_userCommands.insert(std::make_pair("DESCRIBE",	&IRCServer::_commandDESCRIBE));
 	this->_userCommands.insert(std::make_pair("JOIN",	&IRCServer::_commandJOIN));
 	this->_userCommands.insert(std::make_pair("MODE",	&IRCServer::_commandMODE));
 }
 
 int								IRCServer::execute(AEntity & client, std::string data)
 {
+//TODO handle prefix in data before sending data to command
 	size_t sep = data.find(" ");
 	std::string command(data);
 	std::string args("");
