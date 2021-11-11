@@ -16,17 +16,26 @@ class Client : public AEntity
 
 		Client &			operator=( Client const & rhs );
 
-		std::string			getUsername( void );
+		const std::string	&getUsername( void ) const;
 		void				setUsername(std::string user);
 
-		std::string			getDomaineName( void );
+		const std::string	&getDomaineName( void ) const;
 		void				setDomaineName(std::string domaine);
 		
-		std::string			getServername( void );
+		const std::string	&getServername( void ) const;
 		void				setServername(std::string servername);
 
-		std::string			getRealname( void );
+		const std::string	&getRealname( void ) const;
 		void				setRealname(std::string realName);
+
+		uint				getHopCount() const;
+		void				setHopCount( uint hop );
+
+		const std::string	&getSID() const;
+		void				setSID( const std::string & sid );
+
+		const std::string	&getServerDescription() const;
+		void				setServerDescription(const std::string &desc);
 
 		void				setRegisteredAsClient( bool registered );
 		void				setRegisteredAsServer( bool registered );
@@ -52,6 +61,10 @@ class Client : public AEntity
 		SockStream*							_socket;
 		int									_type;
 
+		/* network */
+		uint								_hopcount;
+		std::string							_sid;
+		std::string							_serverinfo;
 };
 
 std::ostream &			operator<<( std::ostream & o, Client const & i );

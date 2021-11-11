@@ -70,7 +70,8 @@ class IRCServer : public ANode
 */
 
 	void						_setRegistered(Client & client, int type);
-	void						_sendMessage(AEntity & client, std::string message);
+	void						_sendMessage(AEntity & client, const std::stringstream &message);
+	void						_sendMessage(SockStream & target, const std::stringstream &message);
 		
 /*
 ** --------------------------------- DEBUG ---------------------------------

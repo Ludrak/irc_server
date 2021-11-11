@@ -26,5 +26,4 @@ class ASockHandler
         std::map<ushort, SockStream *> _sockets;
 };
 
-
 # endif // SOCKHANDLER_HPP
