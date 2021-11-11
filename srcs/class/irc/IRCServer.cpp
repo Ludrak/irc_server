@@ -74,7 +74,6 @@ bool							IRCServer::_reply(Client & client, ushort statusCode, std::string tar
 	std::string reply = Parser::formatReply(IRCServer::statusMessages[statusCode], target, target2);
 	Logger::debug("Formated response: " + reply);
 	std::string prefix = ":" + client.getNickname() + "!server-ident@sender-server ";
-
 	this->_sendMessage(client, prefix + ntos(statusCode) + " " + reply);
 	return SUCCESS;
 }
@@ -244,7 +243,7 @@ int								IRCServer::execute(AEntity & client, std::string data)
 	size_t sep = data.find(" ");
 	std::string command(data);
 	std::string args("");
-	if (sep < data.size() - 1)
+	if (sep < data.size())
 	{
 		command = data.substr(0, sep);
 		args = data.substr(sep + 1);
@@ -341,7 +340,7 @@ void			IRCServer::_initStatusMessages( void )
 	IRCServer::statusMessages[ERR_USERSDISABLED]		=	":USERS has been disabled";//NO TARGET //TODO implement command
 	IRCServer::statusMessages[ERR_NOTREGISTERED]		=	":You have not registered";//NO TARGET //TODO implement command
 	IRCServer::statusMessages[ERR_NEEDMOREPARAMS]		=	"[target] :Not enough parameters";
-	IRCServer::statusMessages[ERR_ALREADYREGISTRED]		=	":Unauthorized command (already registered)"; // NO TARGET
+	IRCServer::statusMessages[ERR_ALREADYREGISTRED]		=	"[target] :Unauthorized command (already registered)";
 	IRCServer::statusMessages[ERR_NOPERMFORHOST]		=	":Your host isn't among the privileged"; // NO TARGET
 	IRCServer::statusMessages[ERR_PASSWDMISMATCH]		=	":Password incorrect"; // NO TARGET
 	IRCServer::statusMessages[ERR_YOUREBANNEDCREEP]		=	":You are banned from this server"; // NO TARGET

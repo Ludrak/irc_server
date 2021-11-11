@@ -130,6 +130,28 @@ void					Client::setRealname(std::string realName)
 }
 
 
+const std::string				&Client::getVersion( void )
+{
+	return this->_version;
+}
+
+void					Client::setVersion(std::string version)
+{
+	Logger::debug(this->getNickname() + " set version: " + version);
+	this->_version = version;
+}
+
+const std::string		&Client::getFlags( void )
+{
+	return this->_flags;
+}
+
+void					Client::setFlags(std::string flags)
+{
+	Logger::debug(this->getNickname() + " set flags: " + flags);
+	this->_flags = flags;
+}
+
 void					Client::setRegistered( bool registered)
 {
 	this->_registered = registered;
@@ -149,6 +171,6 @@ SockStream&				Client::getStream( void )
 		// throw ;
 	}
 	return *this->_socket;
-}
 
+}
 /* ************************************************************************** */

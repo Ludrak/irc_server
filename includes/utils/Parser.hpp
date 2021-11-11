@@ -15,6 +15,9 @@ class Parser
 		static size_t				 	nbParam(std::string command);
 		static bool						validNickname(std::string nick);
 		static bool						validChannelName(std::string channelName);
+		static bool						validVersionName(std::string version);
+		static bool						validPASSflags(std::string flags);
+
 		static bool						_isSpecial(char c);
 	private:
 

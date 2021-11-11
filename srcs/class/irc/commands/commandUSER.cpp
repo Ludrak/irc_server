@@ -2,9 +2,10 @@
 
 uint						IRCServer::_commandUSER(Client & client, std::string cmd)
 {
+	//TOFIX: can register without nickname
 	Logger::debug("<" + ntos(client.getStream().getSocket()) + "> Command<USER> with args: " + cmd );
 	if (client.isRegistered())
-		return this->_reply(client, ERR_ALREADYREGISTRED);
+		return this->_reply(client, ERR_ALREADYREGISTRED, "USER");
 	else if (Parser::nbParam(cmd) < 4)
 		return this->_reply(client, ERR_NEEDMOREPARAMS, "USER");
 	client.setUsername(Parser::getParam(cmd, 0));

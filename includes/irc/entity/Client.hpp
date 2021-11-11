@@ -10,7 +10,7 @@ class IRCServer;
 
 class Client : public AEntity
 {
-
+//TODO pass all getter in const std::string &
 	public:
 
 		Client(SockStream & socket);
@@ -30,6 +30,12 @@ class Client : public AEntity
 		std::string			getRealname( void );
 		void				setRealname(std::string realName);
 
+		const std::string&	getVersion( void );
+		void				setVersion(std::string version); //Server only
+
+		const std::string&	getFlags( void );
+		void				setFlags(std::string flags); //Server only
+
 		void				setRegistered( bool registered );
 		bool				isRegistered( void );
 
@@ -37,9 +43,9 @@ class Client : public AEntity
 		SockStream&			getStream();
 
 
-		uint				joinChannel( Channel & chan );
-		uint				leaveChannel( Channel & chan );
-		uint				leaveAllChannels( void );
+		uint				joinChannel( Channel & chan ); //client only
+		uint				leaveChannel( Channel & chan ); //client only
+		uint				leaveAllChannels( void ); //client only
 
 	
 	private:
@@ -50,6 +56,8 @@ class Client : public AEntity
 		std::string							_domaine;
 		std::string							_servername;
 		std::string							_realname;
+		std::string							_version; //Server only
+		std::string							_flags; //Server only
 		bool								_registered;
 		SockStream*							_socket;
 

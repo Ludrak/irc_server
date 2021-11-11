@@ -141,6 +141,29 @@ bool					Parser::validChannelName(std::string channelName)
 	return true;
 }
 
+bool					Parser::validVersionName(std::string version)
+{
+	if (version.size() < 4 || version.size() > 14)
+		return false;
+	for (uint i = 0; i < 4 ; ++i)
+	{
+		if (isdigit(version[i]) == false)
+			return false;
+	}
+	return true;
+}
+
+bool					Parser::validPASSflags(std::string flags)
+{
+	if (flags.size() > 100)
+		return false;
+	size_t pos = flags.find("|");
+	if (pos == std::string::npos)
+		return false;
+	if (pos != 0 && flags.compare(0, pos, "IRC") != 0)
+		return false;
+	return true;
+}
 
 bool					Parser::_isSpecial(char c)
 {
