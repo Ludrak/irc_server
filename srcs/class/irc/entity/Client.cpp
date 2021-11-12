@@ -4,10 +4,9 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Client::Client(SockStream & socket) : AEntity(), _type(Client::value_type_unknown)
+Client::Client(SockStream & socket) : AEntity(), _type(Client::value_type_unknown), _isRelayed(false)
 {
 	this->_socket = &socket;
-
 }
 
 /*
@@ -139,6 +138,17 @@ bool					Client::isRegistered( void )
 {
 	return this->_registered;
 }
+
+bool					Client::isRelayed() const
+{
+	return (this->_isRelayed);
+}
+
+void					Client::setRelayed( bool relayed )
+{
+	this->_isRelayed = relayed;
+}
+
 
 SockStream&				Client::getStream( void )
 {

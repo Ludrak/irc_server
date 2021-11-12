@@ -71,6 +71,7 @@ class SockStream
 		void						setType( const t_sock_type type );
 
 		std::string					getIP(void);
+		void						setIP(const std::string &ip_format);
 
 	protected:
 		ushort						_socket;

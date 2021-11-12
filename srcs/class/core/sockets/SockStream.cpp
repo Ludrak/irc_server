@@ -115,6 +115,13 @@ void							SockStream::setType( const t_sock_type type )
 	this->_type = type;
 }
 
+/*IP FORMAT: XXX.XXX.XXX.XXX:PORT */
+void							SockStream::setIP(const std::string &ip_format)
+{
+	inet_aton(ip_format.substr(0, ip_format.find(":")).c_str(), &this->_addr.sin_addr);
+	this->_addr.sin_port = std::stoi(ip_format.substr(ip_format.find(":") + 1, ip_format.size() - (ip_format.find(":") + 1)));
+}
+
 std::string						SockStream::getIP()
 {
 	return (inet_ntoa(this->_addr.sin_addr) + std::string(":") + ntos(ntohs(this->_addr.sin_port)));

@@ -8,9 +8,10 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 : ASockManager(), ANode(host), _forwardSocket(0), _password(password), _protocol()
 {
 	Logger::debug("IRCServer constructor");
-	Logger::info("IRCServer host: " + ntos(host));
-	Logger::info("IRCServer port: " + ntos(port));
-	Logger::info("IRCServer password :" + ntos(password));
+	Logger::info("IRC Server:");
+	Logger::info("- host     : " + ntos(host));
+	Logger::info("- port     : " + ntos(port));
+	Logger::info("- password :" + ntos(password));
 	this->_init_commands();
 	this->listenOn(port, this->_protocol);
 }
@@ -42,9 +43,9 @@ bool						IRCServer::setNetworkConnection(const std::string & host, ushort port,
 {
 	// this->_forword_socket = new SockStream(host, port);
 	Logger::info("Try connecting to network:"); 
-	Logger::info("- host		: " + ntos(host)); 
-	Logger::info("- port		: " + ntos(port)); 
-	Logger::info("- password	: " + ntos(password));
+	Logger::info("- host     : " + ntos(host)); 
+	Logger::info("- port     : " + ntos(port)); 
+	Logger::info("- password : " + ntos(password));
 	try
 	{
 		if (this->connectOn(host, port, this->_protocol) == false)
@@ -73,7 +74,7 @@ void							IRCServer::_setRegistered(Client & client, int type)
 	else if (type == Client::value_type_server)
 	{
 		client.setRegisteredAsServer(true);
-		this->_ircClients.insert(make_pair(client.getNickname(), &client));
+		this->_ircClients.insert(make_pair(client.getSID(), &client));
 		this->_pendingConnections.remove(&client);
 	}
 }
@@ -126,7 +127,7 @@ void							IRCServer::_onClientRecv(SockStream & s, Package & pkg)
 		Logger::critical("SockStream without Client associated !!! " + ntos(s.getSocket()));
 		return ;
 	}
-	Logger::info("recv [" + s.getIP() + "] : " + pkg.getData());
+	Logger::debug("recv [" + s.getIP() + "] : " + pkg.getData());
 	this->execute(*c, pkg.getData());
 }
 
@@ -134,7 +135,6 @@ void							IRCServer::_onClientRecv(SockStream & s, Package & pkg)
 
 void							IRCServer::_onClientQuit(SockStream &s)
 {
-	Package pack = Package(this->_protocol, std::string("<") + ntos(s.getSocket()) + "> disconnected.\r\n"); // REVIEW why trailing \r\n?
 	Client* cli = this->getClientBySockStream(s);
 	if (cli == NULL)
 	{
@@ -144,6 +144,24 @@ void							IRCServer::_onClientQuit(SockStream &s)
 	if (cli->isRegistered())
 	{
 		Logger::warning("Client " + cli->getNickname() + " disconnected.");
+		if (cli->getType() == Client::value_type_server)
+		{
+			/* for server SID is used as unique identifier */
+			/* disconnect all servers correspondig to that socket since those servers are now netsplitted from the network */
+			for (std::map<std::string, AEntity *>::iterator it = this->_ircClients.begin(); it != this->_ircClients.end();)
+			{
+				Client *lost_server = reinterpret_cast<Client*>(it->second);
+				if (it->second->getType() == Client::value_type_server && lost_server->getStream().getSocket() == s.getSocket())
+				{
+					if (lost_server->isRelayed())
+						Logger::warning("netsplit occured ! lost connection from server " + lost_server->getSID() + "@" + lost_server->getStream().getIP());
+					delete this->_ircClients[lost_server->getSID()];
+					this->_ircClients.erase(it++);
+				}
+				else ++it;
+			}
+			return ;
+		}
 		std::string nick = cli->getNickname();
 		delete this->_ircClients[nick];
 		this->_ircClients.erase(nick);
@@ -168,7 +186,7 @@ void						IRCServer::_onRecv( SockStream &server,  Package &pkg)
 		Logger::error("Receving response from a server that's not the forward server.");
 		return ;
 	}
-
+	
 }
 
 
@@ -179,16 +197,8 @@ void				IRCServer::_onConnect ( SockStream &server)
 {
 	Logger::info("Connecting to forward server");
 	this->_forwardSocket = server.getSocket();
-
-	// TODO make these in ircserver and adjust main so that we can configure them with some options
-	//  --servname <name>
-	//  --token <token>
-	//  --info <info>
-	std::string name = "MyName";
-	int			token = 420;
-	std::string info = "My Awesome server informations";
 	std::stringstream ss;
-	ss << "SERVER " << name << " 0 " << token << " :" << info; 
+	ss << "SERVER " << this->_name << " 0 " << this->_token << " :" << this->_info; 
 	this->_sendMessage(server, ss);
 }
 		
@@ -212,14 +222,14 @@ Client*							IRCServer::getClientBySockStream(SockStream & s)
 	//get in map of user
 	for (std::map<std::string, AEntity*>::iterator it = this->_ircClients.begin(); it != this->_ircClients.end(); ++it)
 	{
-		if (reinterpret_cast<Client *>(it->second)->getStream().getSocket() == s.getSocket())
+		if (reinterpret_cast<Client *>(it->second)->getStream().getIP() == s.getIP())
 			return reinterpret_cast<Client *>(it->second);
 	}
 	//get in  pending list
 	std::list<Client*>::iterator it;
 	for ( it = this->_pendingConnections.begin(); it != this->_pendingConnections.end(); ++it)
 	{
-		if ((*it)->getStream().getSocket() == s.getSocket())
+		if ((*it)->getStream().getIP() == s.getIP())
 			return *it;
 	}
 	return NULL;
@@ -229,6 +239,37 @@ const IProtocol&					IRCServer::getProtocol( void ) const
 {
 	return this->_protocol;
 }
+
+const std::string		&IRCServer::getName() const
+{
+	return (this->_name);
+}
+
+const std::string		&IRCServer::getInfo() const
+{
+	return (this->_info);
+}
+
+uint					IRCServer::getToken() const
+{
+	return (this->_token);
+}
+
+void					IRCServer::setName(const std::string &name)
+{
+	this->_name = name;
+}
+
+void					IRCServer::setInfo(const std::string &info)
+{
+	this->_info = info;	
+}
+
+void					IRCServer::setToken(const uint token)
+{
+	this->_token = token;
+}
+
 
 /*
 ** --------------------------------- COMMANDS ---------------------------------
@@ -377,42 +418,95 @@ uint		IRCServer::_commandSERVER(Client & client, std::string cmd)
 		return SUCCESS;
 	std::string	serverName = Parser::getParam(cmd, 0);
 	int			hopCount = std::stoi(Parser::getParam(cmd, 1));
-	std::string	token = Parser::getParam(cmd, 2);
 	std::string	info = Parser::getParam(cmd, 3);
-	if (client.getType() == Client::value_type_unknown)
+	
+	uint token = 0;
+	try
 	{
-		client.setNickname(serverName);
-		client.setHopCount(hopCount);
-		// TODO check if sid is unique
-		client.setSID(token);
-		client.setServerDescription(info);
-		this->_setRegistered(client, Client::value_type_server);
-		this->_printServerState();
-		Logger::info("new server connected to network: " + serverName + " (" + client.getStream().getIP() + ")");
+		token = std::stoi(Parser::getParam(cmd, 2));
+		if (token > 999)
+			throw ;
 	}
-	// TODO check unique 
-	else if (hopCount > 0)
+	catch(const std::exception& e)
+	{
+		// TODO invalid token ?
+		Logger::error ("Server trying to connect has invalid token: \"" + Parser::getParam(cmd, 2) + "\"");
+		return (SUCCESS);
+	}
+
+	if (token == this->_token || this->_ircClients.count(std::to_string (token)) == 1)
 	{
 		Logger::error("already regristered server ! (" + client.getStream().getIP() + ")");
 		Logger::error("closing connection to " + client.getStream().getIP() + " to preserve network stability.");
-		//this->disconnect(client.getStream());
+		//TODO this->disconnect(client.getStream());
 		return ERR_ALREADYREGISTRED;
+	}
+	if (client.getType() == Client::value_type_unknown)
+	{
+		if (hopCount != 0)
+		{
+			/* cannot introduce new server behind while not regristered */
+			Logger::error ("unregistered client tries to introduce new server behind himself");
+			return (SUCCESS); // ?
+		}
+		else
+		{
+			client.setNickname(serverName);
+			client.setHopCount(hopCount);
+			client.setSID(std::to_string(token));
+			client.setServerDescription(info);
+			this->_setRegistered(client, Client::value_type_server);
+			this->_printServerState();
+			Logger::info("new server connected to network: " + serverName + " (" + client.getSID() + "@" + client.getStream().getIP() + ")");
+		}
+	}
+	else if (hopCount == 0)
+	{
+
+		/* server trying to register twice */
+		Logger::error("Server " + client.getSID() + "@" + client.getStream().getIP() + " tried to register twice");
+		return (SUCCESS); // ?
+	}
+	else if (hopCount > 0)
+	{
+		/* 
+		** if server_reference was registered by client we need to pass it a reference 
+		** to it's sockstream so that we can communicate with it later easily
+		*/ 
+		Client *server_reference = new Client(client.getStream());
+		server_reference->setNickname(serverName);
+		server_reference->setHopCount(hopCount);
+		server_reference->setSID(std::to_string(token));
+		server_reference->setServerDescription(info);
+		server_reference->setRelayed(true);
+		this->_setRegistered(*server_reference, Client::value_type_server);
+		this->_printServerState();
+		Logger::info("new server connected to sub network: " + serverName + " (" + server_reference->getSID() + "@" + server_reference->getStream().getIP() + " is " + ntos(hopCount) + " hop(s) away)");
 	}
 
 	// relay to forward and all connected servers
-	std::stringstream ss;
-	ss << "SERVER " << serverName << " " << (hopCount + 1) << " " << token << " :" << info;
+	// meantime relay all infos about our connections to new server
+	std::stringstream relay_all_ss;
+	relay_all_ss << "SERVER " << serverName << " " << (hopCount + 1) << " " << token << " :" << info;
 	if (this->_forwardSocket != 0)
 	{
 		Logger::debug("relaying server connection to forward server (" + this->_sockets[this->_forwardSocket]->getIP() + ")");
-		this->_sendMessage(*this->_sockets[this->_forwardSocket], ss);
+		this->_sendMessage(*this->_sockets[this->_forwardSocket], relay_all_ss);
+		//relay_new_ss << "SERVER " <<  << " " << (hopCount + 1) << " " << token << " :" << info;
+		// TODO SEND / RECV FORWARD INFORMATIONS
 	}
 	for (std::map<std::string, AEntity *>::iterator it = this->_ircClients.begin(); it != this->_ircClients.end(); it++)
 	{
 		if (it->second->getType() == Client::value_type_server && reinterpret_cast<Client*>(it->second)->getSID() != client.getSID())
 		{
-			Logger::debug("relaying server connection to connected server (" + reinterpret_cast<Client*>(it->second)->getStream().getIP() + ")");
-			this->_sendMessage(*it->second, ss);
+			Client *srv = reinterpret_cast<Client*>(it->second);
+			Logger::debug("relaying server connection to connected server (" + srv->getStream().getIP() + ")");
+			this->_sendMessage(*it->second, relay_all_ss);
+			// TODO how to implement multiple backward relays
+			
+			//std::stringstream relay_new_ss;
+			//relay_new_ss << "SERVER " << srv->getNickname() << " " << srv->getHopCount() + 1 << " " << srv->getSID() << " :" << srv->getServerDescription();
+			//this->_sendMessage(*server_reference, relay_new_ss);
 		}
 	}
 	return (SUCCESS);

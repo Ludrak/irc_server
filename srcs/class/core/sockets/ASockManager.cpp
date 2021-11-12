@@ -51,6 +51,7 @@ void            ASockManager::run( void )
             {
                 this->_poll_next_iterator = it;
 				size_t sz = this->_sockets.size();
+                Logger::debug("Polling socket " + std::to_string(it->fd));
                 this->_onPollEvent(it->fd, it->revents);
             	it = this->_poll_next_iterator;
                 if (this->_sockets.size() != sz)

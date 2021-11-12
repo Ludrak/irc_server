@@ -102,7 +102,7 @@ bool	isValidServerInfo(const std::string &info)
 
 bool	isValidServerToken(const std::string &tok)
 {
-	if (tok.size() != 3 || tok.find_first_not_of("0123456789") != std::string::npos)
+	if (tok.size() > 3 || tok.find_first_not_of("0123456789") != std::string::npos)
 		return (false);
 	return (true);
 }
@@ -137,9 +137,13 @@ uint	getArg(const char *const identifier, const int n, const int ac, const char 
 		if (n + 1 < ac)
 		{
 			if (!validityChecker(argv[n + 1]))
+			{
+				Logger::error("arument " + std::string(identifier) + " is invalid: " + argv[n + 1]);
 				return (ARG_ERROR);
+			}
 			return (ARG_OK);
 		}
+		Logger::error("arument " + std::string(identifier) + " has no value after it");
 		return (ARG_ERROR);
 	}
 	return (ARG_NOTFOUND);
@@ -299,7 +303,11 @@ int		main(int ac, char **av)
 	std::cout << "* - info:            " << server_info << std::endl;
 	std::cout << "*************************************************" << std::endl;
 
+	Logger::setLogLevel(INFO);
 	IRCServer server(server_port, server_pass, server_host);
+	server.setName(server_name);
+	server.setToken(server_token);
+	server.setInfo(server_info);
 	server.setMaxConnection(server_max_connections);
 	if (has_network_connection)
 		server.setNetworkConnection(network_host, network_port, network_pass);

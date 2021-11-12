@@ -41,6 +41,12 @@ class IRCServer : public ANode
 		Channel*				getChannel(int ChannelUID);
 		Client*					getClientBySockStream(SockStream & s);
 
+		const std::string		&getName() const;
+		const std::string		&getInfo() const;
+		uint					getToken() const;
+		void					setName(const std::string &name);
+		void					setInfo(const std::string &info);
+		void					setToken(const uint token);
 	
 	private:
 
@@ -54,6 +60,11 @@ class IRCServer : public ANode
 		std::map<std::string, Operations>		_serverCommands;
 		std::map<std::string, Operations>		_unregisteredCommands;
 		IRCProtocol								_protocol;
+
+		/* server infos */
+		std::string								_name;
+		std::string								_info;
+		uint									_token;
 
 /*
 ** --------------------------------- EVENTS ---------------------------------

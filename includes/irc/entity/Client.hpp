@@ -44,6 +44,9 @@ class Client : public AEntity
 		uint				getType( void ) const;
 		SockStream&			getStream();
 
+		bool				isRelayed() const;
+		void				setRelayed( bool relayed );
+
 		enum C { 
 			value_type_unknown = 0,
 			value_type_client = 1,
@@ -52,7 +55,6 @@ class Client : public AEntity
 	
 	private:
 
-		Client( Client const & src );
 		std::string							_username;
 		std::string							_domaine;
 		std::string							_servername;
@@ -65,6 +67,8 @@ class Client : public AEntity
 		uint								_hopcount;
 		std::string							_sid;
 		std::string							_serverinfo;
+
+		bool								_isRelayed;
 };
 
 std::ostream &			operator<<( std::ostream & o, Client const & i );
