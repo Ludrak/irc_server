@@ -12,7 +12,7 @@ uint						IRCServer::_commandUSER(Client & client, std::string cmd)
 	client.setDomaineName(Parser::getParam(cmd, 1));
 	client.setServername(Parser::getParam(cmd, 2));
 	client.setRealname(Parser::getParam(cmd, 3));
-	this->_setRegistered(client);
+	this->_setRegistered(client, Client::value_type_client);
 	Logger::info("new user registered: " + client.getNickname());
 	return SUCCESS;
 }

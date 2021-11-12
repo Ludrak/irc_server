@@ -29,11 +29,12 @@ uint		IRCServer::_commandPRIVMSG(Client & client, std::string cmd)
 		}
 	}
 	std::string prefix = "";
-	std::string msg = ":" + client.getNickname() + "!server-ident@sender-server PRIVMSG " + target->getNickname() + " :" + Parser::getParam(cmd, 1);
-	Logger::debug("to " + client.getNickname() + " send " + msg);
+	std::stringstream ss;
+	ss << ":" << client.getNickname() << "!server-ident@sender-server PRIVMSG " << target->getNickname() << " :" << Parser::getParam(cmd, 1);
+	Logger::debug("to " + client.getNickname() + " send " + ss.str());
 	if (target->getType() == AEntity::value_type_channel)
-		this->_sendMessage(*target, msg, &client.getStream());
+		this->_sendMessage(*target, ss, &client);
 	else
-		this->_sendMessage(*target, msg);
+		this->_sendMessage(*target, ss);
 	return SUCCESS;
 }

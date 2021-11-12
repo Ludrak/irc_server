@@ -13,12 +13,14 @@ class AClient;
 
 class AClient : public virtual ASockManager
 {
+    public:
     class ConnectionException : std::exception
     {
-        virtual const char  *what() const throw()
-        {
-            return ("can't connect to server");
-        }
+        public:
+            virtual const char  *what() const throw()
+            {
+                return ("can't connect to server");
+            }
     };
 
     public:

@@ -4,10 +4,9 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Client::Client(SockStream & socket) : AEntity(NB_CLIENT_REGISTRATION_MAX)
+Client::Client(SockStream & socket) : AEntity(NB_CLIENT_REGISTRATION_MAX), _type(Client::value_type_unknown), _isRelayed(false)
 {
 	this->_socket = &socket;
-
 }
 
 /*
@@ -84,12 +83,10 @@ uint					Client::leaveAllChannels( void )
 
 uint					Client::getType( void ) const
 {
-	if (this->_socket->getType() == REMOTE_CLIENT)
-		return Client::value_type_client;
-	return Client::value_type_server;
+	return (this->_type);
 }
 
-std::string				Client::getUsername( void )
+const std::string		&Client::getUsername( void ) const
 {
 	return this->_username;
 }
@@ -99,7 +96,7 @@ void					Client::setUsername(std::string user)
 	this->_username = user;
 }
 
-std::string				Client::getDomaineName( void )
+const std::string		&Client::getDomaineName( void ) const
 {
 	return this->_domaine;
 }
@@ -109,7 +106,7 @@ void					Client::setDomaineName(std::string domaine)
 	this->_domaine = domaine;
 }
 
-std::string				Client::getServername( void )
+const std::string		&Client::getServername( void ) const
 {
 	return this->_servername;
 }
@@ -119,7 +116,7 @@ void					Client::setServername(std::string servername)
 	this->_servername = servername;
 }
 
-std::string				Client::getRealname( void )
+const std::string		&Client::getRealname( void ) const
 {
 	return this->_realname;
 }
@@ -129,6 +126,23 @@ void					Client::setRealname(std::string realName)
 	this->_realname = realName;
 }
 
+uint					Client::getHopCount() const
+{
+	return (this->_hopcount);
+}
+void					Client::setHopCount( uint hop )
+{
+	this->_hopcount = hop;
+}
+
+const std::string		&Client::getSID() const
+{
+	return (this->_sid);
+}
+void					Client::setSID( const std::string & sid )
+{
+	this->_sid = sid;
+}
 
 const std::string				&Client::getVersion( void )
 {
@@ -157,12 +171,45 @@ void					Client::setRegistered( bool registered)
 	this->_registered = registered;
 }
 
+const std::string		&Client::getServerDescription() const
+{
+	return (this->_serverinfo);
+}
+void					Client::setServerDescription(const std::string &desc)
+{
+	this->_serverinfo = desc;
+}
+
+
+void					Client::setRegisteredAsClient( bool registered)
+{
+	this->_registered = registered;
+	this->_type = Client::value_type_client;
+}
+
+void					Client::setRegisteredAsServer( bool registered)
+{
+	this->_registered = registered;
+	this->_type = Client::value_type_server;
+}
+
 bool					Client::isRegistered( void )
 {
 	return this->_registered;
 }
 
-SockStream&				Client::getStream( void )
+bool					Client::isRelayed() const
+{
+	return (this->_isRelayed);
+}
+
+void					Client::setRelayed( bool relayed )
+{
+	this->_isRelayed = relayed;
+}
+
+
+SockStream&				Client::getStream( void ) const
 {
 	if (this->_socket == NULL)
 	{
@@ -171,6 +218,4 @@ SockStream&				Client::getStream( void )
 		// throw ;
 	}
 	return *this->_socket;
-
 }
-/* ************************************************************************** */

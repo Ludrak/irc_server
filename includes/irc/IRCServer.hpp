@@ -5,6 +5,7 @@ class Channel;
 class Client;
 
 # include "StatusCode.hpp"
+# include <string>
 # include "Channel.hpp"
 # include "Client.hpp"
 # include "Parser.hpp"
@@ -30,19 +31,30 @@ class IRCServer : public ANode
 		Client*								getClientBySockStream(SockStream & s);
 
 		static std::string					statusMessages[MAX_STATUS_MESSAGES + 1];
+		const std::string		&getName() const;
+		const std::string		&getInfo() const;
+		uint					getToken() const;
+		void					setName(const std::string &name);
+		void					setInfo(const std::string &info);
+		void					setToken(const uint token);
 	
 	private:
 
-		typedef uint	(IRCServer::*UserOperations)(Client & client, std::string str);
-		typedef uint	(IRCServer::*ServerOperations)(AEntity & client, std::string str);
-	
+		typedef uint	(IRCServer::*Operations)(Client & client, std::string str);
+
 		ushort									_forwardSocket;
 		std::string								_password;
 		std::map<std::string, AEntity*>			_ircClients;
 		std::list<Client*>						_pendingConnections;
-		std::map<std::string, UserOperations>	_userCommands;
-		std::map<std::string, ServerOperations>	_serverCommands;
+		std::map<std::string, Operations>		_userCommands;
+		std::map<std::string, Operations>		_serverCommands;
+		std::map<std::string, Operations>		_unregisteredCommands;
 		IRCProtocol								_protocol;
+
+		/* server infos */
+		std::string								_name;
+		std::string								_info;
+		uint									_token;
 
 /*
 ** --------------------------------- EVENTS ---------------------------------
@@ -59,8 +71,9 @@ class IRCServer : public ANode
 */
 
 	bool						_reply(Client & client, ushort statusCode, std::string target = "", std::string target2 = "");
-	void						_setRegistered(Client & client);
-	void						_sendMessage(AEntity & client, std::string message, SockStream * except = NULL);
+	void						_setRegistered(Client & client, int type);
+void							_sendMessage(AEntity & target, const std::stringstream &message, const AEntity *except=NULL);
+	void						_sendMessage(SockStream & target, const std::stringstream &message);
 		
 /*
 ** --------------------------------- DEBUG ---------------------------------
@@ -81,6 +94,7 @@ class IRCServer : public ANode
 		uint					_commandMODE(Client & client, std::string cmd);
 		uint					_commandMODEclient(Client & client, std::string cmd); //Not use this in array of methods
 		uint					_commandMODEchannel(Client & client, Channel& target, size_t nbParam, std::string cmd);//Not use this in array of methods
+		uint					_commandSERVER(Client & client, std::string cmd);
 
 };
 

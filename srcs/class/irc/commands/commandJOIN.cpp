@@ -43,7 +43,9 @@ uint		IRCServer::_commandJOIN(Client & client, std::string cmd)
 					
 			}
 			this->_ircClients.insert(std::make_pair(*itc, new_chan));
-			this->_sendMessage(client, ":" + client.getNickname() + " test@sender-server JOIN :" + new_chan->getNickname());
+			std::stringstream ss;
+			ss <<  ":" << client.getNickname() << " test@sender-server JOIN :" << new_chan->getNickname();
+			this->_sendMessage(client, ss);
 			this->execute(client, "MODE " + new_chan->getNickname() +  " O " + client.getNickname());
 			continue ;
 		}

@@ -26,6 +26,7 @@ SockStream      *ASockHandler::getSocket(const ushort socket)
 
 void		    ASockHandler::sendPackage( Package *pkg, SockStream &recipient)
 {
+    Logger::debug("added package " + ntos(pkg) + " to pending list of " + recipient.getIP());
 	recipient.setPollEvent(POLLOUT);
 	pkg->setRecipient(&recipient);
 	recipient.getPendingData().push_back(pkg);

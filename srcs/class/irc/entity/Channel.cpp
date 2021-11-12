@@ -130,7 +130,7 @@ Client*					Channel::getCreator( void )
 void					Channel::setCreator(Client & client)
 {
 	this->_creator = &client;
-}			
+}
 
 
 /* ************************************************************************** */

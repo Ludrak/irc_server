@@ -19,7 +19,7 @@ class Channel : public AEntity, public ASockHandler
 		~Channel();
 
 		Channel &		operator=( Channel const & rhs );
-		
+
 		uint				getType( void ) const;
 		Client				*getCreator(void);
 		void				setCreator(Client & client);

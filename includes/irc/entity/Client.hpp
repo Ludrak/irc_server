@@ -18,16 +18,16 @@ class Client : public AEntity
 
 		Client &			operator=( Client const & rhs );
 
-		std::string			getUsername( void );
+		const std::string	&getUsername( void ) const;
 		void				setUsername(std::string user);
 
-		std::string			getDomaineName( void );
+		const std::string	&getDomaineName( void ) const;
 		void				setDomaineName(std::string domaine);
 		
-		std::string			getServername( void );
+		const std::string	&getServername( void ) const;
 		void				setServername(std::string servername);
 
-		std::string			getRealname( void );
+		const std::string	&getRealname( void ) const;
 		void				setRealname(std::string realName);
 
 		const std::string&	getVersion( void );
@@ -37,10 +37,22 @@ class Client : public AEntity
 		void				setFlags(std::string flags); //Server only
 
 		void				setRegistered( bool registered );
+		uint				getHopCount() const;
+		void				setHopCount( uint hop );
+
+		const std::string	&getSID() const;
+		void				setSID( const std::string & sid );
+
+		const std::string	&getServerDescription() const;
+		void				setServerDescription(const std::string &desc);
+
+		void				setRegisteredAsClient( bool registered );
+		void				setRegisteredAsServer( bool registered );
+		//REVIEW isRegistered makred twice
 		bool				isRegistered( void );
 
 		uint				getType( void ) const;
-		SockStream&			getStream();
+		SockStream&			getStream() const;
 
 
 		uint				joinChannel( Channel & chan ); //client only
@@ -48,10 +60,18 @@ class Client : public AEntity
 		uint				leaveAllChannels( void ); //client only
 
 	
-	private:
+		bool				isRelayed() const;
+		void				setRelayed( bool relayed );
 
+		enum C { 
+			value_type_unknown = 0,
+			value_type_client = 1,
+			value_type_server = 2 
+		};
+	
+	private:
 		Client( Client const & src );
-		std::list<Channel *>				_channels;
+
 		std::string							_username;
 		std::string							_domaine;
 		std::string							_servername;
@@ -60,7 +80,15 @@ class Client : public AEntity
 		std::string							_flags; //Server only
 		bool								_registered;
 		SockStream*							_socket;
+		int									_type;
+		std::list<Channel *>				_channels;
 
+		/* network */
+		uint								_hopcount;
+		std::string							_sid;
+		std::string							_serverinfo;
+
+		bool								_isRelayed;
 };
 
 std::ostream &			operator<<( std::ostream & o, Client const & i );
