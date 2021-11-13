@@ -9,6 +9,7 @@
 
 # define M_REGISTRATION_LIMITED		1 << 0
 
+/*
 class AEntity
 {
 	public:
@@ -36,7 +37,6 @@ class AEntity
 
 		bool				isFull( void ) const;
 
-		/* mode */
 		void				toogleMode(uint modeMask);
 		void				enableMode(uint modeMask);
 		void				disableMode(uint modeMask);
@@ -62,5 +62,24 @@ class AEntity
 };
 
 std::ostream &			operator<<( std::ostream & o, AEntity const & i );
+*/
+# define ENTITY_TYPE 0
+
+class	AEntity
+{
+	public:
+		static const int	value_type;
+	
+	public:
+		int		getType() const;
+	
+	protected:
+		AEntity( const int type );
+
+	private:
+		int				_type;
+};
+
+const int AEntity::value_type = ENTITY_TYPE;
 
 #endif /* ******************************************************** AENTITY_HPP */

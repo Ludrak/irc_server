@@ -10,6 +10,6 @@ class UnRegisteredConnectionInfo : public CommonInfo
 
 	protected:
 		std::string			_version;
-}
+};
 
 #endif //UNREGISTEREDCONNECTIONINFO_HPP

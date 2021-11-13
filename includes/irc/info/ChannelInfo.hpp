@@ -22,6 +22,6 @@ class ChannelInfo : public CommonInfo
 		uint		_mode;
 		uint		_concurrentClients;
 		uint		_concurrentClientsMax;
-}
+};
 
 #endif //CHANNELINFO_HPP

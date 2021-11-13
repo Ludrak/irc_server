@@ -31,7 +31,7 @@ void						ChannelInfo::disableMode(uint modeMask)
 	this->_mode &= ~modeMask;
 }
 
-bool						ChannelInfo::isEnable(uint modeMask)
+bool						ChannelInfo::isEnable(uint modeMask) const
 {
 	return (this->_mode & modeMask);	
 }

@@ -1,19 +1,13 @@
 #include "AEntity.hpp"
 
+
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-AEntity::AEntity(uint registrationsMax) : _nbRegistrations(0), _nbRegistrationsMax(registrationsMax), _mode(0)
+AEntity::AEntity(const int type) : _type(type)
 {
-
 }
-
-AEntity::AEntity( const AEntity & src )
-{
-	(void) src;
-}
-
 
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
@@ -23,111 +17,96 @@ AEntity::~AEntity()
 {
 }
 
+int		AEntity::getType() const
+{
+	return (this->_type);
+}
 
-/*
-** --------------------------------- OVERLOAD ---------------------------------
-*/
 
-// AEntity &				AEntity::operator=( AEntity const & rhs )
+// /*
+// ** --------------------------------- METHODS ----------------------------------
+// */
+
+// uint						AEntity::getUID( void ) const
 // {
-// 	//if ( this != &rhs )
-// 	//{
-// 		//this->_value = rhs.getValue();
-// 	//}
-// 	return *this;
-// }
-
-// std::ostream &			operator<<( std::ostream & o, AEntity const & i )
-// {
-// 	//o << "Value = " << i.getValue();
-// 	return o;
+// 	return this->_uid;
 // }
 
 
-/*
-** --------------------------------- METHODS ----------------------------------
-*/
+// std::string					AEntity::getNickname(void)
+// {
+// 	return this->_nickname;
+// }
 
-uint						AEntity::getUID( void ) const
-{
-	return this->_uid;
-}
+// void						AEntity::setNickname(std::string nick)
+// {
+// 	this->_nickname = nick;
+// }
 
+// std::string					AEntity::getPassword( void )
+// {
+// 	return this->_givenPassword;
+// }
 
-std::string					AEntity::getNickname(void)
-{
-	return this->_nickname;
-}
-
-void						AEntity::setNickname(std::string nick)
-{
-	this->_nickname = nick;
-}
-
-std::string					AEntity::getPassword( void )
-{
-	return this->_givenPassword;
-}
-
-void						AEntity::setPassword( std::string password) 
-{
-	this->_givenPassword = password;
-}
+// void						AEntity::setPassword( std::string password) 
+// {
+// 	this->_givenPassword = password;
+// }
 
 
-bool						AEntity::incRegistration( void )
-{
-	if (this->isEnable(M_REGISTRATION_LIMITED) && this->_nbRegistrations >= this->_nbRegistrationsMax)
-		return false;
-	this->_nbRegistrations++;
-	return true;
-}
+// bool						AEntity::incRegistration( void )
+// {
+// 	if (this->isEnable(M_REGISTRATION_LIMITED) && this->_nbRegistrations >= this->_nbRegistrationsMax)
+// 		return false;
+// 	this->_nbRegistrations++;
+// 	return true;
+// }
 
-bool						AEntity::decRegistration( void )
-{
-	if (this->_nbRegistrations == 0)
-		return false;
-	this->_nbRegistrations--;
-	return true;
-}
+// bool						AEntity::decRegistration( void )
+// {
+// 	if (this->_nbRegistrations == 0)
+// 		return false;
+// 	this->_nbRegistrations--;
+// 	return true;
+// }
 
-uint						AEntity::getNbRegistrations( void ) const
-{
-	return this->_nbRegistrations;
-}
+// uint						AEntity::getNbRegistrations( void ) const
+// {
+// 	return this->_nbRegistrations;
+// }
 
-uint						AEntity::getNbRegistrationsMax( void ) const
-{
-	return this->_nbRegistrationsMax;
-}
+// uint						AEntity::getNbRegistrationsMax( void ) const
+// {
+// 	return this->_nbRegistrationsMax;
+// }
 
-bool						AEntity::isFull( void ) const
-{
-	if (this->_nbRegistrations == this->_nbRegistrationsMax)
-		return true;
-	return false;
-}
+// bool						AEntity::isFull( void ) const
+// {
+// 	if (this->_nbRegistrations == this->_nbRegistrationsMax)
+// 		return true;
+// 	return false;
+// }
 
 
-void						AEntity::toogleMode(uint modeMask)
-{
-	this->_mode ^= modeMask;
-}
+// void						AEntity::toogleMode(uint modeMask)
+// {
+// 	this->_mode ^= modeMask;
+// }
 
-void						AEntity::enableMode(uint modeMask)
-{
-	this->_mode |= modeMask;
-}
+// void						AEntity::enableMode(uint modeMask)
+// {
+// 	this->_mode |= modeMask;
+// }
 
-void						AEntity::disableMode(uint modeMask)
-{
-	this->_mode &= ~modeMask;
-}
+// void						AEntity::disableMode(uint modeMask)
+// {
+// 	this->_mode &= ~modeMask;
+// }
 
-bool						AEntity::isEnable(uint modeMask)
-{
-	return (this->_mode & modeMask);	
-}
+// bool						AEntity::isEnable(uint modeMask)
+// {
+// 	return (this->_mode & modeMask);	
+// }
 
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
