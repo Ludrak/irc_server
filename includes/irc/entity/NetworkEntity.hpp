@@ -13,7 +13,8 @@ class NetworkEntity : public AEntity
         static const int	value_type;
 
     public:
-        NetworkEntity(SockStream &stream, const int type);
+        NetworkEntity(SockStream &stream, const std::string &uid, const int type);
+        virtual ~NetworkEntity();
 
         SockStream          &getStream() const;
 

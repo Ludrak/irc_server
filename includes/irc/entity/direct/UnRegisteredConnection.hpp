@@ -11,6 +11,9 @@ class UnRegisteredConnection : public NetworkEntity, public UnRegisteredConnecti
 {
     public:
         static const int value_type;
+
+    public:
+        UnRegisteredConnection(SockStream &stream);
 };
 
 const int UnRegisteredConnection::value_type = UNREGISTERED_CONNECTION_ENTITY_TYPE;

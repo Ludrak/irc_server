@@ -1,19 +1,18 @@
 # include "ClientInfo.hpp"
 
-ClientInfo::ClientInfo(const std::string &nickname, const std::string &name, const std::string &real_name, const uint &mode)
+ClientInfo::ClientInfo(const std::string &name, const std::string &real_name, const uint &mode, const std::string &pass)
 : CommonInfo()
 {
-	this->_uid = nickname;
 	this->_name = name;
 	this->_realname = real_name;
 	this->_mode = mode;
+	this->_password = pass;
 }
 
 ClientInfo::ClientInfo(const UnRegisteredConnectionInfo &reference)
 : CommonInfo(),	_mode(0), _concurrentChannels(0), _concurrentChannelsMax(NB_CLIENT_REGISTRATION_MAX),
 _realname("default real name"), _serverToken("420"), _host("127.0.0.1"), _privilege(0)
 {
-	this->_uid = reference.getUID();
 	this->_name = reference.getName();
 	this->_password = reference.getPassword();
 }
@@ -22,7 +21,6 @@ ClientInfo::ClientInfo(const ClientInfo &copy)
 : CommonInfo(),	_mode(copy.getMode()), _concurrentChannels(copy.getConcurrentChannels()), _concurrentChannelsMax(NB_CLIENT_REGISTRATION_MAX),
 _realname(copy.getRealname()), _serverToken(copy.getServerToken()), _host(copy.getHostname()), _privilege(copy.isPrivilegied())
 {
-	this->_uid = copy.getUID();
 	this->_name = copy.getName();
 	this->_password = copy.getPassword();
 }

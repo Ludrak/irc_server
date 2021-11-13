@@ -5,7 +5,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-AEntity::AEntity(const int type) : _type(type)
+AEntity::AEntity(const int type, const std::string &uid) : _type(type), _uid(uid)
 {
 }
 
@@ -17,10 +17,15 @@ AEntity::~AEntity()
 {
 }
 
-int		AEntity::getType() const
+int					AEntity::getType() const
 {
 	return (this->_type);
 }
+
+const std::string&	AEntity::getUID( void ) const
+{
+	return this->_uid;
+};
 
 
 // /*

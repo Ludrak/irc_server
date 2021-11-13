@@ -22,7 +22,7 @@ class Server : public NetworkEntity, public ServerInfo
 
 		/* server is  build by SockStream& and by giving all its common informations */
 		/* type is set to FORWARD_SERVER_ENTITY_TYPE */
-		Server (SockStream &sock, std::string uid, std::string name, std::string info);
+		Server (SockStream &sock, const std::string &uid, const std::string &name, const std::string &info, const std::string &pass);
 };
 
 const int Server::value_type = SERVER_ENTITY_TYPE;

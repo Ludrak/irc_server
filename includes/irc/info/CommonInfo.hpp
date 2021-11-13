@@ -8,12 +8,10 @@ class CommonInfo
 {
 	public:
 		const std::string&	getName( void ) const;
-		const std::string&	getUID( void ) const;
 		const std::string&	getPassword( void ) const;
 
 	protected:
 		std::string		_name;
-		std::string		_uid;
 		std::string		_password;
 };
 

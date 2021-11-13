@@ -8,7 +8,7 @@ class ServerInfo : public CommonInfo
 {
 	public:
 		/* relayed server constructor */
-		ServerInfo(const std::string &token, const std::string &servname, const std::string &servinfo);
+		ServerInfo(const std::string &servname, const std::string &servinfo, const std::string &pass);
 		
 		/* directly connected server constructor */
 		ServerInfo(const UnRegisteredConnectionInfo &reference);

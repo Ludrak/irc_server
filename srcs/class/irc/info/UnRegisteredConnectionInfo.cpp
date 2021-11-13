@@ -1,6 +1,6 @@
 # include "UnRegisteredConnectionInfo.hpp"
 
-const std::string&			ClientInfo::getVersion( void ) const
+const std::string&			UnRegisteredConnectionInfo::getVersion( void ) const
 {
 	return this->_version;
 }

@@ -13,7 +13,8 @@ class RelayedEntity : public AEntity
         static const int	value_type;
 
     public:
-        RelayedEntity(Server &relay, const int hopcount, const int type);
+        RelayedEntity(Server &relay, const int hopcount, const std::string &uid, const int type);
+        virtual ~RelayedEntity();
 
         int             getHopCount() const;
         const Server    &getRelayServer() const;

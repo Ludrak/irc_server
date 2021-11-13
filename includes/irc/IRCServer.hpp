@@ -13,48 +13,60 @@ class Client;
 # include "ntos.hpp"
 # include "IRCProtocol.hpp"
 # include "ANode.hpp"
+# include "ServerInfo.hpp"
+# include "ClientInfo.hpp"
+# include "RelayedClient.hpp"
+# include "RelayedServer.hpp"
 
 # define IRC_DEFAULT_HOST "127.0.0.1"
 # define IRC_DEFAULT_PORT 6667
 # define IRC_DEFAULT_PASS ""
 
-class IRCServer : public ANode
+class IRCServer : public ANode, public ServerInfo
 {
 
 	public:
 		IRCServer(ushort port = IRC_DEFAULT_PORT, const std::string &password = IRC_DEFAULT_PASS, const std::string &host = IRC_DEFAULT_HOST);
 		virtual ~IRCServer();
 
-		bool								setNetworkConnection(const std::string & host, ushort port, std::string & password);
+		//bool								setNetworkConnection(const std::string & host, ushort port, std::string & password);
 		const IProtocol&					getProtocol( void ) const;
 		Channel*							getChannel(int ChannelUID);
-		Client*								getClientBySockStream(SockStream & s);
+		AEntity*							getEntityByStream(SockStream & s);
 
 		static std::string					statusMessages[MAX_STATUS_MESSAGES + 1];
-		const std::string		&getName() const;
-		const std::string		&getInfo() const;
-		uint					getToken() const;
-		void					setName(const std::string &name);
-		void					setInfo(const std::string &info);
-		void					setToken(const uint token);
-	
+
 	private:
 
 		typedef uint	(IRCServer::*Operations)(Client & client, std::string str);
+		
+		/* entities */
+		//std::map<std::string, AEntity*>			_ircClients;
+		//std::list<Client*>						_pendingConnections;
 
-		ushort									_forwardSocket;
-		std::string								_password;
-		std::map<std::string, AEntity*>			_ircClients;
-		std::list<Client*>						_pendingConnections;
-		std::map<std::string, Operations>		_userCommands;
-		std::map<std::string, Operations>		_serverCommands;
-		std::map<std::string, Operations>		_unregisteredCommands;
-		IRCProtocol								_protocol;
+		/* list of all registered entities of the server */
+		std::map<std::string, AEntity*>                 _entities;
+		/* list of Channels */
+		std::map<std::string, Channel*>                 _channels;
+		/* list of both Client and RelayedClients */
+		std::map<std::string, ClientInfo*>              _clients;
+		/* list of both Server and RelayedServer */
+		std::map<std::string, ServerInfo*>              _servers;
+		/* list of yet unregistered connections */
+		std::map<SockStream*, UnRegisteredConnection*>	_unregistered_connections;
+		/* list of all direct connections that we can recv on */
+		std::map<SockStream*, NetworkEntity*>			_connections;
 
-		/* server infos */
-		std::string								_name;
-		std::string								_info;
-		uint									_token;
+		// global entities  known (?)
+		// std::vector<SockStream*>						_known_entities
+		
+		/* Operations */
+		std::map<std::string, Operations>				_userCommands;
+		std::map<std::string, Operations>				_serverCommands;
+		std::map<std::string, Operations>				_unregisteredCommands;
+
+		/* protocol for data transmission */
+		IRCProtocol										_protocol;
 
 /*
 ** --------------------------------- EVENTS ---------------------------------
@@ -71,8 +83,8 @@ class IRCServer : public ANode
 */
 
 	bool						_reply(Client & client, ushort statusCode, std::string target = "", std::string target2 = "");
-	void						_setRegistered(Client & client, int type);
-void							_sendMessage(AEntity & target, const std::stringstream &message, const AEntity *except=NULL);
+	void						_registerClient(AEntity & client, int type);
+	void						_sendMessage(AEntity & target, const std::stringstream &message, const AEntity *except=NULL);
 	void						_sendMessage(SockStream & target, const std::stringstream &message);
 		
 /*
@@ -85,7 +97,7 @@ void							_sendMessage(AEntity & target, const std::stringstream &message, cons
 		void					_initCommands(void);
 		void					_initStatusMessages( void );
 
-		int						execute(AEntity & client, std::string data);
+		int						execute(AEntity *entity, std::string data);
 		uint					_commandPASS(Client & client, std::string cmd);
 		uint					_commandNICK(Client & client, std::string cmd);
 		uint					_commandUSER(Client & client, std::string cmd);

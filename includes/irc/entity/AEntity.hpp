@@ -69,12 +69,15 @@ class	AEntity
 {
 	public:
 		static const int	value_type;
-	
-	public:
-		int		getType() const;
+
+		virtual ~AEntity();
+		int					getType() const;
+		const std::string	&getUID() const;
 	
 	protected:
-		AEntity( const int type );
+		AEntity( const int type, const std::string &uid );
+
+		std::string		_uid;
 
 	private:
 		int				_type;

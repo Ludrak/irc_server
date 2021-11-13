@@ -1,11 +1,15 @@
 #include "Server.hpp"
 
 Server::Server(const UnRegisteredConnection &serv)
-: NetworkEntity(serv.getStream(), Server::value_type), ServerInfo(serv)
+: NetworkEntity(serv.getStream(), serv.getUID(), Server::value_type), ServerInfo(serv)
 {
+    if (this->_uid.empty())
+        Logger::critical ("registered server without uid");
 }
 
-Server::Server(SockStream& sock, std::string uid, std::string name, std::string info) 
-: NetworkEntity(sock, Server::value_type_forward), ServerInfo(uid, name, info)
+Server::Server(SockStream& sock, const std::string &uid, const std::string &name, const std::string &info, const std::string &pass) 
+: NetworkEntity(sock, uid, Server::value_type_forward), ServerInfo(name, info, pass)
 {
+    if (this->_uid.empty())
+        Logger::critical ("registered forward server without uid");
 }

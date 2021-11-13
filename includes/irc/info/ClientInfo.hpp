@@ -10,7 +10,7 @@ class ClientInfo : public CommonInfo
 {
 	public:
 		/* relayed client info (when USER is recieved with hopcount > 0) */
-		ClientInfo(const std::string &nickname, const std::string &name, const std::string &real_name, const uint &mode);
+		ClientInfo(const std::string &name, const std::string &real_name, const uint &mode, const std::string &pass);
 
 		/* directly connected client info */
 		ClientInfo(const UnRegisteredConnectionInfo &reference);

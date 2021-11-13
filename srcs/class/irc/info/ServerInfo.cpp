@@ -1,17 +1,16 @@
 # include "ServerInfo.hpp"
 
-ServerInfo::ServerInfo(const std::string &token, const std::string &name, const std::string &info)
+ServerInfo::ServerInfo(const std::string &name, const std::string &info, const std::string &pass)
 : CommonInfo()
 {
-	this->_uid = token;
 	this->_name = name;
 	this->_info = info;
+	this->_password = pass;
 }
 
 ServerInfo::ServerInfo(const UnRegisteredConnectionInfo &reference)
 : CommonInfo(), _info(""), _version("1"), _flags("")
 {
-	this->_uid = reference.getUID();
 	this->_name = reference.getName();
 	this->_password = reference.getPassword();
 }
@@ -19,7 +18,6 @@ ServerInfo::ServerInfo(const UnRegisteredConnectionInfo &reference)
 ServerInfo::ServerInfo(const ServerInfo &copy)
 : CommonInfo(), _info(copy.getInfo()), _version(copy.getVersion()), _flags(copy.getFlags())
 {
-	this->_uid = copy.getUID();
 	this->_name = copy.getName();
 	this->_password = copy.getPassword();
 }
