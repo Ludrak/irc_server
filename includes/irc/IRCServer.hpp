@@ -84,6 +84,7 @@ class IRCServer : public ANode, public ServerInfo
 
 	bool						_reply(Client & client, ushort statusCode, std::string target = "", std::string target2 = "");
 	void						_registerClient(AEntity & client, int type);
+	void						_registerServer(AEntity & server, int type);
 	void						_sendMessage(AEntity & target, const std::stringstream &message, const AEntity *except=NULL);
 	void						_sendMessage(SockStream & target, const std::stringstream &message);
 		
