@@ -5,8 +5,6 @@
 #include "NetworkEntity.hpp"
 #include "UnRegisteredConnectionInfo.hpp"
 
-# define UNREGISTERED_CONNECTION_ENTITY_TYPE 9
-
 class UnRegisteredConnection : public NetworkEntity, public UnRegisteredConnectionInfo
 {
     public:

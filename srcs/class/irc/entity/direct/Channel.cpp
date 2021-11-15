@@ -4,12 +4,12 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Channel::Channel(const std::string & channelName) : AEntity(NB_CHANNEL_REGISTRATION_MAX), ASockHandler(), _creator(NULL)
+Channel::Channel(const std::string & channelName) : AEntity(Channel::value_type, channelName), ASockHandler(), _creator(NULL)
 {
 	this->_uid = channelName;
 }
 
-Channel::Channel( const Channel & src ) : AEntity(NB_CHANNEL_REGISTRATION_MAX), ASockHandler(), _clients(src._clients), _operators(src._operators)
+Channel::Channel( const Channel & src ) : AEntity(Channel::value_type, src.getUID()), ASockHandler(), _clients(src._clients), _operators(src._operators)
 {
 
 }

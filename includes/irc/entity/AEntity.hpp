@@ -9,61 +9,15 @@
 
 # define M_REGISTRATION_LIMITED		1 << 0
 
-/*
-class AEntity
-{
-	public:
-
-		AEntity(uint registrationsMax);
-		AEntity( AEntity const & src );
-		virtual ~AEntity();
-
-		AEntity &		operator=( AEntity const & rhs );
-
-		uint				getUID( void ) const;
-		virtual uint		getType( void ) const = 0;
-		
-		std::string			getNickname( void );
-		void				setNickname(std::string nick);
-	
-		std::string			getPassword( void );
-		void				setPassword(std::string password);
-		
-		bool				incRegistration( void );
-		bool				decRegistration( void );
-
-		uint				getNbRegistrations( void ) const;
-		uint				getNbRegistrationsMax( void ) const;
-
-		bool				isFull( void ) const;
-
-		void				toogleMode(uint modeMask);
-		void				enableMode(uint modeMask);
-		void				disableMode(uint modeMask);
-		bool				isEnable(uint modeMask);
-
-		enum C { 
-			value_type_channel = 0,
-			value_type_unknow = 1,
-			value_type_client = 2,
-			value_type_server = 3 
-		};
-
-	protected:
-		uint				_nbRegistrations;
-		uint				_nbRegistrationsMax;
-
-	private:
-		uint				_mode;
-		uint				_uid;
-		std::string			_nickname;
-		std::string			_givenPassword;
-
-};
-
-std::ostream &			operator<<( std::ostream & o, AEntity const & i );
-*/
-# define ENTITY_TYPE 0
+# define ENTITY_TYPE 							(1 << 0)
+# define NETWORK_ENTITY_TYPE 					(1 << 1)
+# define RELAYED_ENTITY_TYPE 					(1 << 2)
+# define CLIENT_ENTITY_TYPE						(1 << 3)
+# define SERVER_ENTITY_TYPE	        			(1 << 4)
+# define FORWARD_SERVER_ENTITY_TYPE 			(1 << 5)
+# define RELAYED_CLIENT_ENTITY_TYPE 			(1 << 6)
+# define RELAYED_SERVER_ENTITY_TYPE				(1 << 7)
+# define UNREGISTERED_CONNECTION_ENTITY_TYPE 	(1 << 8)
 
 class	AEntity
 {

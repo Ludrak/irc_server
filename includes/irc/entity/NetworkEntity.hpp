@@ -5,8 +5,6 @@
 #include "AEntity.hpp"
 #include "SockStream.hpp"
 
-# define NETWORK_ENTITY_TYPE 1
-
 class NetworkEntity : public AEntity
 {
     public:
