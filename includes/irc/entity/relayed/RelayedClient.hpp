@@ -5,8 +5,6 @@
 #include "RelayedEntity.hpp"
 #include "ClientInfo.hpp"
 
-# define RELAYED_CLIENT_ENTITY_TYPE 6
-
 class RelayedClient : public RelayedEntity, public ClientInfo
 {
 	public:

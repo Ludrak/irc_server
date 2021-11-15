@@ -5,8 +5,6 @@
 #include "AEntity.hpp"
 #include "Server.hpp"
 
-# define RELAYED_ENTITY_TYPE 2
-
 class RelayedEntity : public AEntity
 {
     public:

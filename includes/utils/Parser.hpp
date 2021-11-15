@@ -5,13 +5,22 @@
 # include <string>
 # include <list>
 # include "Logger.hpp"
+
 # include "AEntity.hpp"
+# include "NetworkEntity.hpp"
+# include "RelayedEntity.hpp"
+
+# include "Client.hpp"
+# include "RelayedClient.hpp"
+# include "ClientInfo.hpp"
+
+# include "Server.hpp"
+# include "RelayedServer.hpp"
+# include "ServerInfo.hpp"
 
 class Parser
 {
 	public:
-		bool							assignPrefix(const std::string &prefix, AEntity *server);
-
 		static std::string				getParam(std::string command, size_t idx);
 		static std::list<std::string>	paramToList(std::string param);
 		static std::string				formatReply(std::string message, std::string target = "", std::string target2 = "");

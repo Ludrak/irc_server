@@ -40,4 +40,6 @@ class Channel : public AEntity, public ASockHandler, public ChannelInfo
 		std::list<Client *> 	_operators;
 };
 
+const int Channel::value_type = CHANNEL_ENTITY_TYPE;
+
 #endif /* ********************************************************* CHANNEL_H */

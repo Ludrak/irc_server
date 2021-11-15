@@ -6,9 +6,6 @@
 #include "ServerInfo.hpp"
 #include "UnRegisteredConnection.hpp"
 
-# define SERVER_ENTITY_TYPE	        4
-# define FORWARD_SERVER_ENTITY_TYPE 5
-
 class Server : public NetworkEntity, public ServerInfo
 {
 	public:

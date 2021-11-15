@@ -5,7 +5,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-AEntity::AEntity(const int type, const std::string &uid) : _type(type), _uid(uid)
+AEntity::AEntity(const int type, const std::string &uid) : _type(type | AEntity::value_type), _uid(uid)
 {
 }
 
