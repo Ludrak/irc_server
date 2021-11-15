@@ -19,6 +19,11 @@ SRCS		=	SockStream.cpp \
 				AClient.cpp \
 				AServer.cpp \
 				ANode.cpp \
+				CommonInfo.cpp \
+				ClientInfo.cpp \
+				ServerInfo.cpp \
+				ChannelInfo.cpp \
+				UnRegisteredConnectionInfo.cpp \
 				IRCServer.cpp \
 				Client.cpp \
 				AEntity.cpp \
@@ -35,6 +40,10 @@ HEADERS		=	SockStream.hpp \
 				SockManager.hpp \
 				AServer.hpp \
 				AClient.hpp \
+				CommonInfo.hpp \
+				ClientInfo.hpp \
+				ServerInfo.hpp \
+				ChannelInfo.hpp \
 				IRCServer.hpp \
 				Client.hpp \
 				ANode.hpp \
@@ -46,7 +55,7 @@ HEADERS		=	SockStream.hpp \
 				IRCProtocol.hpp \
 				Parser.hpp \
 				Logger.hpp \
-				StatusCode.hpp \
+				status.hpp \
 				ntos.hpp
 
 COMMANDS	=	commandJOIN.cpp \

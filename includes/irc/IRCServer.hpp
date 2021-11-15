@@ -18,6 +18,8 @@ class Client;
 # include "RelayedClient.hpp"
 # include "RelayedServer.hpp"
 
+# define SUCCESS				0
+
 # define IRC_DEFAULT_HOST "127.0.0.1"
 # define IRC_DEFAULT_PORT 6667
 # define IRC_DEFAULT_PASS ""
@@ -44,17 +46,22 @@ class IRCServer : public ANode, public ServerInfo
 		//std::map<std::string, AEntity*>			_ircClients;
 		//std::list<Client*>						_pendingConnections;
 
-		/* list of all registered entities of the server */
+		/* map of all registered entities of the server */
 		std::map<std::string, AEntity*>                 _entities;
-		/* list of Channels */
+		
+		/* map of Channels */
 		std::map<std::string, Channel*>                 _channels;
-		/* list of both Client and RelayedClients */
+		
+		/* map of both Client and RelayedClients */
 		std::map<std::string, ClientInfo*>              _clients;
-		/* list of both Server and RelayedServer */
+
+		/* map of both Server and RelayedServer */
 		std::map<std::string, ServerInfo*>              _servers;
-		/* list of yet unregistered connections */
+
+		/* map of yet unregistered connections */
 		std::map<SockStream*, UnRegisteredConnection*>	_unregistered_connections;
-		/* list of all direct connections that we can recv on */
+		
+		/* map of all direct connections that we can recv on */
 		std::map<SockStream*, NetworkEntity*>			_connections;
 
 		// global entities  known (?)

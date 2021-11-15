@@ -63,7 +63,7 @@ class AEntity
 
 std::ostream &			operator<<( std::ostream & o, AEntity const & i );
 */
-# define ENTITY_TYPE 0
+# define ENTITY_TYPE 0x1
 
 class	AEntity
 {
@@ -77,10 +77,9 @@ class	AEntity
 	protected:
 		AEntity( const int type, const std::string &uid );
 
+		int				_type;
 		std::string		_uid;
 
-	private:
-		int				_type;
 };
 
 const int AEntity::value_type = ENTITY_TYPE;
