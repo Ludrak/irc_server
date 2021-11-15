@@ -4,6 +4,7 @@
 ** --------------------------------- STATIC ----------------------------------
 */
 
+
 std::string 				Parser::getParam(std::string command, size_t idx)
 {
 	size_t nbParam = Parser::nbParam(command);

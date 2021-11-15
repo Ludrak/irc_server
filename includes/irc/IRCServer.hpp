@@ -22,19 +22,24 @@ class Client;
 # define IRC_DEFAULT_PORT 6667
 # define IRC_DEFAULT_PASS ""
 
-class IRCServer : public ANode, public ServerInfo
+class IRCServer : public ANode, public AEntity, public ServerInfo
 {
 
 	public:
 		IRCServer(ushort port = IRC_DEFAULT_PORT, const std::string &password = IRC_DEFAULT_PASS, const std::string &host = IRC_DEFAULT_HOST);
 		virtual ~IRCServer();
 
-		//bool								setNetworkConnection(const std::string & host, ushort port, std::string & password);
-		const IProtocol&					getProtocol( void ) const;
-		Channel*							getChannel(int ChannelUID);
-		AEntity*							getEntityByStream(SockStream & s);
+		//bool				setNetworkConnection(const std::string & host, ushort port, std::string & password);
+		const IProtocol&	getProtocol( void ) const;
+		Channel*			getChannel(int ChannelUID);
+		AEntity*			getEntityByStream(SockStream & s);
 
-		static std::string					statusMessages[MAX_STATUS_MESSAGES + 1];
+		/* prefix parser */
+		std::string			makePrefix(const AEntity *user=NULL, const AEntity *host_server=NULL);
+		bool				parsePrefix(const std::string &prefix, AEntity * *const sender_server, AEntity * *const user=NULL, AEntity * *const host_server=NULL);
+
+		static const int	value_type;
+		static std::string	statusMessages[MAX_STATUS_MESSAGES + 1];
 
 	private:
 
@@ -49,9 +54,9 @@ class IRCServer : public ANode, public ServerInfo
 		/* list of Channels */
 		std::map<std::string, Channel*>                 _channels;
 		/* list of both Client and RelayedClients */
-		std::map<std::string, ClientInfo*>              _clients;
+		std::map<std::string, AEntity*>              	_clients;
 		/* list of both Server and RelayedServer */
-		std::map<std::string, ServerInfo*>              _servers;
+		std::map<std::string, AEntity*>              	_servers;
 		/* list of yet unregistered connections */
 		std::map<SockStream*, UnRegisteredConnection*>	_unregistered_connections;
 		/* list of all direct connections that we can recv on */
@@ -71,43 +76,43 @@ class IRCServer : public ANode, public ServerInfo
 /*
 ** --------------------------------- EVENTS ---------------------------------
 */
-		void					_onClientJoin( SockStream &s );
-		void					_onClientRecv( SockStream &s, Package &pkg );
-		void					_onClientQuit( SockStream &s );
-		void					_onRecv( SockStream &server,  Package &pkg );
-		void					_onConnect ( SockStream &server );
-		void					_onQuit( SockStream &server );
+		void				_onClientJoin( SockStream &s );
+		void				_onClientRecv( SockStream &s, Package &pkg );
+		void				_onClientQuit( SockStream &s );
+		void				_onRecv( SockStream &server,  Package &pkg );
+		void				_onConnect ( SockStream &server );
+		void				_onQuit( SockStream &server );
 
 /*
 ** --------------------------------- SocketAction ---------------------------------
 */
 
-	bool						_reply(Client & client, ushort statusCode, std::string target = "", std::string target2 = "");
-	void						_registerClient(AEntity & client, int type);
-	void						_registerServer(AEntity & server, int type);
-	void						_sendMessage(AEntity & target, const std::stringstream &message, const AEntity *except=NULL);
-	void						_sendMessage(SockStream & target, const std::stringstream &message);
+		bool				_reply(Client & client, ushort statusCode, std::string target = "", std::string target2 = "");
+		void				_registerClient(AEntity & client, int type);
+		void				_registerServer(AEntity & server, int type);
+		void				_sendMessage(AEntity & target, const std::stringstream &message, const AEntity *except=NULL);
+		void				_sendMessage(SockStream & target, const std::stringstream &message);
 		
 /*
 ** --------------------------------- DEBUG ---------------------------------
 */
-		void					_printServerState( void );
+		void				_printServerState( void );
 /*
 ** --------------------------------- COMMANDS ---------------------------------
 */
-		void					_initCommands(void);
-		void					_initStatusMessages( void );
+		void				_initCommands(void);
+		void				_initStatusMessages( void );
 
-		int						execute(AEntity *entity, std::string data);
-		uint					_commandPASS(Client & client, std::string cmd);
-		uint					_commandNICK(Client & client, std::string cmd);
-		uint					_commandUSER(Client & client, std::string cmd);
-		uint					_commandPRIVMSG(Client & client, std::string cmd);
-		uint					_commandJOIN(Client & client, std::string cmd);
-		uint					_commandMODE(Client & client, std::string cmd);
-		uint					_commandMODEclient(Client & client, std::string cmd); //Not use this in array of methods
-		uint					_commandMODEchannel(Client & client, Channel& target, size_t nbParam, std::string cmd);//Not use this in array of methods
-		uint					_commandSERVER(Client & client, std::string cmd);
+		int					execute(AEntity *entity, std::string data);
+		uint				_commandPASS(Client & client, std::string cmd);
+		uint				_commandNICK(Client & client, std::string cmd);
+		uint				_commandUSER(Client & client, std::string cmd);
+		uint				_commandPRIVMSG(Client & client, std::string cmd);
+		uint				_commandJOIN(Client & client, std::string cmd);
+		uint				_commandMODE(Client & client, std::string cmd);
+		uint				_commandMODEclient(Client & client, std::string cmd); //Not use this in array of methods
+		uint				_commandMODEchannel(Client & client, Channel& target, size_t nbParam, std::string cmd);//Not use this in array of methods
+		uint				_commandSERVER(Client & client, std::string cmd);
 
 };
 
