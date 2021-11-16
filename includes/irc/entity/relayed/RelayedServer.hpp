@@ -8,13 +8,13 @@
 class RelayedServer : public RelayedEntity, public ServerInfo
 {
 	public:
-		static const int	value_type;
+		static const uint	value_type;
 
     public:
         RelayedServer(Server &relay, const int hop, const std::string token, const std::string name, const std::string info, const std::string &password);
 };
 
-const int RelayedServer::value_type = RELAYED_SERVER_ENTITY_TYPE;
+const uint RelayedServer::value_type = RELAYED_SERVER_ENTITY_TYPE;
 
 
 #endif // RELAYED_SERVER_HPP

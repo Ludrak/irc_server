@@ -53,12 +53,13 @@ std::ostream &			operator<<( std::ostream & o, Channel const & i )
 
 uint				Channel::addClient(Client & client)
 {
+	// TODO send right reply / inc /dec registration
 	if (this->isRegistered(client) == true)
-		return ERR_ALREADYREGISTRED;
-	else if (client.incRegistration() == false)
-		return ERR_TOOMANYCHANNELS;
-	else if (this->incRegistration() == false)
-		return ERR_CHANNELISFULL;
+		return 3;//ERR_ALREADYREGISTRED;
+	//else if (client.incRegistration() == false)
+		return 2;//ERR_TOOMANYCHANNELS;
+	//else if (this->incRegistration() == false)
+		return 1;//ERR_CHANNELISFULL;
 	this->_clients.push_back(&client);
 	this->addSocket(client.getStream());
 	Logger::info("<" + client.getUID() + "> join channel <" + this->getUID() + ">");
@@ -69,11 +70,12 @@ uint				Channel::addClient(Client & client)
 
 uint					Channel::removeClient(Client & client)
 {
+	//TODO send reply & dec / inc registration
 	if (this->isRegistered(client) == false)
-		return ERR_NOTONCHANNEL;
-	if (this->decRegistration() == false)
+		return 1;//ERR_NOTONCHANNEL;
+	//if (this->decRegistration() == false)
 		Logger::critical("Presence in channel should already be tested here");
-	if (client.decRegistration())
+	//if (client.decRegistration())
 		Logger::critical("client registration should already be tested here");
 	this->_clients.remove(&client);
 	this->delSocket(client.getStream());
