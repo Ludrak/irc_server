@@ -1,11 +1,11 @@
 # include "IRCServer.hpp"
 
-uint						IRCServer::_commandVERSION(Client & client, std::string cmd)
+uint						IRCServer::_commandVERSION(AEntity & executor, std::string params)
 {
 	//TODO implement VERSION command
-	(void)client;
-	(void)cmd;
-	// if (Paser::nbParam(cmd) == 0)
+	(void)executor;
+	(void)params;
+	// if (Paser::nbParam(params) == 0)
 	// 	return this->_reply(RPL_VERSION);
 	// std::string target = Arser::getParam()
 }

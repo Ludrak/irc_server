@@ -5,22 +5,22 @@
    Parameters: <password> <version> <flags> [<options>]
 */
 //REVIEW		Unsupported/Unparsed param <options>
-uint						IRCServer::_commandPASS(Client & client, std::string cmd)
+uint						IRCServer::_commandPASS(AEntity & executor, std::string params)
 {
-	Logger::debug("<" + ntos(client.getStream().getSocket()) + "> Command<PASS> with args: " + cmd );
-	if (client.isRegistered())
-		return this->_reply(client, ERR_ALREADYREGISTRED, "PASS");
-	switch (Parser::nbParam(cmd))
+	Logger::debug("<" + ntos(executor.getStream().getSocket()) + "> Command<PASS> with args: " + params );
+	if (executor.isRegistered())
+		return this->_reply(executor, ERR_ALREADYREGISTRED, "PASS");
+	switch (Parser::nbParam(params))
 	{
 		case 0:
 			Logger::debug("- no param given");
-			return this->_reply(client, ERR_NEEDMOREPARAMS, "PASS");
+			return this->_reply(executor, ERR_NEEDMOREPARAMS, "PASS");
 		case 3:
-			client.setFlags(Parser::getParam(cmd, 2));
+			executor.setFlags(Parser::getParam(params, 2));
 		case 2:
-			client.setVersion(Parser::getParam(cmd, 1));
+			executor.setVersion(Parser::getParam(params, 1));
 		case 1:
-			client.setPassword(Parser::getParam(cmd, 0));
+			executor.setPassword(Parser::getParam(params, 0));
 	}
 	return SUCCESS;
 }

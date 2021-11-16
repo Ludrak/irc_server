@@ -1,10 +1,10 @@
 # include "IRCServer.hpp"
 
-uint		IRCServer::_commandMODEchannel(Client & client, Channel& target, size_t nbParam, std::string cmd)
+uint		IRCServer::_commandMODEchannel(AEntity & client, Channel& target, size_t nbParam, std::string params)
 {
 	//TODO pass this as static function 
 	//bascially handled for know
-	std::string mode = Parser::getParam(cmd, 1);
+	std::string mode = Parser::getParam(params, 1);
 	(void) nbParam;
 	if (mode.size() == 1)
 	{
@@ -49,29 +49,29 @@ uint		IRCServer::_commandMODEchannel(Client & client, Channel& target, size_t nb
 }
 
 
-uint		IRCServer::_commandMODEclient(Client & client, std::string cmd)
+uint		IRCServer::_commandMODEclient(Client & client, std::string params)
 {
 	Logger::warning("MODE (client) not supported yet");
 	(void) client;
-	(void) cmd;
+	(void) params;
 	return SUCCESS;
 }
 
-uint		IRCServer::_commandMODE(Client & client, std::string cmd)
+uint		IRCServer::_commandMODE(AEntity & executor, std::string params)
 {
-	Logger::debug("<" + ntos(client.getStream().getSocket()) + "> Command<MODE> with args: " + cmd );
-	size_t nbParam = Parser::nbParam(cmd);
+	Logger::debug("<" + ntos(executor.getStream().getSocket()) + "> Command<MODE> with args: " + params );
+	size_t nbParam = Parser::nbParam(params);
 	if ( nbParam < 2)
-		return this->_reply(client, ERR_NEEDMOREPARAMS, "MODE");
-	std::string target_name = Parser::getParam(cmd, 0);
+		return this->_reply(executor, ERR_NEEDMOREPARAMS, "MODE");
+	std::string target_name = Parser::getParam(params, 0);
 	if (this->_ircClients.count(target_name) == false)
-		return this->_reply(client, ERR_NOSUCHNICK, target_name);
+		return this->_reply(executor, ERR_NOSUCHNICK, target_name);
 
 	AEntity* target = this->_ircClients[target_name];
 	if (target->getType() == AEntity::value_type_channel )
-		return _commandMODEchannel(client, *reinterpret_cast<Channel *>(target), nbParam, cmd);
+		return _commandMODEchannel(executor, *reinterpret_cast<Channel *>(target), nbParam, params);
 	else if (target->getType() == AEntity::value_type_client )
-		return _commandMODEclient(client, cmd);
+		return _commandMODEclient(executor, params);
 	Logger::warning("Unhandled type in MODE command");
 	return SUCCESS;
 

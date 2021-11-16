@@ -1,8 +1,8 @@
 # include "IRCServer.hpp"
 
-uint						IRCServer::_commandMOTD(Client & client, std::string cmd)
+uint						IRCServer::_commandMOTD(AEntity & executor, std::string params)
 {
 	//TODO implement MOTD command
-	(void)client;
-	(void)cmd;
+	(void)executor;
+	(void)params;
 }
