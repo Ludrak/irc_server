@@ -413,7 +413,7 @@ std::string							IRCServer::makePrefix(const AEntity *user=NULL, const AEntity 
 
 // REVIEW NEW
 // prefix format -> :<server_uid>[!<user_uid>@<host_uid>]SPACE
-bool								IRCServer::parsePrefix(const std::string &prefix, AEntity * *const sender_server, AEntity * *const user, AEntity * *const host_server)
+bool								IRCServer::parsePrefix(const std::string &prefix, AEntity **const sender_server, AEntity **const user, AEntity **const host_server)
 {
 	if (prefix.find(":") != 1)
 		return (false);
@@ -531,30 +531,18 @@ int			IRCServer::execute(AEntity *e, std::string data)
 			Logger::debug("command not found (" + client->getUID() + "@" + client->getStream().getIP() + ")");
 			return (1);
 		}
-		uint err = this->_userCommands[command](client, data.substr(command.size() + 1, data.size() - (command.size() + 1)));
-		if (err != 0)
-		{
-			//TODO command err send reply
-			Logger::debug("sending error " + ntos(err) + " to user " + client->getUID() + "@" + client->getStream().getIP());
-			return (1);
-		}
+		return ((this->*(_userCommands[command]))(*client, data.substr(command.size() + 1, data.size() - (command.size() + 1))));
 	}
 	else if (e->getType() == Server::value_type || e->getType() == Server::value_type_forward)
 	{
 		Server	*server = dynamic_cast<Server*>(e);
-		if (this->_userCommands.count(command) == 1)
+		if (this->_serverCommands.count(command) == 1)
 		{
 			//TODO reply command not found
 			Logger::debug("server command not found (" + server->getUID() + "@" + server->getStream().getIP() + ")");
 			return (1);
 		}
-		uint err = this->_userCommands[command](server, data.substr(command.size() + 1, data.size() - (command.size() + 1)));
-		if (err != 0)
-		{
-			//TODO command err send reply
-			Logger::debug("sending error " + ntos(err) + " to server " + server->getUID() + "@" + server->getStream().getIP());
-			return (1);
-		}
+		return ((this->*(_serverCommands[command]))(*server, data.substr(command.size() + 1, data.size() - (command.size() + 1))));
 	}
 	// TODO ADD UNREGISTERED                                
 	// TODO find a way to fit all 3 client types in one call

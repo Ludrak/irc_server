@@ -38,18 +38,15 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 
 		/* prefix parser */
 		std::string			makePrefix(const AEntity *user=NULL, const AEntity *host_server=NULL);
-		bool				parsePrefix(const std::string &prefix, AEntity * *const sender_server, AEntity * *const user=NULL, AEntity * *const host_server=NULL);
+		bool				parsePrefix(const std::string &prefix, AEntity **const sender_server, AEntity **const user=NULL, AEntity **const host_server=NULL);
 
 		static const int	value_type;
 		static std::string	statusMessages[MAX_STATUS_MESSAGES + 1];
 
 	private:
-
-		typedef uint	(IRCServer::*Operations)(Client & client, std::string str);
-		
-		/* entities */
-		//std::map<std::string, AEntity*>			_ircClients;
-		//std::list<Client*>						_pendingConnections;
+/*
+** ------------------------------ ENTITIES ---------------------------------
+*/
 
 		/* map of all registered entities of the server */
 		std::map<std::string, AEntity*>                 _entities;
@@ -63,17 +60,24 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		std::map<std::string, AEntity*>              	_servers;
 		/* map of yet unregistered connections */
 		std::map<SockStream*, UnRegisteredConnection*>	_unregistered_connections;
-		
+	
 		/* map of all direct connections that we can recv on */
 		std::map<SockStream*, NetworkEntity*>			_connections;
 
-		// global entities  known (?)
-		// std::vector<SockStream*>						_known_entities
-		
-		/* Operations */
+/*
+** ------------------------------ OPERATIONS ---------------------------------
+*/
+
+		typedef uint	(IRCServer::*Operations)(NetworkEntity & exector, std::string params);
+
+		/* Operations lists */
 		std::map<std::string, Operations>				_userCommands;
 		std::map<std::string, Operations>				_serverCommands;
 		std::map<std::string, Operations>				_unregisteredCommands;
+
+/*
+** ------------------------------- PROTOCOL(S) -------------------------------
+*/
 
 		/* protocol for data transmission */
 		IRCProtocol										_protocol;
@@ -109,15 +113,16 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		void				_initStatusMessages( void );
 
 		int					execute(AEntity *entity, std::string data);
-		uint				_commandPASS(Client & client, std::string cmd);
-		uint				_commandNICK(Client & client, std::string cmd);
-		uint				_commandUSER(Client & client, std::string cmd);
-		uint				_commandPRIVMSG(Client & client, std::string cmd);
-		uint				_commandJOIN(Client & client, std::string cmd);
-		uint				_commandMODE(Client & client, std::string cmd);
-		uint				_commandMODEclient(Client & client, std::string cmd); //Not use this in array of methods
-		uint				_commandMODEchannel(Client & client, Channel& target, size_t nbParam, std::string cmd);//Not use this in array of methods
-		uint				_commandSERVER(Client & client, std::string cmd);
+		uint				_commandPASS(NetworkEntity & executor, std::string params);
+		uint				_commandNICK(NetworkEntity & executor, std::string params);
+		uint				_commandUSER(NetworkEntity & executor, std::string params);
+		uint				_commandPRIVMSG(NetworkEntity & executor, std::string params);
+		uint				_commandJOIN(NetworkEntity & executor, std::string params);
+		uint				_commandMODE(NetworkEntity & executor, std::string params);
+		uint				_commandSERVER(NetworkEntity & executor, std::string params);
+
+		uint				_commandMODEclient(NetworkEntity & executor, std::string params); //Not use this in array of methods
+		uint				_commandMODEchannel(NetworkEntity & executor, Channel& target, size_t nbParam, std::string params);//Not use this in array of methods
 
 };
 
