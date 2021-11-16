@@ -9,8 +9,8 @@
 class Server : public NetworkEntity, public ServerInfo
 {
 	public:
-		static const int	value_type;
-        static const int	value_type_forward;
+		static const uint	value_type;
+        static const uint	value_type_forward;
 	
 	public:
 		/* initalizes from an unregistred connection */
@@ -22,7 +22,7 @@ class Server : public NetworkEntity, public ServerInfo
 		Server (SockStream &sock, const std::string &uid, const std::string &name, const std::string &info, const std::string &pass);
 };
 
-const int Server::value_type = SERVER_ENTITY_TYPE;
-const int Server::value_type_forward = FORWARD_SERVER_ENTITY_TYPE;
+const uint Server::value_type = SERVER_ENTITY_TYPE;
+const uint Server::value_type_forward = FORWARD_SERVER_ENTITY_TYPE;
 
 #endif // SERVER_HPP

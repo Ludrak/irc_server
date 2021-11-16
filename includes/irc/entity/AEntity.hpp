@@ -5,7 +5,7 @@
 # include <string>
 # include <list>
 # include <map>
-# include "StatusCode.hpp"
+# include "status.hpp"
 
 # define M_REGISTRATION_LIMITED		1 << 0
 
@@ -18,24 +18,31 @@
 # define RELAYED_CLIENT_ENTITY_TYPE 			(1 << 6)
 # define RELAYED_SERVER_ENTITY_TYPE				(1 << 7)
 # define UNREGISTERED_CONNECTION_ENTITY_TYPE 	(1 << 8)
+# define CHANNEL_ENTITY_TYPE					(1 << 9)
+
+# define ENTITY_FAMILY							0
+# define CLIENT_ENTITY_FAMILY					1
+# define SERVER_ENTITY_FAMILY					2
 
 class	AEntity
 {
 	public:
-		static const int	value_type;
+		static const uint	value_type;
 
 		virtual ~AEntity();
-		int					getType() const;
+		uint				getType() const;
+		uint				getFamily() const;
 		const std::string	&getUID() const;
 	
 	protected:
 		AEntity( const int type, const std::string &uid );
 
-		int				_type;
+		uint			_type;
+		uint			_family;
 		std::string		_uid;
 
 };
 
-const int AEntity::value_type = ENTITY_TYPE;
+const uint AEntity::value_type = ENTITY_TYPE;
 
 #endif /* ******************************************************** AENTITY_HPP */

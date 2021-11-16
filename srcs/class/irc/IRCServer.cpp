@@ -1,7 +1,6 @@
 #include "IRCServer.hpp"
 
-std::string				IRCServer::statusMessages[] = {};
-const int				IRCServer::value_type = 1333;
+const uint				IRCServer::value_type = 1333;
 
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
@@ -11,7 +10,6 @@ const int				IRCServer::value_type = 1333;
 IRCServer::IRCServer(ushort port, const std::string & password, const std::string &host)
 : ASockManager(), ANode(host), AEntity(IRCServer::value_type, "token"), ServerInfo("name", "info", "pass"), _protocol()
 {
-	this->_initStatusMessages();
 	this->_initCommands();
 	Logger::debug("IRCServer constructor");
 	Logger::info("IRC Server:");
@@ -94,37 +92,17 @@ void			IRCServer::_printServerState( void )
 // }
 
 
-// TODO REFRACTOR
-bool							IRCServer::_reply(Client & client, ushort statusCode, std::string target, std::string target2)
-{
-	if (statusCode > MAX_STATUS_MESSAGES)
-	{
-		Logger::critical("Try to send an invalid statusCode: " + ntos(statusCode));
-		return !SUCCESS;
-	}
-	Logger::debug("Replying code: " + ntos(statusCode));
-	Logger::debug("Raw response: " + IRCServer::statusMessages[statusCode]);
-	Logger::debug("target: " + target);
-	Logger::debug("target2: " + target2);
-	std::string reply = Parser::formatReply(IRCServer::statusMessages[statusCode], target, target2);
-	Logger::debug("Formated response: " + reply);
-	// TODO set valid reply infos
-	std::string prefix = ":" + client.getUID() + "!server-ident@sender-server ";
-	std::stringstream ss;
-	ss << prefix << ntos(statusCode) << " " << reply;
-	this->_sendMessage(client, ss);
-	return SUCCESS;
-}
-
 
 // REVIEW REFRACTORED
 void							IRCServer::_registerClient(AEntity & entity, int type)
 {
-	switch (type)
+	int t = type & ~AEntity::value_type & ~NetworkEntity::value_type & ~RelayedEntity::value_type;
+	switch (t)
 	{
 		/* register client from UnRegisteredConnection */
 		/* UnRegisteredConnection must have all infomations to create a client now */
 		case Client::value_type:
+		{
 			UnRegisteredConnection *connection = dynamic_cast<UnRegisteredConnection*>(&entity);
 			if (connection == NULL)
 			{
@@ -137,14 +115,18 @@ void							IRCServer::_registerClient(AEntity & entity, int type)
 			this->_unregistered_connections.erase(&connection->getStream());
 			Logger::info ("new user joined : " + client->getName() + " (" + client->getUID() + "@" + client->getStream().getIP() + ")");
 			break;
+		}
+		
 		/* register client from RelayedClient */
 		/* in here we assume that the RelayedClient has successfully been created */
 		case RelayedClient::value_type:
+		{
 			RelayedClient *relay_client = dynamic_cast<RelayedClient*>(&entity);
 			this->_clients.insert(std::make_pair(relay_client->getUID(), relay_client));
 			this->_entities.insert(std::make_pair(relay_client->getUID(), relay_client));
-			Logger::info ("new user joined : " + relay_client->getName() + " (" + relay_client->getUID() + "@" + relay_client->getRelayServer().getStream().getIP() + " is " + ntos(relay_client->getHopCount()) + " hops(s) away)");
+			Logger::info ("new user joined : " + relay_client->getName() + " (" + relay_client->getUID() + "@" + relay_client->getServer().getStream().getIP() + " is " + ntos(relay_client->getHopCount()) + " hops(s) away)");
 			break;
+		}
 		
 		default:
 			Logger::critical("setting as registered a client with an unknown type: " + ntos(type));
@@ -155,7 +137,8 @@ void							IRCServer::_registerClient(AEntity & entity, int type)
 //REVIEW NEW
 void							IRCServer::_registerServer(AEntity &entity, const int type)
 {
-	switch (type)
+	int t = type & ~AEntity::value_type & ~NetworkEntity::value_type & ~RelayedEntity::value_type;
+	switch (t)
 	{
 		/* register server from UnRegisteredConnection */
 		/* UnRegisteredConnection must have all infomations to create a server now */
@@ -174,6 +157,7 @@ void							IRCServer::_registerServer(AEntity &entity, const int type)
 			Logger::info ("new server connected to network : " + server->getName() + " (" + server->getUID() + "@" + server->getStream().getIP() + ")");
 			break;
 		}
+
 		/* register server from RelayedServer */
 		/* in here we assume that the RelayedServer has successfully been created */
 		case RelayedServer::value_type:
@@ -181,7 +165,7 @@ void							IRCServer::_registerServer(AEntity &entity, const int type)
 			RelayedServer *relay_server = dynamic_cast<RelayedServer*>(&entity);
 			this->_servers.insert(std::make_pair(relay_server->getUID(), relay_server));
 			this->_entities.insert(std::make_pair(relay_server->getUID(), relay_server));
-			Logger::info ("new server connected to network : " + relay_server->getName() + " (" + relay_server->getUID() + "@" + relay_server->getRelayServer().getStream().getIP() + " is " + ntos(relay_server->getHopCount()) + " hops(s) away)");
+			Logger::info ("new server connected to network : " + relay_server->getName() + " (" + relay_server->getUID() + "@" + relay_server->getServer().getStream().getIP() + " is " + ntos(relay_server->getHopCount()) + " hops(s) away)");
 			break;
 		}
 
@@ -193,61 +177,73 @@ void							IRCServer::_registerServer(AEntity &entity, const int type)
 
 // TODO REFRACTOR ALL
 // REVIEW UGLY REFRACTORED VERSION
-void							IRCServer::_sendMessage(AEntity & target, const std::stringstream &message, const AEntity *except)
+void							IRCServer::_sendMessage(AEntity & target, const std::string &message, const AEntity *except)
 {
 	//TODO add server prefix
-	switch (target.getType())
+	int type = target.getType() & ~AEntity::value_type & ~NetworkEntity::value_type & ~RelayedEntity::value_type;
+	switch (type)
 	{
 		case Channel::value_type :
 		{
 			Logger::debug("Sending channel message");
-			Package package(this->_protocol, this->_protocol.format(message.str()));
+			Package package(this->_protocol, this->_protocol.format(message));
 			reinterpret_cast<Channel*>(&target)->broadcastPackage(package, &reinterpret_cast<const Client*>(except)->getStream());
 			break;
 		}
 		case Client::value_type :
 		{
 			Logger::debug("Sending Client message");
-			Package *package = new Package(this->_protocol, this->_protocol.format(message.str()), &reinterpret_cast<Client*>(&target)->getStream());
+			Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<Client*>(&target)->getStream());
 			this->sendPackage(package, reinterpret_cast<Client*>(&target)->getStream());
 			break;
 		}	
 		case RelayedClient::value_type :
 		{
 			Logger::debug("Sending RelayedClient message");
-			Package *package = new Package(this->_protocol, this->_protocol.format(message.str()), &reinterpret_cast<RelayedClient*>(&target)->getRelayServer().getStream());
-			this->sendPackage(package, reinterpret_cast<RelayedClient*>(&target)->getRelayServer().getStream());
+			Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<RelayedClient*>(&target)->getServer().getStream());
+			this->sendPackage(package, reinterpret_cast<RelayedClient*>(&target)->getServer().getStream());
 			break;
 		}
 		case Server::value_type :
 		{
 			Logger::debug("Sending Server message");
-			Package *package = new Package(this->_protocol, this->_protocol.format(message.str()), &reinterpret_cast<Server*>(&target)->getStream());
+			Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<Server*>(&target)->getStream());
 			this->sendPackage(package, reinterpret_cast<Server*>(&target)->getStream());
 			break;
 		}
 		case RelayedServer::value_type :
 		{
 			Logger::debug("Sending RelayedServer message");
-			Package *package = new Package(this->_protocol, this->_protocol.format(message.str()), &reinterpret_cast<RelayedServer*>(&target)->getRelayServer().getStream());
-			this->sendPackage(package, reinterpret_cast<RelayedServer*>(&target)->getRelayServer().getStream());
+			Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<RelayedServer*>(&target)->getServer().getStream());
+			this->sendPackage(package, reinterpret_cast<RelayedServer*>(&target)->getServer().getStream());
 			break;
 		}
 		case UnRegisteredConnection::value_type :
 		{
 			Logger::debug("Sending UnregisteredConnection message");
-			Package *package = new Package(this->_protocol, this->_protocol.format(message.str()), &reinterpret_cast<UnRegisteredConnection*>(&target)->getStream());
+			Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<UnRegisteredConnection*>(&target)->getStream());
 			this->sendPackage(package, reinterpret_cast<UnRegisteredConnection*>(&target)->getStream());
 			break;
 		}
 		default:
-			Logger::critical("Unknown entity type to send message: " + message.str());
+			Logger::critical("Unknown entity type to send message: " + message);
 	}
+}
+
+void							IRCServer::_sendMessage(AEntity & target, const std::stringstream &message, const AEntity *except)
+{
+	this->_sendMessage(target, message.str(), except);
 }
 
 void							IRCServer::_sendMessage(SockStream & target, const std::stringstream &message)
 {
 	Package *pkg = new Package(this->_protocol, this->_protocol.format(message.str()), &target);
+	this->sendPackage(pkg, target);
+}
+
+void							IRCServer::_sendMessage(SockStream & target, const std::string &message)
+{
+	Package *pkg = new Package(this->_protocol, this->_protocol.format(message), &target);
 	this->sendPackage(pkg, target);
 }
 
@@ -281,6 +277,7 @@ void							IRCServer::_onClientRecv(SockStream & s, Package & pkg)
 // TODO REFRACTOR ALL
 void							IRCServer::_onClientQuit(SockStream &s)
 {
+	(void)s;
 	//TODO erase client from _connections
 	//TODO erase client from _unregistered (if unregistered)
 	//TODO erase client from _entities
@@ -329,6 +326,8 @@ void							IRCServer::_onClientQuit(SockStream &s)
 // TODO REFRACTOR AND HANDLE FORWARD
 void						IRCServer::_onRecv(SockStream &server, Package &pkg)
 {
+	(void)server;
+	(void)pkg;	
 	Logger::debug("Receiving package from forward server");
 	Logger::debug("data: " + pkg.getData() );
 }
@@ -336,6 +335,7 @@ void						IRCServer::_onRecv(SockStream &server, Package &pkg)
 // TODO REFRACTOR AND HANDLE FORWARD
 void				IRCServer::_onConnect ( SockStream &server)
 {
+	(void)server;
 	Logger::info("Connecting to forward server");
 	std::stringstream ss;
 	ss << "SERVER " << this->_name << " 0 " << this->getUID() << " :" << this->_info; 
@@ -345,6 +345,7 @@ void				IRCServer::_onConnect ( SockStream &server)
 // TODO REFRACTOR AND HANDLE FORWARD
 void				IRCServer::_onQuit( SockStream &server)
 {
+	(void)server;
 	Logger::warning("Stop connection to forward server");
 	Logger::warning("TODO handle netsplit with forward network");
 }
@@ -393,7 +394,7 @@ void							IRCServer::_initCommands( void )
 
 // REVIEW NEW
 // prefix format -> :<server_uid>[!<user_uid>@<host_uid>]SPACE
-std::string							IRCServer::makePrefix(const AEntity *user=NULL, const AEntity *host_server=NULL)
+std::string							IRCServer::makePrefix(const AEntity *user, const AEntity *host_server)
 {
 	std::string prefix = ":";
 	prefix += this->getUID();
@@ -413,140 +414,125 @@ std::string							IRCServer::makePrefix(const AEntity *user=NULL, const AEntity 
 
 // REVIEW NEW
 // prefix format -> :<server_uid>[!<user_uid>@<host_uid>]SPACE
-bool								IRCServer::parsePrefix(const std::string &prefix, AEntity **const sender_server, AEntity **const user, AEntity **const host_server)
+bool								IRCServer::parsePrefix(const std::string &prefix, Server **const sender_server, RelayedClient **const user, RelayedServer **const host_server)
 {
-	if (prefix.find(":") != 1)
+	if (prefix.find(":") != 1 || !sender_server)
 		return (false);
 	/* extended prefix */
 	if (prefix.find("!") != std::string::npos && user && host_server)
 	{
 		/* parse sender */
 		std::string token = prefix.substr(1, prefix.find ("!") - 1);
-		if (this->_servers.count(token) != 1 || this->_servers[token]->getType() & ~NetworkEntity::value_type)
+		if (this->_servers.count(token) != 1 || this->_servers[token]->getType() & ~Server::value_type)
+		{
+			Logger::critical("extended prefix sender server is not a direct server");
 			return (false);
-		*sender_server = this->_servers[token];
+		}
+		*sender_server = reinterpret_cast<Server*>(this->_servers[token]);
 
 		/* parse sender client nickname */
 		token = prefix.substr(prefix.find ("!") + 1, prefix.find("@") - prefix.find ("!") - 1);
-		if (this->_clients.count(token) != 1)
-			return (false);
-		if (this->_clients[token]->getType() & ~RelayedClient::value_type)
+		if (this->_clients.count(token) != 1 || this->_clients[token]->getType() & ~RelayedClient::value_type)
 		{
-			Logger::error("extended prefix username is not a relayed client");
+			Logger::critical("extended prefix username is not a relayed client");
 			return (false);
 		}
-		*user = this->_clients[token];
+		*user = reinterpret_cast<RelayedClient*>(this->_clients[token]);
 
 		/* parse host server */
 		token = prefix.substr(prefix.find("@") + 1, prefix.size() - prefix.find("!") - 1);
-		if (this->_servers.count(token) != 1
-		|| this->_servers[token]->getType() & ~Server::value_type || this->_servers[token]->getType() & ~Server::value_type)
+		if (this->_servers.count(token) != 1 || this->_servers[token]->getType() & ~RelayedServer::value_type)
+		{
+			Logger::critical("extended prefix host is not a relayed server");
 			return (false);
-		*host_server = this->_servers[token];
+		}
+		*host_server = reinterpret_cast<RelayedServer*>(this->_servers[token]);
 	}
 	/* simple prefix */
 	else
 	{
+		*user = NULL;
+		*sender_server = NULL;
 		std::string token = prefix.substr(1, prefix.size() - 1);
-		if (this->_servers.count(token) != 1 || this->_servers[token]->getType() & ~NetworkEntity::value_type)
+		if (this->_servers.count(token) != 1 || this->_servers[token]->getType() & ~Server::value_type)
+		{
+			Logger::critical("extended prefix sender server is not a direct server");
 			return (false);
-		*sender_server = this->_servers[token];
+		}
+		*sender_server = reinterpret_cast<Server*>(this->_servers[token]);
 	}
 	return (true);
 }
 
-// REVIEW OLD VERSION
-// int								IRCServer::execute(AEntity & client, std::string data)
-// {
-// 	size_t sep = data.find(" ");
-// 	std::string command(data);
-// 	std::string args("");
-// 	if (sep < data.size())
-// 	{
-// 		command = data.substr(0, sep);
-// 		args = data.substr(sep + 1);
-// 	}
-// 	switch (client.getType())
-// 	{
-// 		case Client::value_type_client:
-// 			if (this->_userCommands.count(command) == 1)
-// 			{
-// 				if ((this->*(this->_userCommands[command]))(dynamic_cast<Client&>(client), args) != SUCCESS)
-// 					Logger::error("Error while executing command");
-// 			}
-// 			else
-// 				Logger::warning("<" + client.getNickname() + ">: unknown command <" + command + ">");
-// 			break;
-// 		case Client::value_type_server:
-// 			if (this->_serverCommands.count(command) == 1)
-// 			{
-// 				uint ret = (this->*(this->_serverCommands[command]))(dynamic_cast<Client&>(client), args);
-// 				if (ret != 0)
-// 				{
-// 					std::string prefix = ":" + client.getNickname() + "!server-ident@sender-server ";
-// 					std::stringstream ss;
-// 					ss << prefix << ret;
-// 					this->_sendMessage(client, ss); // senError
-// 				}
-// 			}
-// 			else
-// 				Logger::warning("unknown command");
-// 			break;
-// 		case Client::value_type_unknown:
-// 			Logger::debug("yet unidentified client");
-// 			if (this->_unregisteredCommands.count(command) == 1)
-// 			{
-// 				uint ret = (this->*(this->_unregisteredCommands[command]))(dynamic_cast<Client&>(client), args);
-// 				if (ret != 0)
-// 				{
-// 					std::string prefix = ":" + client.getNickname() + "!server-ident@sender-server ";
-// 					std::stringstream ss;
-// 					ss << prefix << ret;
-// 					this->_sendMessage(client, ss); // senError
-// 				}
-// 			}
-// 			else
-// 				Logger::warning(client.getNickname() + ": unknown command");
-// 			break;
-// 		default:
-// 			Logger::error("unknown client type");
-// 			break;
-// 	}
-// 	return 1;
-// }
-
 // REVIEW REFRACTORED FOR NEW ARCH                   
-// TODO (still) REFRACTOR NICELY WITH PREFIX HANDLER & HANDLE ALL CLIENT TYPES
 // INFO : we need to be able to execute any command for any clients type
 // INFO : RelayedClient and RelayedServer just need to send back the command to target server
 int			IRCServer::execute(AEntity *e, std::string data)
 {
-	std::string command = data.substr(0, data.find(" "));
-	if (e->getType() == Client::value_type)
+	Server			*sender = NULL;
+	AEntity			*client = NULL;
+	AEntity			*client_host = NULL;
+	if (data[0] == ':')
 	{
-		Client	*client = dynamic_cast<Client*>(e);
-		if (this->_userCommands.count(command) == 1)
+		this->parsePrefix(data.substr(0, data.find(" ")), &sender, reinterpret_cast<RelayedClient**>(&client), reinterpret_cast<RelayedServer**>(&client_host));
+		data = data.substr(data.find(" ") + 1, data.size() - data.find(" ") - 1);
+		if (sender == NULL)
+			return (1);
+	}
+	std::string command = data.substr(0, data.find(" "));
+
+	if (e->getType() & Client::value_type || client)
+	{
+		/* no prefix defined so we use executor */
+		if (!client)
+			client = reinterpret_cast<Client*>(e);
+		
+		/* check if command is part of list of operations */
+		if (this->_userCommands.count(command) == 0)
 		{
-			//TODO reply command not found
-			Logger::debug("command not found (" + client->getUID() + "@" + client->getStream().getIP() + ")");
+			if (client->getType() & Client::value_type)
+			{
+				Logger::debug("user sent command not found (" + client->getUID() + "@" + reinterpret_cast<Client*>(client)->getStream().getIP() + ")");
+				std::stringstream ss(ERR_UNKNOWNCOMMAND(data)); 
+				this->_sendMessage(reinterpret_cast<Client*>(client)->getStream(), ss);
+			}
+			else if (client->getType() & RelayedClient::value_type)
+			{
+				Logger::debug("relayed user sent unknown command (" + client->getUID() + "@" + reinterpret_cast<RelayedClient*>(client)->getServer().getStream().getIP() + ")");
+				std::stringstream ss(ERR_UNKNOWNCOMMAND(data)); 
+				this->_sendMessage(reinterpret_cast<RelayedClient*>(client)->getServer().getStream(), ss);
+			}
 			return (1);
 		}
+		/* execute command from command list */
 		return ((this->*(_userCommands[command]))(*client, data.substr(command.size() + 1, data.size() - (command.size() + 1))));
 	}
-	else if (e->getType() == Server::value_type || e->getType() == Server::value_type_forward)
+	else if ((e->getFamily() & SERVER_ENTITY_FAMILY) && sender)
 	{
-		Server	*server = dynamic_cast<Server*>(e);
-		if (this->_serverCommands.count(command) == 1)
+		/* check if command is part of list of operations */
+		if (this->_serverCommands.count(command) == 0)
 		{
-			//TODO reply command not found
-			Logger::debug("server command not found (" + server->getUID() + "@" + server->getStream().getIP() + ")");
+			if (e->getType() & Server::value_type)
+			{
+				Logger::debug("server sent unknown command (" + e->getUID() + "@" + reinterpret_cast<Server*>(client)->getStream().getIP() + ")");
+				std::stringstream ss(ERR_UNKNOWNCOMMAND(data)); 
+				this->_sendMessage(reinterpret_cast<Server*>(client)->getStream(), ss);
+			}
+			else if (client->getType() == RelayedServer::value_type)
+			{
+				Logger::debug("relayed server sent unknown command  (" + client->getUID() + "@" + reinterpret_cast<RelayedServer*>(client)->getServer().getStream().getIP() + ")");
+				std::stringstream ss(ERR_UNKNOWNCOMMAND(data)); 
+				this->_sendMessage(reinterpret_cast<RelayedServer*>(client)->getServer().getStream(), ss);
+			}
 			return (1);
 		}
-		return ((this->*(_serverCommands[command]))(*server, data.substr(command.size() + 1, data.size() - (command.size() + 1))));
+		/* execute command from command list */
+		return ((this->*(_serverCommands[command]))(*client, data.substr(command.size() + 1, data.size() - (command.size() + 1))));
 	}
 	// TODO ADD UNREGISTERED                                
 	// TODO find a way to fit all 3 client types in one call
 	Logger::critical("Command '" + command + "' has no viable executor");
+	return (1);
 }
 
 // TODO REFRACTOR ALL
@@ -652,67 +638,5 @@ int			IRCServer::execute(AEntity *e, std::string data)
 // 	}
 // 	return (SUCCESS);
 // }
-
-
-//TODO add strerror to socket binding failed
-void			IRCServer::_initStatusMessages( void )
-{
-	/* Errors */
-
-	IRCServer::statusMessages[ERR_NOSUCHNICK]			=	"[target] :No such nick/channel";
-	IRCServer::statusMessages[ERR_NOSUCHSERVER]			=	"[target] :No such server";
-	IRCServer::statusMessages[ERR_NOSUCHCHANNEL]		=	"[target] :No such channel";
-	IRCServer::statusMessages[ERR_CANNOTSENDTOCHAN]		=	"[target] :Cannot send to channel";
-	IRCServer::statusMessages[ERR_TOOMANYCHANNELS]		=	"[target] :You have joined too many channels";
-	IRCServer::statusMessages[ERR_WASNOSUCHNICK]		=	"[target] :There was no such nickname";
-	IRCServer::statusMessages[ERR_TOOMANYTARGETS]		=	"[target] :<error code> recipients. <abort message>";
-	IRCServer::statusMessages[ERR_NOSUCHSERVICE]		=	"[target] :No such service";
-	IRCServer::statusMessages[ERR_NOORIGIN]				=	":No origin specified";//NO TARGET
-	IRCServer::statusMessages[ERR_NORECIPENT]			=	":No recipient given ([target])";
-	IRCServer::statusMessages[ERR_NOTEXTTOSEND]			=	":No text to send";//NO TARGET
-	IRCServer::statusMessages[ERR_NOTOPLEVEL]			=	"[target] :No toplevel domain specified";
-	IRCServer::statusMessages[ERR_WILDTOPLEVEL]			=	"[target] :Wildcard in toplevel domaind";
-	IRCServer::statusMessages[ERR_BADMASK]				=	"[target] :Bad Server/host mask";
-	IRCServer::statusMessages[ERR_UNKNOWNCOMMAND]		=	"[target] :Unknown command";
-	IRCServer::statusMessages[ERR_NOMOTD]				=	":MOTD File is missing";//NO TARGET
-	IRCServer::statusMessages[ERR_NOADMININFO]			=	"[target] :No administrative info available";
-	IRCServer::statusMessages[ERR_FILEERROR]			=	":File error doing <file op> on <file>"; // NO TARGET
-	IRCServer::statusMessages[ERR_NONICKNAMEGIVEN]		=	":No nickname given"; // NO TARGET
-	IRCServer::statusMessages[ERR_ERRONEUSNICKNAME]		=	"[target] :Erroneous nickname";
-	IRCServer::statusMessages[ERR_NICKNAMEINUSE]		=	"[target] :Nickname is already in use";
-	IRCServer::statusMessages[ERR_NICKCOLLISION]		=	"[target] :Nickname collision KILL from <user>@<host>";
-	IRCServer::statusMessages[ERR_UNAVAILRESOURCE]		=	"[target] :Nick/channel is temporarily unavailable";
-	IRCServer::statusMessages[ERR_USERNOTINCHANNEL]		=	"[target] [target2] :They aren't on that channel"; //2 TARGET
-	IRCServer::statusMessages[ERR_NOTONCHANNEL]			=	"[target] :You're not on that channel";
-	IRCServer::statusMessages[ERR_USERONCHANNEL]		=	"[target] [target2] :is already on channel"; // 2 TARGET
-	IRCServer::statusMessages[ERR_NOLOGIN]				=	"[target] :User not logged in";
-	IRCServer::statusMessages[ERR_SUMMONDISABLED]		=	":SUMMON has been disabled";//NO TARGET //TODO implement command
-	IRCServer::statusMessages[ERR_USERSDISABLED]		=	":USERS has been disabled";//NO TARGET //TODO implement command
-	IRCServer::statusMessages[ERR_NOTREGISTERED]		=	":You have not registered";//NO TARGET //TODO implement command
-	IRCServer::statusMessages[ERR_NEEDMOREPARAMS]		=	"[target] :Not enough parameters";
-	IRCServer::statusMessages[ERR_ALREADYREGISTRED]		=	"[target] :Unauthorized command (already registered)";
-	IRCServer::statusMessages[ERR_NOPERMFORHOST]		=	":Your host isn't among the privileged"; // NO TARGET
-	IRCServer::statusMessages[ERR_PASSWDMISMATCH]		=	":Password incorrect"; // NO TARGET
-	IRCServer::statusMessages[ERR_YOUREBANNEDCREEP]		=	":You are banned from this server"; // NO TARGET
-	IRCServer::statusMessages[ERR_YOUWILLBEBANNED]		=	""; // NO TARGET
-	IRCServer::statusMessages[ERR_KEYSET]				=	"[target] :Channel key already set";
-	IRCServer::statusMessages[ERR_CHANNELISFULL]		=	"[target] :Cannot join channel (+l)";
-	IRCServer::statusMessages[ERR_UNKNOWNMODE]			=	"[target] :is unknown mode char to me for [target2]";//2TARGET
-	IRCServer::statusMessages[ERR_INVITEONLYCHAN]		=	"[target] :Cannot join channel (+i)";
-	IRCServer::statusMessages[ERR_BANNEDFROMCHAN]		=	"[target] :Cannot join channel (+b)";
-	IRCServer::statusMessages[ERR_BADCHANNELKEY]		=	"[target] :Cannot join channel (+k)";
-	IRCServer::statusMessages[ERR_BADCHANMASK]			=	"[target] :Bad Channel Mask";
-	IRCServer::statusMessages[ERR_NOCHANMODES]			=	"[target] :Channel doesn't support modes";
-	IRCServer::statusMessages[ERR_BANLISTFULL]			=	"[target] [target2] :Channel list is full"; //2 TARGET
-	IRCServer::statusMessages[ERR_NOPRIVILEGES]			=	":Permission Denied- You're not an IRC operator"; //NO TARGET
-	IRCServer::statusMessages[ERR_CHANOPRIVSNEEDED]		=	"[target] :You're not channel operator";
-	IRCServer::statusMessages[ERR_CANTKILLSERVER]		=	":You can't kill a server!"; //NO TARGET //TODO implment it
-	IRCServer::statusMessages[ERR_RESTRICTED]			=	":Your connection is restricted!"; //NO TARGET
-	IRCServer::statusMessages[ERR_UNIQOPPRIVSNEEDED]	=	":You're not the original channel operator"; //NO TARGET
-	IRCServer::statusMessages[ERR_NOOPERHOST]			=	"[target] :No O-lines for your host";
-	IRCServer::statusMessages[ERR_UMODEUNKNOWNFLAG]		=	"[target] :Unknown MODE flag";
-	IRCServer::statusMessages[ERR_USERSDONTMATCH]		=	"[target] :Cannot change mode for other users";
-}
-
 
 /* ************************************************************************** */

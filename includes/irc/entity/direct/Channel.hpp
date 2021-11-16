@@ -10,12 +10,10 @@
 
 # define M_MODERATED		1 << 1
 
-# define CHANNEL_ENTITY_TYPE	8
-
 class Channel : public AEntity, public ASockHandler, public ChannelInfo
 {
 	public:
-		static const int	value_type;
+		static const uint	value_type;
 	
 	public:
 		Channel(const std::string & channelName);
@@ -40,6 +38,6 @@ class Channel : public AEntity, public ASockHandler, public ChannelInfo
 		std::list<Client *> 	_operators;
 };
 
-const int Channel::value_type = CHANNEL_ENTITY_TYPE;
+const uint Channel::value_type = CHANNEL_ENTITY_TYPE;
 
 #endif /* ********************************************************* CHANNEL_H */

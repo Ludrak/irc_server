@@ -89,7 +89,7 @@ information.
 /* Generic error message used to report a failed file
 operation during the processing of a message.
 */
-# define ERR_FILE#(A, B) define ERROR "424 :File error doing " + A + " on " + B
+# define ERR_FILEERROR(A, B) "424 :File error doing " + A + " on " + B
 
 
 /* Returned when a nickname parameter expected for a
@@ -102,7 +102,7 @@ command and isn't found.
 characters which do not fall in the defined set.  See
 section x.x.x for details on valid nicknames.
 */
-# define ERR_#(A) define ERRONEUSNICKNAME "432 :" + A + " Erroneus nickname"
+# define ERR_ERRONEUSNICKNAME(A) "432 :" + A + " Erroneus nickname"
 
 
 /* Returned when a NICK message is processed that results
@@ -428,8 +428,6 @@ banids have been listed (or if none present) a
 # define RPL_BANLIST(A, B) "367 " + A + " " + B
 
 # define RPL_ENDOFBANLIST(A) "368 :" + A + " End of channel ban list"
-
-# define RPL_ENDOFBANLIST() must be sent.
 
 /* A server responding to an INFO message is required to
 send all its 'info' in a series of RPL_INFO messages
