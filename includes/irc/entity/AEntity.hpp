@@ -33,14 +33,14 @@ class	AEntity
 		uint				getType() const;
 		uint				getFamily() const;
 		const std::string	&getUID() const;
+		void				setUID( const std::string & uid );
 	
 	protected:
 		AEntity( const int type, const std::string &uid );
 
-		uint			_type;
-		uint			_family;
-		std::string		_uid;
-
+		uint				_type;
+		uint				_family;
+		std::string			_uid;
 };
 
 const uint AEntity::value_type = ENTITY_TYPE;
