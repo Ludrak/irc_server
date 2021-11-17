@@ -176,7 +176,7 @@ parameters.
 change part of the registered details (such as
 password or user details from second USER message).
 */
-# define ERR_ALREADYREGISTRED() "462 :You may not reregister"
+# define ERR_ALREADYREGISTRED() "462 :Unauthorized command (already registered)"
 
 
 /* Returned to a client which attempts to register with

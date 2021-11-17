@@ -1,5 +1,6 @@
 #include "Client.hpp"
 
+//REVIEW see for handling 'username' see also in UserCommand
 Client::Client(
     const IRCServer                 &server_reference,
     const UnRegisteredConnection    &client,

@@ -29,7 +29,8 @@ CommandPass::~CommandPass()
 uint					CommandPass::operator()(NetworkEntity & executor, std::string params)
 {
 	if (this->getServer()._entities.count(executor.getUID()) != 0)
-		return this->getServer()._sendMessage(executor, ERR_ALREADYREGISTRED("PASS"));
+		return this->getServer()._sendMessage(executor, ERR_ALREADYREGISTRED());
+	//REVIEW check params syntax
 	switch (Parser::nbParam(params))
 	{
 		case 0:

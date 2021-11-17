@@ -20,7 +20,7 @@ class CommonInfo
 		void				setPassword( const std::string &pass );
 
 	protected:
-		std::string			_uid;
+		std::string		_uid;
 		std::string		_name;
 		std::string		_password;
 };
