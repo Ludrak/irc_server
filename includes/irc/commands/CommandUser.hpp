@@ -17,6 +17,7 @@ class CommandUser : public ACommand
 		uint				operator()(NetworkEntity & executor, std::string params);
 
 		bool				hasPermissions(AEntity & executor);
+		uint				_commandUSERunknown(UnRegisteredConnection * executor, std::string params);
 
 	private:
 
