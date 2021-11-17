@@ -23,13 +23,11 @@ CommandNick::~CommandNick()
 
 uint					CommandNick::operator()(NetworkEntity & executor, std::string params)
 {
-	//TODO uncomment this
-	// if (executor.getPassword() != this->getServer()._password)
-	// 	return SUCCESS;
-	// Logger::debug("<" + ntos(executor.getStream().getSocket()) + "> Command<NICK> with args: " + params );
-	if (executor.getFamily() == SERVER_ENTITY_FAMILY)
+	if (executor.getPassword() != this->getServer()._password)
+		return SUCCESS;
+	else if (executor.getFamily() == SERVER_ENTITY_FAMILY)
 		return this->_nickFromServer(static_cast<Server &>(executor), params);
-	else if (Parser::nbParam(params) != 1) //REVIEW normalement si 2 param venant d'un user, commande ignoré
+	else if (Parser::nbParam(params) == 0) 
 	{
 		this->getServer()._sendMessage(executor, ERR_NONICKNAMEGIVEN()); //TODO handle Nick other params coming from server
 		return EXIT_FAILURE;
@@ -64,11 +62,11 @@ uint				CommandNick::_nickFromUnregistered(UnRegisteredConnection & executor, st
 uint				CommandNick::_nickFromClient(Client & executor, std::string & nick)
 {
 	Logger::info("Renaming " + executor.getUID() + " to " + nick);
+	executor.setUID(nick);
 	this->getServer()._clients.erase(executor.getUID());
 	this->getServer()._entities.erase(executor.getUID());
 	this->getServer()._clients.insert(std::make_pair(nick, &executor));
 	this->getServer()._entities.insert(std::make_pair(nick, &executor));
-	executor.setUID(nick);
 	return SUCCESS;
 }
 

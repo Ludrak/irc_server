@@ -55,8 +55,7 @@ uint					CommandPass::operator()(NetworkEntity & executor, std::string params)
 
 bool				CommandPass::hasPermissions(AEntity & executor)
 {
-	//TODO implement right for Pass
-	( void) executor;
+	(void) executor;
 	return true;
 }
 
