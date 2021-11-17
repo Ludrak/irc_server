@@ -71,14 +71,16 @@ COMMANDS_SRCS		=	CommandHandler.cpp \
 						CommandPass.cpp \
 						CommandNick.cpp \
 						CommandUser.cpp \
-						CommandPrivmsg.cpp
+						CommandPrivmsg.cpp \
+						CommandJoin.cpp
 					
 COMMANDS_HEADERS	=	CommandHandler.hpp \
 						ACommand.hpp \
 						CommandPass.hpp \
 						CommandNick.hpp \
 						CommandUser.hpp \
-						CommandPrivmsg.hpp
+						CommandPrivmsg.hpp \
+						CommandJoin.hpp
 
 # Librarys (only for local archives in project folder)
 LIBRARYS	= 

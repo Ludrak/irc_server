@@ -9,8 +9,8 @@ class ChannelInfo
 		bool		isFull( void ) const;
 		uint		getConcurrentClients( void ) const; //REVIEW rename? 
 		uint		getConcurrentClientsMax( void ) const; //REVIEW rename?
-		void		incrementJoinedClients();
-		void		decrementJoinedClients();
+		bool		incrementJoinedClients();
+		bool		decrementJoinedClients();
 
 		/* mode */
 		void		toogleMode( uint modeMask );

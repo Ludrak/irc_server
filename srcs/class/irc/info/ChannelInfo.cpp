@@ -35,3 +35,25 @@ bool						ChannelInfo::isEnable(uint modeMask) const
 {
 	return (this->_mode & modeMask);	
 }
+
+bool						ChannelInfo::incrementJoinedClients( void )
+{
+	if (this->_concurrentClients == this->_concurrentClientsMax)
+	{
+		Logger::critical("Incrementing number of joined channel at max value");
+		return (false);
+	}
+	this->_concurrentClients++;
+	return (true);
+}
+
+bool						ChannelInfo::decrementJoinedClients( void )
+{
+	if (this->_concurrentClients == 0)
+	{
+		Logger::critical("Decrementing number of joined channel at zero value");
+		return (false);
+	}
+	this->_concurrentClients--;
+	return (true);
+}
