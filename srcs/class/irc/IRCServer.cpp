@@ -8,7 +8,7 @@ const uint				IRCServer::value_type = 1333;
 //REVIEW Server name maximum 63 character
 // TODO set server token, name & info 
 IRCServer::IRCServer(ushort port, const std::string & password, const std::string &host)
-: ASockManager(), ANode(host), AEntity(IRCServer::value_type, "token"), ServerInfo("name", "info", "pass"), _handler(*this), _protocol()
+: ASockManager(), ANode(host), AEntity(IRCServer::value_type, "token"), ServerInfo("Default server description", "1.0", host), _handler(*this), _protocol()
 {
 	this->_initCommands();
 	Logger::debug("IRCServer constructor");
@@ -66,30 +66,30 @@ void			IRCServer::_printServerState( void )
 	// }
 }
 
-// // TODO REFRACTOR 
-// bool							IRCServer::setNetworkConnection(const std::string & host, ushort port, std::string & password)
-// {
-// 	// this->_forword_socket = new SockStream(host, port);
-// 	Logger::info("Try connecting to network:"); 
-// 	Logger::info("- host     : " + ntos(host)); 
-// 	Logger::info("- port     : " + ntos(port)); 
-// 	Logger::info("- password : " + ntos(password));
-// 	try
-// 	{
-// 		if (this->connectOn(host, port, this->_protocol) == false)
-// 		{
-// 			Logger::error("Cannot connect to network");
-// 			return false;
-// 		}
-// 	}
-// 	catch (const AClient::ConnectionException &e)
-// 	{
-// 		// connection exception, we are root on that server
-// 		Logger::info ("Forward connection failed: running server as root node");
-// 		return false;
-// 	}
-// 	return true;
-// }
+bool							IRCServer::connectToNetwork(const std::string & host, ushort port, std::string & password)
+{
+	// this->_forword_socket = new SockStream(host, port);
+	Logger::info("Try connecting to network:"); 
+	Logger::info("- host     : " + ntos(host)); 
+	Logger::info("- port     : " + ntos(port)); 
+	Logger::info("- password : " + ntos(password));
+	try
+	{
+		if (this->connectOn(host, port, this->_protocol) == false)
+		{
+			Logger::error("Cannot connect to network");
+			return false;
+		}
+	}
+	catch (const AClient::ConnectionException &e)
+	{
+		// connection exception, we are root on that server
+
+		Logger::info ("Forward connection failed: running server as root node");
+		return false;
+	}
+	return true;
+}
 
 
 
@@ -110,7 +110,7 @@ AEntity						*IRCServer::_registerClient(AEntity & entity, int type)
 				Logger::critical("client registered from unregistered connection isn't already connected");
 				return NULL;
 			}
-			Client	*client = new Client(*connection);
+			Client	*client = new Client(*this, *connection, 0, "real_name");
 			this->_clients.insert(std::make_pair(client->getUID(), client));
 			this->_entities.insert(std::make_pair(client->getUID(), client));
 			//TODO delete the lost UnRegisteredConnection
@@ -153,7 +153,7 @@ void							IRCServer::_registerServer(AEntity &entity, const int type)
 				Logger::critical("client registered from unregistered connection isn't already connected");
 				return ;
 			}
-			Server *server = new Server(*connection);
+			Server *server = new Server(*connection, "token", "name", "info", "hostname");
 			this->_servers.insert(std::make_pair(server->getUID(), server));
 			this->_entities.insert(std::make_pair(server->getUID(), server));
 			this->_unregistered_connections.erase(&connection->getStream());
@@ -334,15 +334,14 @@ void						IRCServer::_onRecv(SockStream &server, Package &pkg)
 {
 	(void)server;
 	(void)pkg;	
-	Logger::debug("Receiving package from forward server");
-	Logger::debug("data: " + pkg.getData() );
+	Logger::warning("TODO HANDLE server received");
 }
 
 // TODO REFRACTOR AND HANDLE FORWARD
 void				IRCServer::_onConnect ( SockStream &server)
 {
-	(void)server;
 	Logger::info("Connecting to forward server");
+	this->_unregistered_connections.insert(std::make_pair(&server, new UnRegisteredConnection(server)));
 	std::stringstream ss;
 	ss << "SERVER " << this->_name << " 0 " << this->getUID() << " :" << this->_info; 
 	this->_sendMessage(server, ss);
