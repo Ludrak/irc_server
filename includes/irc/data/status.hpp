@@ -1,6 +1,7 @@
 # ifndef STATUS_HPP
 # define STATUS_HPP
 
+# define SUCCESS	0
 
 /* Used to indicate the nickname parameter supplied to a
 command is currently unused.

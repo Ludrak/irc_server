@@ -8,7 +8,7 @@ const uint				IRCServer::value_type = 1333;
 //REVIEW Server name maximum 63 character
 // TODO set server token, name & info 
 IRCServer::IRCServer(ushort port, const std::string & password, const std::string &host)
-: ASockManager(), ANode(host), AEntity(IRCServer::value_type, "token"), ServerInfo("name", "info", "pass"), _protocol()
+: ASockManager(), ANode(host), AEntity(IRCServer::value_type, "token"), ServerInfo("name", "info", "pass"), _handler(*this), _protocol()
 {
 	this->_initCommands();
 	Logger::debug("IRCServer constructor");
@@ -94,7 +94,7 @@ void			IRCServer::_printServerState( void )
 
 
 // REVIEW REFRACTORED
-void							IRCServer::_registerClient(AEntity & entity, int type)
+AEntity						*IRCServer::_registerClient(AEntity & entity, int type)
 {
 	int t = type & ~AEntity::value_type & ~NetworkEntity::value_type & ~RelayedEntity::value_type;
 	switch (t)
@@ -103,35 +103,38 @@ void							IRCServer::_registerClient(AEntity & entity, int type)
 		/* UnRegisteredConnection must have all infomations to create a client now */
 		case Client::value_type:
 		{
+			//REVIEW use reinterpret_cast here instead of dynamic_cast
 			UnRegisteredConnection *connection = dynamic_cast<UnRegisteredConnection*>(&entity);
 			if (connection == NULL)
 			{
 				Logger::critical("client registered from unregistered connection isn't already connected");
-				return ;
+				return NULL;
 			}
 			Client	*client = new Client(*connection);
 			this->_clients.insert(std::make_pair(client->getUID(), client));
 			this->_entities.insert(std::make_pair(client->getUID(), client));
+			//TODO delete the lost UnRegisteredConnection
 			this->_unregistered_connections.erase(&connection->getStream());
 			Logger::info ("new user joined : " + client->getName() + " (" + client->getUID() + "@" + client->getStream().getIP() + ")");
-			break;
+			return client;
 		}
 		
 		/* register client from RelayedClient */
 		/* in here we assume that the RelayedClient has successfully been created */
 		case RelayedClient::value_type:
 		{
+			//REVIEW use reinterpret_cast here instead of dynamic_cast
 			RelayedClient *relay_client = dynamic_cast<RelayedClient*>(&entity);
 			this->_clients.insert(std::make_pair(relay_client->getUID(), relay_client));
 			this->_entities.insert(std::make_pair(relay_client->getUID(), relay_client));
 			Logger::info ("new user joined : " + relay_client->getName() + " (" + relay_client->getUID() + "@" + relay_client->getServer().getStream().getIP() + " is " + ntos(relay_client->getHopCount()) + " hops(s) away)");
-			break;
+			return relay_client;
 		}
-		
 		default:
 			Logger::critical("setting as registered a client with an unknown type: " + ntos(type));
-			return ;
+			return NULL;
 	}
+	return NULL;
 }
 
 //REVIEW NEW
@@ -269,8 +272,11 @@ void						IRCServer::_onClientJoin(SockStream & s)
 void							IRCServer::_onClientRecv(SockStream & s, Package & pkg)
 {
 	AEntity *entity	= getEntityByStream(s);
-	if (entity && !pkg.getData().empty())
-		this->execute(entity, pkg.getData());
+	if (!entity || pkg.getData().empty())
+		return ;
+	uint ret = this->_handler.handle(*entity, pkg.getData());
+	if (ret)
+		Logger::error("something bad happened in handler");
 }
 
 
@@ -371,25 +377,30 @@ const IProtocol&				IRCServer::getProtocol( void ) const
 	return this->_protocol;
 }
 
+UnRegisteredConnection*		IRCServer::getUnRegisteredConnectionByUID(std::string UID)
+{
+	for (std::map<SockStream*, UnRegisteredConnection *>::iterator it = this->_unregistered_connections.begin(); it != this->_unregistered_connections.end(); ++it)
+	{
+		if (!it->second->getUID().empty() && it->second->getUID().compare(UID) == SUCCESS)
+			return it->second;
+	}
+	return NULL;
+}
+
 /*
 ** --------------------------------- COMMANDS ---------------------------------
 */
 
 void							IRCServer::_initCommands( void )
 {
-	this->_unregisteredCommands.insert(std::make_pair("USER",	&IRCServer::_commandUSER));
-	this->_unregisteredCommands.insert(std::make_pair("PASS",	&IRCServer::_commandPASS));
-	this->_unregisteredCommands.insert(std::make_pair("NICK",	&IRCServer::_commandNICK));
-	this->_unregisteredCommands.insert(std::make_pair("SERVER",	&IRCServer::_commandSERVER));
+	this->_handler.addCommand<CommandUser>("USER");
+	this->_handler.addCommand<CommandPass>("PASS");
+	this->_handler.addCommand<CommandNick>("NICK");
+	// this->handle.addComand<CommandServer>("SERVER");
+	// this->_handle.addCommand<CommandPrivmsg>("PRIVMSG");
+	// this->_handle.addCommand<CommandJoin>("JOIN");
+	// this->_handle.addCommand<CommandMode>("MODE");
 
-	this->_userCommands.insert(std::make_pair("USER",			&IRCServer::_commandUSER));
-	this->_userCommands.insert(std::make_pair("PASS",			&IRCServer::_commandPASS));
-	this->_userCommands.insert(std::make_pair("NICK",			&IRCServer::_commandNICK));
-	this->_userCommands.insert(std::make_pair("PRIVMSG",		&IRCServer::_commandPRIVMSG));
-	this->_userCommands.insert(std::make_pair("JOIN",			&IRCServer::_commandJOIN));
-	this->_userCommands.insert(std::make_pair("MODE",			&IRCServer::_commandMODE));
-
-	this->_serverCommands.insert(std::make_pair("SERVER",		&IRCServer::_commandSERVER));
 }
 
 // REVIEW NEW
@@ -467,73 +478,73 @@ bool								IRCServer::parsePrefix(const std::string &prefix, Server **const sen
 // REVIEW REFRACTORED FOR NEW ARCH                   
 // INFO : we need to be able to execute any command for any clients type
 // INFO : RelayedClient and RelayedServer just need to send back the command to target server
-int			IRCServer::execute(AEntity *e, std::string data)
-{
-	Server			*sender = NULL;
-	AEntity			*client = NULL;
-	AEntity			*client_host = NULL;
-	if (data[0] == ':')
-	{
-		this->parsePrefix(data.substr(0, data.find(" ")), &sender, reinterpret_cast<RelayedClient**>(&client), reinterpret_cast<RelayedServer**>(&client_host));
-		data = data.substr(data.find(" ") + 1, data.size() - data.find(" ") - 1);
-		if (sender == NULL)
-			return (1);
-	}
-	std::string command = data.substr(0, data.find(" "));
+// int			IRCServer::execute(AEntity *e, std::string data)
+// {
+// 	Server			*sender = NULL;
+// 	AEntity			*client = NULL;
+// 	AEntity			*client_host = NULL;
+// 	if (data[0] == ':')
+// 	{
+// 		this->parsePrefix(data.substr(0, data.find(" ")), &sender, reinterpret_cast<RelayedClient**>(&client), reinterpret_cast<RelayedServer**>(&client_host));
+// 		data = data.substr(data.find(" ") + 1, data.size() - data.find(" ") - 1);
+// 		if (sender == NULL)
+// 			return (1);
+// 	}
+// 	std::string command = data.substr(0, data.find(" "));
 
-	if (e->getType() & Client::value_type || client)
-	{
-		/* no prefix defined so we use executor */
-		if (!client)
-			client = reinterpret_cast<Client*>(e);
+// 	if (e->getType() & Client::value_type || client)
+// 	{
+// 		/* no prefix defined so we use executor */
+// 		if (!client)
+// 			client = reinterpret_cast<Client*>(e);
 		
-		/* check if command is part of list of operations */
-		if (this->_userCommands.count(command) == 0)
-		{
-			if (client->getType() & Client::value_type)
-			{
-				Logger::debug("user sent command not found (" + client->getUID() + "@" + reinterpret_cast<Client*>(client)->getStream().getIP() + ")");
-				std::stringstream ss(ERR_UNKNOWNCOMMAND(data)); 
-				this->_sendMessage(reinterpret_cast<Client*>(client)->getStream(), ss);
-			}
-			else if (client->getType() & RelayedClient::value_type)
-			{
-				Logger::debug("relayed user sent unknown command (" + client->getUID() + "@" + reinterpret_cast<RelayedClient*>(client)->getServer().getStream().getIP() + ")");
-				std::stringstream ss(ERR_UNKNOWNCOMMAND(data)); 
-				this->_sendMessage(reinterpret_cast<RelayedClient*>(client)->getServer().getStream(), ss);
-			}
-			return (1);
-		}
-		/* execute command from command list */
-		return ((this->*(_userCommands[command]))(*client, data.substr(command.size() + 1, data.size() - (command.size() + 1))));
-	}
-	else if ((e->getFamily() & SERVER_ENTITY_FAMILY) && sender)
-	{
-		/* check if command is part of list of operations */
-		if (this->_serverCommands.count(command) == 0)
-		{
-			if (e->getType() & Server::value_type)
-			{
-				Logger::debug("server sent unknown command (" + e->getUID() + "@" + reinterpret_cast<Server*>(client)->getStream().getIP() + ")");
-				std::stringstream ss(ERR_UNKNOWNCOMMAND(data)); 
-				this->_sendMessage(reinterpret_cast<Server*>(client)->getStream(), ss);
-			}
-			else if (client->getType() == RelayedServer::value_type)
-			{
-				Logger::debug("relayed server sent unknown command  (" + client->getUID() + "@" + reinterpret_cast<RelayedServer*>(client)->getServer().getStream().getIP() + ")");
-				std::stringstream ss(ERR_UNKNOWNCOMMAND(data)); 
-				this->_sendMessage(reinterpret_cast<RelayedServer*>(client)->getServer().getStream(), ss);
-			}
-			return (1);
-		}
-		/* execute command from command list */
-		return ((this->*(_serverCommands[command]))(*client, data.substr(command.size() + 1, data.size() - (command.size() + 1))));
-	}
-	// TODO ADD UNREGISTERED                                
-	// TODO find a way to fit all 3 client types in one call
-	Logger::critical("Command '" + command + "' has no viable executor");
-	return (1);
-}
+// 		/* check if command is part of list of operations */
+// 		if (this->_userCommands.count(command) == 0)
+// 		{
+// 			if (client->getType() & Client::value_type)
+// 			{
+// 				Logger::debug("user sent command not found (" + client->getUID() + "@" + reinterpret_cast<Client*>(client)->getStream().getIP() + ")");
+// 				std::stringstream ss(ERR_UNKNOWNCOMMAND(data)); 
+// 				this->_sendMessage(reinterpret_cast<Client*>(client)->getStream(), ss);
+// 			}
+// 			else if (client->getType() & RelayedClient::value_type)
+// 			{
+// 				Logger::debug("relayed user sent unknown command (" + client->getUID() + "@" + reinterpret_cast<RelayedClient*>(client)->getServer().getStream().getIP() + ")");
+// 				std::stringstream ss(ERR_UNKNOWNCOMMAND(data)); 
+// 				this->_sendMessage(reinterpret_cast<RelayedClient*>(client)->getServer().getStream(), ss);
+// 			}
+// 			return (1);
+// 		}
+// 		/* execute command from command list */
+// 		return ((this->*(_userCommands[command]))(*client, data.substr(command.size() + 1, data.size() - (command.size() + 1))));
+// 	}
+// 	else if ((e->getFamily() & SERVER_ENTITY_FAMILY) && sender)
+// 	{
+// 		/* check if command is part of list of operations */
+// 		if (this->_serverCommands.count(command) == 0)
+// 		{
+// 			if (e->getType() & Server::value_type)
+// 			{
+// 				Logger::debug("server sent unknown command (" + e->getUID() + "@" + reinterpret_cast<Server*>(client)->getStream().getIP() + ")");
+// 				std::stringstream ss(ERR_UNKNOWNCOMMAND(data)); 
+// 				this->_sendMessage(reinterpret_cast<Server*>(client)->getStream(), ss);
+// 			}
+// 			else if (client->getType() == RelayedServer::value_type)
+// 			{
+// 				Logger::debug("relayed server sent unknown command  (" + client->getUID() + "@" + reinterpret_cast<RelayedServer*>(client)->getServer().getStream().getIP() + ")");
+// 				std::stringstream ss(ERR_UNKNOWNCOMMAND(data)); 
+// 				this->_sendMessage(reinterpret_cast<RelayedServer*>(client)->getServer().getStream(), ss);
+// 			}
+// 			return (1);
+// 		}
+// 		/* execute command from command list */
+// 		return ((this->*(_serverCommands[command]))(*client, data.substr(command.size() + 1, data.size() - (command.size() + 1))));
+// 	}
+// 	// TODO ADD UNREGISTERED                                
+// 	// TODO find a way to fit all 3 client types in one call
+// 	Logger::critical("Command '" + command + "' has no viable executor");
+// 	return (1);
+// }
 
 // TODO REFRACTOR ALL
 // TODO (still) move away ! 

@@ -1,26 +1,62 @@
-# include "IRCServer.hpp"
+#include "CommandNick.hpp"
 
 /*
-   Command: PASS
-   Parameters: <password> <version> <flags> [<options>]
+** ------------------------------- CONSTRUCTOR --------------------------------
 */
-//REVIEW		Unsupported/Unparsed param <options>
-uint						IRCServer::_commandPASS(AEntity & executor, std::string params)
+
+CommandNick::CommandNick()
 {
-	Logger::debug("<" + ntos(executor.getStream().getSocket()) + "> Command<PASS> with args: " + params );
-	if (executor.isRegistered())
-		return this->_reply(executor, ERR_ALREADYREGISTRED, "PASS");
-	switch (Parser::nbParam(params))
-	{
-		case 0:
-			Logger::debug("- no param given");
-			return this->_reply(executor, ERR_NEEDMOREPARAMS, "PASS");
-		case 3:
-			executor.setFlags(Parser::getParam(params, 2));
-		case 2:
-			executor.setVersion(Parser::getParam(params, 1));
-		case 1:
-			executor.setPassword(Parser::getParam(params, 0));
-	}
+}
+
+CommandNick::CommandNick( const CommandNick & src )
+{
+}
+
+
+/*
+** -------------------------------- DESTRUCTOR --------------------------------
+*/
+
+CommandNick::~CommandNick()
+{
+}
+
+
+/*
+** --------------------------------- OVERLOAD ---------------------------------
+*/
+
+CommandNick &				CommandNick::operator=( CommandNick const & rhs )
+{
+	//if ( this != &rhs )
+	//{
+		//this->_value = rhs.getValue();
+	//}
+	return *this;
+}
+
+uint					CommandNick::operator()(AEntity & executor, std::string params)
+{
+	(void) executor;
+	(void) params;
+}
+
+
+
+/*
+** --------------------------------- METHODS ----------------------------------
+*/
+
+bool				CommandPass::hasPermissions(AEntity & executor)
+{
+	//TODO implement right for NICK
+	( void) executor;
 	return SUCCESS;
 }
+
+/*
+** --------------------------------- ACCESSOR ---------------------------------
+*/
+
+
+/* ************************************************************************** */

@@ -235,12 +235,12 @@ int		main(int ac, char **av)
 
 	Logger::setLogLevel(INFO);
 	IRCServer server(server_port, server_pass, server_host);
-	server.setName(server_name);
-	server.setToken(server_token);
-	server.setInfo(server_info);
+	// server.setName(server_name);
+	// server.setToken(server_token);
+	// server.setInfo(server_info);
 	server.setMaxConnection(server_max_connections);
-	if (has_network_connection)
-		server.setNetworkConnection(network_host, network_port, network_pass);
+	// if (has_network_connection)
+	// 	server.setNetworkConnection(network_host, network_port, network_pass);
 	server.run();
 	return (EXIT_SUCCESS);
 }

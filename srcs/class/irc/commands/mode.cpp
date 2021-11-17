@@ -57,7 +57,8 @@ uint		IRCServer::_commandMODEclient(Client & client, std::string params)
 	return SUCCESS;
 }
 
-uint		IRCServer::_commandMODE(AEntity & executor, std::string params)
+uint		IRCServer::_commandMODE(AEntity
+ & executor, std::string params)
 {
 	Logger::debug("<" + ntos(executor.getStream().getSocket()) + "> Command<MODE> with args: " + params );
 	size_t nbParam = Parser::nbParam(params);

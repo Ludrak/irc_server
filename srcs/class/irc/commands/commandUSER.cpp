@@ -1,18 +1,62 @@
-# include "IRCServer.hpp"
+#include "CommandUser.hpp"
 
-uint						IRCServer::_commandUSER(AEntity & executor, std::string params)
+/*
+** ------------------------------- CONSTRUCTOR --------------------------------
+*/
+
+CommandUser::CommandUser()
 {
-	//TOFIX: can register without nickname
-	Logger::debug("<" + ntos(executor.getStream().getSocket()) + "> Command<USER> with args: " + params );
-	if (executor.isRegistered())
-		return this->_reply(executor, ERR_ALREADYREGISTRED, "USER");
-	else if (Parser::nbParam(params) < 4)
-		return this->_reply(executor, ERR_NEEDMOREPARAMS, "USER");
-	executor.setUsername(Parser::getParam(params, 0));
-	executor.setDomaineName(Parser::getParam(params, 1));
-	executor.setServername(Parser::getParam(params, 2));
-	executor.setRealname(Parser::getParam(params, 3));
-	this->_setRegistered(executor, Client::value_type_client);
-	Logger::info("new user registered: " + executor.getNickname());
+}
+
+CommandUser::CommandUser( const CommandUser & src )
+{
+}
+
+
+/*
+** -------------------------------- DESTRUCTOR --------------------------------
+*/
+
+CommandUser::~CommandUser()
+{
+}
+
+
+/*
+** --------------------------------- OVERLOAD ---------------------------------
+*/
+
+CommandUser &				CommandUser::operator=( CommandUser const & rhs )
+{
+	//if ( this != &rhs )
+	//{
+		//this->_value = rhs.getValue();
+	//}
+	return *this;
+}
+
+uint					CommandUser::operator()(AEntity & executor, std::string params)
+{
+	( void ) executor;
+	( void ) params;
+}
+
+
+
+/*
+** --------------------------------- METHODS ----------------------------------
+*/
+
+bool				CommandUser::hasPermissions(AEntity & executor)
+{
+	//TODO implement right for NICK
+	( void) executor;
 	return SUCCESS;
 }
+
+/*
+** --------------------------------- ACCESSOR ---------------------------------
+*/
+
+
+/* ************************************************************************** */

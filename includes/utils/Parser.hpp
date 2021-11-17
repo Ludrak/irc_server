@@ -26,6 +26,7 @@ class Parser
 		static std::string				formatReply(std::string message, std::string target = "", std::string target2 = "");
 		static size_t				 	nbParam(std::string command);
 		static bool						validNickname(std::string nick);
+		static bool						validUser(std::string username);
 		static bool						validChannelName(std::string channelName);
 		static bool						validVersionName(std::string version);
 		static bool						validPASSflags(std::string flags);

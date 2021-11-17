@@ -107,6 +107,20 @@ std::string				Parser::formatReply(std::string message, std::string target, std:
 	return message;
 }
 
+bool					Parser::validUser(std::string username)
+{
+	if (username.empty() || username.size() > 100)
+		return false;
+	if (!(isalpha(username.at(0)) || _isSpecial(username.at(0))))
+		return false;
+	for (std::string::size_type i = 1; i < username.size(); ++i)
+	{
+		if ((username[i] == '\0') || (username[i] == '\r') || (username[i] == '\n') || (username[i] == ' ') || (username[i] == '@'))
+			return false;
+	}
+	return true;
+}
+
 
 bool					Parser::validNickname(std::string nick)
 {
