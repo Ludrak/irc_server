@@ -1,30 +1,35 @@
 #ifndef ACOMMAND_HPP
 # define ACOMMAND_HPP
 
+
+class	IRCServer;
+class	CommandHandler;
 # include <iostream>
 # include <string>
 # include "Server.hpp"
-
 # include "status.hpp"
 
 class ACommand
 {
-
 	public:
 
-		ACommand();
+		ACommand(CommandHandler & handler);
 		ACommand( ACommand const & src );
 		virtual ~ACommand();
 
 		ACommand &			operator=( ACommand const & rhs );
-		virtual uint		operator()(AEntity & executor, std::string params) = 0;
+		virtual uint		operator()(NetworkEntity & executor, std::string params) = 0;
 		
-		const Server*		getSender( void ) const;
-		const AEntity*		getClient( void ) const;
-		const AEntity*		getClientHost( void ) const;
+		IRCServer&			getServer( void );
+		CommandHandler&		getHandler( void );
 
+		const Server*		getSender( void ) const;
 		void				setSender(Server * sender);
+
+		const AEntity*		getClient( void ) const;
 		void				setClient(AEntity * client);
+
+		const AEntity*		getClientHost( void ) const;
 		void				setClientHost(AEntity * host);
 
 		virtual	bool		hasPermissions(AEntity & executor);
@@ -33,7 +38,11 @@ class ACommand
 		Server				*_sender;
 		AEntity				*_client;
 		AEntity				*_clientHost;
+		CommandHandler		&_handler;
 
 };
+
+# include "IRCServer.hpp"
+# include "CommandHandler.hpp"
 
 #endif /* ********************************************************* ACOMMAND_HPP */

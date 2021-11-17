@@ -4,7 +4,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-ACommand::ACommand() : _sender(NULL), _client(NULL), _clientHost(NULL)
+ACommand::ACommand(CommandHandler & handler) : _sender(NULL), _client(NULL), _clientHost(NULL), _handler(handler)
 {
 }
 
@@ -40,13 +40,22 @@ bool				ACommand::hasPermissions(AEntity & executor)
 {
 	/* By default all permissions is granted*/
 	(void) executor;
-	return SUCCESS;
+	return false;
 }
 
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
 */
 
+IRCServer&			ACommand::getServer( void )
+{
+	return this->_handler.getServer();
+}
+
+CommandHandler&		ACommand::getHandler( void )
+{
+	return this->_handler;
+}
 
 const Server*		ACommand::getSender( void ) const
 {

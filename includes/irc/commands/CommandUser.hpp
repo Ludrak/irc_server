@@ -10,11 +10,11 @@ class CommandUser : public ACommand
 
 	public:
 
-		CommandUser();
+		CommandUser(CommandHandler & handler);
 		~CommandUser();
 
 		CommandUser &		operator=( CommandUser const & rhs );
-		uint				operator()(AEntity & executor, std::string params);
+		uint				operator()(NetworkEntity & executor, std::string params);
 
 		bool				hasPermissions(AEntity & executor);
 

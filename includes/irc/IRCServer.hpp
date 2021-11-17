@@ -21,6 +21,7 @@ class CommandHandler;
 
 // Commands
 # include "CommandHandler.hpp"
+# include "ACommand.hpp"
 # include "CommandPass.hpp"
 # include "CommandNick.hpp"
 # include "CommandUser.hpp"
@@ -34,6 +35,10 @@ class CommandHandler;
 class IRCServer : public ANode, public AEntity, public ServerInfo
 {
 	friend class CommandHandler;
+	friend class CommandPass;
+	friend class CommandNick;
+	friend class CommandUser;
+
 	public:
 		static const uint	value_type;
 
@@ -43,9 +48,11 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		//bool				setNetworkConnection(const std::string & host, ushort port, std::string & password);
 		const IProtocol&			getProtocol( void ) const;
 		Channel*					getChannel(int ChannelUID);
-		AEntity*					getEntityByStream(SockStream & s);
+		NetworkEntity*				getEntityByStream(SockStream & s);
 
 		UnRegisteredConnection*		getUnRegisteredConnectionByUID(const std::string UID);
+
+		bool						alreadyInUseUID(std::string & uid) const; 
 
 		/* prefix parser */
 		std::string					makePrefix(const AEntity *user=NULL, const AEntity *host_server=NULL);
