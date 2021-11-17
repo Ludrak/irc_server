@@ -3,13 +3,15 @@
 
 # include "CommonInfo.hpp"
 
-class ChannelInfo : public CommonInfo
+class ChannelInfo
 {
 	public:
 		bool		isFull( void ) const;
 		uint		getConcurrentClients( void ) const; //REVIEW rename? 
 		uint		getConcurrentClientsMax( void ) const; //REVIEW rename?
-		
+		void		incrementJoinedClients();
+		void		decrementJoinedClients();
+
 		/* mode */
 		void		toogleMode( uint modeMask );
 		void		enableMode( uint modeMask );

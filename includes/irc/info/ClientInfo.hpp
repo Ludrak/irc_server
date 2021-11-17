@@ -3,44 +3,56 @@
 
 # include "CommonInfo.hpp"
 # include "UnRegisteredConnectionInfo.hpp"
+# include "Logger.hpp"
 
 # define NB_CLIENT_REGISTRATION_MAX 12
 
-class ClientInfo : public CommonInfo
+class ClientInfo
 {
 	public:
 		/* relayed client info (when USER is recieved with hopcount > 0) */
-		ClientInfo(const std::string &name, const std::string &real_name, const uint &mode, const std::string &pass);
-
-		/* directly connected client info */
-		ClientInfo(const UnRegisteredConnectionInfo &reference);
-		ClientInfo(const ClientInfo &copy);
-
-		bool				isFull( void ) const;
+		/* created by command which contains all info about the new client */
+		ClientInfo(
+			const std::string	&real_name,
+			const uint			mode,
+			const std::string	&server_token,
+			const std::string	&server_host
+		);
+		
+		/* channels */
+		bool				maxChannelAccessReached( void ) const;
 		uint				getConcurrentChannels( void ) const; 
 		uint				getConcurrentChannelsMax( void ) const;
+		void				incrementJoinedChannels( void );
+		void				decrementJoinedChannels( void );
 
 		/* mode */
+		uint				getMode( void ) const;
+		bool				isEnable( uint modeMask ) const;
 		void				toogleMode( uint modeMask );
 		void				enableMode( uint modeMask );
 		void				disableMode( uint modeMask );
-		bool				isEnable( uint modeMask ) const;
-		uint				getMode() const;
 
 		const std::string&	getRealname( void ) const;
+		void				setRealname( const std::string &real_name );
+
 		const std::string&	getServerToken( void ) const;
+		void				setServerToken( const std::string &server_token );
+
 		const std::string&	getHostname( void ) const;
-		bool				isPrivilegied( void ) const;
-		//TODO add inc et dec //REVIEW not here
+		void				setHostname( const std::string &host );
+
+		bool				isServerOP( void ) const;
+		void				setServerOP( const bool op );
 
 	protected:
 		uint			_mode;
-		uint			_concurrentChannels;
-		uint			_concurrentChannelsMax;
 		std::string		_realname;
 		std::string		_serverToken;
 		std::string		_host;
-		uint			_privilege;
+		uint			_serverOp;
+		uint			_concurrentChannels;
+		uint			_concurrentChannelsMax;
 	
 	private:
 		ClientInfo();

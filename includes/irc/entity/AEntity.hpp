@@ -6,6 +6,7 @@
 # include <list>
 # include <map>
 # include "status.hpp"
+# include "CommonInfo.hpp"
 
 # define M_REGISTRATION_LIMITED		1 << 0
 
@@ -24,7 +25,7 @@
 # define CLIENT_ENTITY_FAMILY					1
 # define SERVER_ENTITY_FAMILY					2
 
-class	AEntity
+class	AEntity : public CommonInfo
 {
 	public:
 		static const uint	value_type = ENTITY_TYPE;
@@ -32,15 +33,12 @@ class	AEntity
 		virtual ~AEntity();
 		uint				getType() const;
 		uint				getFamily() const;
-		const std::string	&getUID() const;
-		void				setUID( const std::string & uid );
 	
 	protected:
 		AEntity( const int type, const std::string &uid );
 
 		uint				_type;
 		uint				_family;
-		std::string			_uid;
 };
 
 #endif /* ******************************************************** AENTITY_HPP */

@@ -15,11 +15,13 @@ class Server : public NetworkEntity, public ServerInfo
 	public:
 		/* initalizes from an unregistred connection */
 		/* type is set to SERVER_ENTITY_TYPE */
-		Server (const UnRegisteredConnection &server);
-
-		/* server is  build by SockStream& and by giving all its common informations */
-		/* type is set to FORWARD_SERVER_ENTITY_TYPE */
-		Server (SockStream &sock, const std::string &uid, const std::string &name, const std::string &info, const std::string &pass);
+		Server(
+			const UnRegisteredConnection &serv,
+			const std::string &token,
+			const std::string &name,
+			const std::string &info,
+			const std::string &host
+		);
 };
 
 #endif // SERVER_HPP
