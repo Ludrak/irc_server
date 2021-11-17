@@ -12,12 +12,11 @@ class IRCServer;
 class Client : public NetworkEntity, public ClientInfo
 {
 	public:
-		static const uint	value_type;
+		static const uint	value_type = CLIENT_ENTITY_TYPE;
 	
 	public:
 		Client (const UnRegisteredConnection &client);
+		~Client();
 };
-
-const uint Client::value_type = CLIENT_ENTITY_TYPE;
 
 #endif /* ********************************************************** CLIENT_H */

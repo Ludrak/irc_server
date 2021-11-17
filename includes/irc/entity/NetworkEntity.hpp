@@ -8,7 +8,7 @@
 class NetworkEntity : public AEntity
 {
     public:
-        static const uint	value_type;
+        static const uint	value_type = NETWORK_ENTITY_TYPE;
 
     public:
         NetworkEntity(SockStream &stream, const std::string &uid, const uint type);
@@ -19,7 +19,5 @@ class NetworkEntity : public AEntity
     private:
         SockStream          &_stream;
 };
-
-const uint NetworkEntity::value_type = NETWORK_ENTITY_TYPE;
 
 #endif // NETWORK_ENTITY

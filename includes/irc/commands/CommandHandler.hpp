@@ -19,7 +19,13 @@ class CommandHandler
 		CommandHandler &		operator=( CommandHandler const & rhs );
 		
 		template<typename T>
-		void			addCommand( const std::string name);
+		void			addCommand( const std::string name)	
+		{
+			if (this->_commands.count(name) == 0)
+				this->_commands.insert(std::make_pair(name, new T));
+			else
+				Logger::critical("Handler: Command " + name + " is inserted twice.");
+		}
 		
 		uint			handle(AEntity & executor, std::string data);
 	private:

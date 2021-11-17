@@ -4,14 +4,9 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-CommandNick::CommandNick()
+CommandNick::CommandNick() : ACommand()
 {
 }
-
-CommandNick::CommandNick( const CommandNick & src )
-{
-}
-
 
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
@@ -26,17 +21,10 @@ CommandNick::~CommandNick()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
-CommandNick &				CommandNick::operator=( CommandNick const & rhs )
-{
-	//if ( this != &rhs )
-	//{
-		//this->_value = rhs.getValue();
-	//}
-	return *this;
-}
-
 uint					CommandNick::operator()(AEntity & executor, std::string params)
 {
+	( void ) executor;
+	( void ) params;
 	// Logger::debug("<" + ntos(executor.getStream().getSocket()) + "> Command<NICK> with args: " + params );
 	// std::string nick = Parser::getParam(params, 0);
 	// if (executor.getPassword() != this->_password)
@@ -58,6 +46,7 @@ uint					CommandNick::operator()(AEntity & executor, std::string params)
 	// 	this->_ircClients.insert(std::make_pair(nick, &executor));
 	// }
 	// client.setNickname(nick);
+	return SUCCESS;
 }
 
 

@@ -24,11 +24,15 @@ SRCS		=	SockStream.cpp \
 				ServerInfo.cpp \
 				ChannelInfo.cpp \
 				UnRegisteredConnectionInfo.cpp \
-				IRCServer.cpp \
-				Client.cpp \
 				AEntity.cpp \
+				NetworkEntity.cpp \
+				RelayedEntity.cpp \
+				UnRegisteredConnection.cpp \
+				Client.cpp \
+				Server.cpp \
 				Channel.cpp \
 				Package.cpp \
+				IRCServer.cpp \
 				Protocol.cpp \
 				IRCProtocol.cpp \
 				Parser.cpp \
@@ -40,15 +44,19 @@ HEADERS		=	SockStream.hpp \
 				SockManager.hpp \
 				AServer.hpp \
 				AClient.hpp \
+				ANode.hpp \
 				CommonInfo.hpp \
 				ClientInfo.hpp \
 				ServerInfo.hpp \
 				ChannelInfo.hpp \
-				IRCServer.hpp \
-				Client.hpp \
-				ANode.hpp \
 				AEntity.hpp \
+				NetworkEntity.hpp \
+				RelayedEntity.hpp \
+				UnRegisteredConnection.hpp \
+				Client.hpp \
+				Server.hpp \
 				Channel.hpp \
+				IRCServer.hpp \
 				Package.hpp \
 				IProtocol.hpp \
 				Protocol.hpp \
@@ -60,15 +68,15 @@ HEADERS		=	SockStream.hpp \
 
 COMMANDS_SRCS		=	CommandHandler.cpp \
 						ACommand.cpp \
-						CommandPASS.cpp \
-						CommandNICK.cpp \
-						CommandUSER.cpp
+						CommandPass.cpp \
+						CommandNick.cpp \
+						CommandUser.cpp
 					
 COMMANDS_HEADERS	=	CommandHandler.hpp \
 						ACommand.hpp \
-						CommandPASS.hpp \
-						CommandNICK.hpp \
-						CommandUSER.hpp
+						CommandPass.hpp \
+						CommandNick.hpp \
+						CommandUser.hpp
 
 # Librarys (only for local archives in project folder)
 LIBRARYS	= 

@@ -7,3 +7,8 @@ Client::Client(const UnRegisteredConnection &client)
     if (this->_uid.empty())
         Logger::critical ("registered client without uid");
 }
+
+Client::~Client()
+{
+
+}

@@ -13,7 +13,7 @@
 class Channel : public AEntity, public ASockHandler, public ChannelInfo
 {
 	public:
-		static const uint	value_type;
+		static const uint	value_type = CHANNEL_ENTITY_TYPE;
 	
 	public:
 		Channel(const std::string & channelName);
@@ -37,7 +37,5 @@ class Channel : public AEntity, public ASockHandler, public ChannelInfo
 		std::list<Client *> 	_clients;
 		std::list<Client *> 	_operators;
 };
-
-const uint Channel::value_type = CHANNEL_ENTITY_TYPE;
 
 #endif /* ********************************************************* CHANNEL_H */

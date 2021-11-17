@@ -79,9 +79,6 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		typedef uint	(IRCServer::*Operations)(AEntity & exector, std::string params);
 
 		/* Operations lists */
-		// std::map<std::string, Operations>				_userCommands;
-		// std::map<std::string, Operations>				_serverCommands;
-		// std::map<std::string, Operations>				_unregisteredCommands;
 		CommandHandler				_handler;
 
 /*
@@ -105,6 +102,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 ** --------------------------------- SocketAction ---------------------------------
 */
 
+//TODO remove _reply
 		bool				_reply(Client & client, ushort statusCode, std::string target = "", std::string target2 = "");
 		AEntity				*_registerClient(AEntity & client, int type);
 		void				_registerServer(AEntity & server, int type);

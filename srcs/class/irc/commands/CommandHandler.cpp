@@ -53,15 +53,6 @@ std::ostream &			operator<<( std::ostream & o, CommandHandler const & i )
 ** --------------------------------- METHODS ----------------------------------
 */
 
-template<typename T>
-void			CommandHandler::addCommand( const std::string name)
-{
-	if (this->_commands.count(name) == 0)
-		this->_commands.insert(std::make_pair(name, new T()));
-	else
-		Logger::critical("Handler: Command " + name + " is inserted twice.");
-}
-
 uint			CommandHandler::handle(AEntity & executor, std::string data)
 {
 	Server			*sender = NULL;

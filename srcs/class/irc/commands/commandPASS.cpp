@@ -1,23 +1,18 @@
-#include "CommandNick.hpp"
+#include "CommandPass.hpp"
 
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-CommandNick::CommandNick()
+CommandPass::CommandPass() : ACommand()
 {
 }
-
-CommandNick::CommandNick( const CommandNick & src )
-{
-}
-
 
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
 
-CommandNick::~CommandNick()
+CommandPass::~CommandPass()
 {
 }
 
@@ -26,19 +21,11 @@ CommandNick::~CommandNick()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
-CommandNick &				CommandNick::operator=( CommandNick const & rhs )
-{
-	//if ( this != &rhs )
-	//{
-		//this->_value = rhs.getValue();
-	//}
-	return *this;
-}
-
-uint					CommandNick::operator()(AEntity & executor, std::string params)
+uint					CommandPass::operator()(AEntity & executor, std::string params)
 {
 	(void) executor;
 	(void) params;
+	return SUCCESS;
 }
 
 

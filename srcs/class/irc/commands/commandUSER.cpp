@@ -4,14 +4,9 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-CommandUser::CommandUser()
+CommandUser::CommandUser() : ACommand()
 {
 }
-
-CommandUser::CommandUser( const CommandUser & src )
-{
-}
-
 
 /*
 ** -------------------------------- DESTRUCTOR --------------------------------
@@ -26,19 +21,11 @@ CommandUser::~CommandUser()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
-CommandUser &				CommandUser::operator=( CommandUser const & rhs )
-{
-	//if ( this != &rhs )
-	//{
-		//this->_value = rhs.getValue();
-	//}
-	return *this;
-}
-
 uint					CommandUser::operator()(AEntity & executor, std::string params)
 {
 	( void ) executor;
 	( void ) params;
+	return SUCCESS;
 }
 
 

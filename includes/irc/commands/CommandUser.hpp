@@ -11,7 +11,6 @@ class CommandUser : public ACommand
 	public:
 
 		CommandUser();
-		CommandUser( CommandUser const & src );
 		~CommandUser();
 
 		CommandUser &		operator=( CommandUser const & rhs );

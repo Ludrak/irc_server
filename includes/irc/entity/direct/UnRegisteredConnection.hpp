@@ -8,12 +8,10 @@
 class UnRegisteredConnection : public NetworkEntity, public UnRegisteredConnectionInfo
 {
     public:
-        static const uint value_type;
+        static const uint value_type = UNREGISTERED_CONNECTION_ENTITY_TYPE;
 
     public:
         UnRegisteredConnection(SockStream &stream);
 };
-
-const uint UnRegisteredConnection::value_type = UNREGISTERED_CONNECTION_ENTITY_TYPE;
 
 #endif // UNREGISTERED_CONNECTION

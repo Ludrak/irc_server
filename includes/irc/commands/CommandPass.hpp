@@ -11,7 +11,6 @@ class CommandPass : public ACommand
 	public:
 
 		CommandPass();
-		CommandPass( CommandPass const & src );
 		~CommandPass();
 
 		CommandPass &		operator=( CommandPass const & rhs );

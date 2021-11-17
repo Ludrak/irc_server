@@ -11,7 +11,6 @@ class CommandNick : public ACommand
 	public:
 
 		CommandNick();
-		CommandNick( CommandNick const & src );
 		~CommandNick();
 
 		CommandNick &		operator=( CommandNick const & rhs );

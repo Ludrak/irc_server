@@ -27,7 +27,7 @@
 class	AEntity
 {
 	public:
-		static const uint	value_type;
+		static const uint	value_type = ENTITY_TYPE;
 
 		virtual ~AEntity();
 		uint				getType() const;
@@ -42,7 +42,5 @@ class	AEntity
 		uint				_family;
 		std::string			_uid;
 };
-
-const uint AEntity::value_type = ENTITY_TYPE;
 
 #endif /* ******************************************************** AENTITY_HPP */
