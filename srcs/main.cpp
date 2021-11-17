@@ -236,7 +236,7 @@ int		main(int ac, char **av)
 	std::cout << "* - info:            " << server_info << std::endl;
 	std::cout << "*************************************************" << std::endl;
 
-	Logger::setLogLevel(INFO);
+	// Logger::setLogLevel(INFO);
 	IRCServer server(server_port, server_pass, server_host);
 	server.setName(server_name);
 	server.setUID(std::to_string(server_token));

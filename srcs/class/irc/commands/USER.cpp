@@ -42,9 +42,9 @@ uint						IRCServer::_commandUSER(AEntity & executor, std::string params)
 {
 	//TOFIX: can register without nickname
 	Logger::debug("<" + ntos(executor.getStream().getSocket()) + "> Command<USER> with args: " + params );
-	if (executor.getFamilly() == CLIENT_ENTITY_FAMILY)
+	if (executor.getFamily() == CLIENT_ENTITY_FAMILY)
 			return this->_sendMessage(executor, ERR_ALREADYREGISTRER("USER"));
-	else if (executor.getFamilly() == SERVER_ENTITY_FAMILY)
+	else if (executor.getFamily() == SERVER_ENTITY_FAMILY)
 		_commandUSERserver(reinterpret_cast<UnRegisteredConnection*>(&executor));
 	else if (executor.getType() & UnregisteredConnection::value_type)
 		_commandUSERunknown(executor);

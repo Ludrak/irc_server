@@ -72,7 +72,7 @@ are returned when an invalid use of "PRIVMSG $<server>" or "PRIVMSG #<host>" is 
 /* Returned to a registered client to indicate that the
 command sent is unknown by the server.
 */
-# define ERR_UNKNOWNCOMMAND(A) "421 :" + A + " Unknown command"
+# define ERR_UNKNOWNCOMMAND(A) "421 " + A + " :Unknown command"
 
 
 /* Server's MOTD file could not be opened by the server.

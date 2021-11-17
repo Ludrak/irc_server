@@ -271,7 +271,7 @@ void						IRCServer::_onClientJoin(SockStream & s)
 // REVIEW REFRACTORED
 void							IRCServer::_onClientRecv(SockStream & s, Package & pkg)
 {
-	AEntity *entity	= getEntityByStream(s);
+	NetworkEntity *entity = getEntityByStream(s);
 	if (!entity || pkg.getData().empty())
 		return ;
 	uint ret = this->_handler.handle(*entity, pkg.getData());
@@ -359,7 +359,7 @@ void				IRCServer::_onQuit( SockStream &server)
 ** --------------------------------- ACCESSOR ---------------------------------
 */
 // REVIEW REFRACTORED
-AEntity*						IRCServer::getEntityByStream(SockStream & s)
+NetworkEntity*						IRCServer::getEntityByStream(SockStream & s)
 {
 	/* get in unregistered list */
 	if (this->_unregistered_connections.count(&s) == 1)
@@ -400,6 +400,20 @@ void							IRCServer::_initCommands( void )
 	// this->_handle.addCommand<CommandJoin>("JOIN");
 	// this->_handle.addCommand<CommandMode>("MODE");
 
+}
+
+bool							IRCServer::alreadyInUseUID(std::string & uid) const 
+{
+	if (this->_entities.count(uid) != 0)
+		return true;
+	for (std::map<SockStream*, UnRegisteredConnection*>::const_iterator it = this->_unregistered_connections.begin(); 
+		it != this->_unregistered_connections.end();
+		++it)
+	{
+		if (it->second->getUID().compare(uid) == SUCCESS)
+			return true;
+	}
+	return false;
 }
 
 // REVIEW NEW

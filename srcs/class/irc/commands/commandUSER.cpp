@@ -4,7 +4,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-CommandUser::CommandUser() : ACommand()
+CommandUser::CommandUser(CommandHandler & handler) : ACommand(handler)
 {
 }
 
@@ -21,7 +21,7 @@ CommandUser::~CommandUser()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
-uint					CommandUser::operator()(AEntity & executor, std::string params)
+uint					CommandUser::operator()(NetworkEntity & executor, std::string params)
 {
 	( void ) executor;
 	( void ) params;
@@ -38,7 +38,7 @@ bool				CommandUser::hasPermissions(AEntity & executor)
 {
 	//TODO implement right for NICK
 	( void) executor;
-	return SUCCESS;
+	return true;
 }
 
 /*

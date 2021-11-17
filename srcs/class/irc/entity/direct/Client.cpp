@@ -11,7 +11,7 @@ Client::Client(
 {
     this->_name = client.getName();
     this->_password = client.getPassword();
-    this->_family = CLIENT_ENTITY_FAMILY;
+    this->_family = CLIENT_ENTITY_FAMILY; //REVIEW  initialisation list
     if (this->_uid.empty())
         Logger::critical ("registered client without uid");
 }

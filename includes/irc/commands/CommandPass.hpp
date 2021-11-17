@@ -10,11 +10,11 @@ class CommandPass : public ACommand
 
 	public:
 
-		CommandPass();
+		CommandPass(CommandHandler & handler);
 		~CommandPass();
 
 		CommandPass &		operator=( CommandPass const & rhs );
-		uint				operator()(AEntity & executor, std::string params);
+		uint				operator()(NetworkEntity & executor, std::string params);
 
 		bool				hasPermissions(AEntity & executor);
 
