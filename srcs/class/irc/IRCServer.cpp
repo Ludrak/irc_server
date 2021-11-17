@@ -8,7 +8,12 @@ const uint				IRCServer::value_type = 42;
 //REVIEW Server name maximum 63 character
 // TODO set server token, name & info 
 IRCServer::IRCServer(ushort port, const std::string & password, const std::string &host)
-: ASockManager(), ANode(host), AEntity(IRCServer::value_type, "token"), ServerInfo("name", "info", "pass", "IRC|amazircd"), _handler(*this), _protocol()
+:	ASockManager(),
+	ANode(host),
+	AEntity(IRCServer::value_type, "token"),
+	ServerInfo("name", "info", "pass", "IRC|amazircd"),
+	_handler(*this),
+	_protocol()
 {
 	this->_initCommands();
 	Logger::debug("IRCServer constructor");
@@ -16,6 +21,8 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 	Logger::info("- host     : " + ntos(host));
 	Logger::info("- port     : " + ntos(port));
 	Logger::info("- password :" + ntos(password));
+	this->setPassword(password);
+
 	this->listenOn(port, this->_protocol);
 }
 
@@ -28,7 +35,9 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 IRCServer::~IRCServer()
 {
 	// delete all entities
-	for (std::map<std::string, AEntity *>::iterator it = this->_entities.begin(); it != this->_entities.end(); ++it)
+	for (std::map<std::string, AEntity *>::iterator it = this->_entities.begin();
+		it != this->_entities.end();
+		++it)
 	{
 		delete (*it).second;
 	}
@@ -108,27 +117,27 @@ bool							IRCServer::connectToNetwork(const std::string & host, ushort port, st
 
 
 
-void							IRCServer::_addClient(AEntity &client)
+void							IRCServer::_addClient(AEntity &client, UnRegisteredConnection * executor)
 {	
-	if (client.getFamily() == CLIENT_ENTITY_FAMILY)
+	if (client.getFamily() != CLIENT_ENTITY_FAMILY)
 	{
-		bool already_exists;
-
-		already_exists = this->_entities.insert(std::make_pair(client.getUID(), &client)).second;
-		if (already_exists)
-		{
-			Logger::critical("double insertion in _entities: trying to add a new client to an already used nickname");
-			return;
-		}
-		already_exists = this->_clients.insert(std::make_pair(client.getUID(), &client)).second;
-		if (already_exists)
-		{
-			Logger::critical("double insertion in _clients: trying to add a new client to an already used nickname");
-			return;
-		}
+		Logger::critical("bad entity insertion: trying to add a non-client family entity to _addClient()");
 		return ;
 	}
-	Logger::critical("bad entity insertion: trying to add a non-client family entity to _addClient()");
+
+	if (executor != NULL) // RELAYED
+	{
+		this->_unregistered_connections.erase(&executor->getStream());
+		this->_connections.erase(&executor->getStream());
+		delete executor;
+	}
+	if (!this->_entities.insert(std::make_pair(client.getUID(), &client)).second)
+		Logger::critical("double insertion in _entities: trying to add a new client to an already used nickname");
+	else if (!this->_clients.insert(std::make_pair(client.getUID(), &client)).second)
+		Logger::critical("double insertion in _clients: trying to add a new client to an already used nickname");
+	else if (client.getType() & ~RelayedEntity::value_type && !this->_connections.insert(std::make_pair(&static_cast<Client &>(client).getStream(), reinterpret_cast<NetworkEntity *>(&client))).second)
+		Logger::critical("double insertion in _connections: trying to add a new client to an already used nickname");
+	return ;
 }
 
 

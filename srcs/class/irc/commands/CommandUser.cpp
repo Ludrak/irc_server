@@ -24,9 +24,9 @@ CommandUser::~CommandUser()
 uint					CommandUser::operator()(NetworkEntity & executor, std::string params)
 {
 	if (this->getServer()._entities.count(executor.getUID()) != 0)
-		return this->getServer()._sendMessage(executor, ERR_ALREADYREGISTRED());
-	else if (executor.getType() & UnregisteredConnection::value_type)
-		return _commandUSERunknown(static_cast<UnRegisteredConnection&>(executor));
+		this->getServer()._sendMessage(executor, ERR_ALREADYREGISTRED());
+	else if (executor.getType() & UnRegisteredConnection::value_type)
+		return this->_commandUSERunknown(static_cast<UnRegisteredConnection&>(executor), params);
 	else
 	{
 		Logger::critical("Error: Invalid familly/type: " + ntos(executor.getFamily()) + "/" + ntos(executor.getType()));
@@ -50,23 +50,27 @@ bool				CommandUser::hasPermissions(AEntity & executor)
 	return true;
 }
 
-uint				CommandUser::_commandUSERunknown(UnRegisteredConnection * executor, std::string params)
+uint				CommandUser::_commandUSERunknown(UnRegisteredConnection & executor, std::string params)
 {
 	if (Parser::nbParam(params) < 4)
-		return this->_sendMessage(executor, ERR_NEEDMOREPARAMS("USER"));
+	{
+		this->getServer()._sendMessage(executor, ERR_NEEDMOREPARAMS(std::string("USER")));
+		return SUCCESS;
+	}
 	else if (executor.getUID().empty() == true)
 		return SUCCESS;
 	std::string username = Parser::getParam(params, 0);
 	//REVIEW set more params syntax check
 	if (Parser::validUser(username) == false)
 		return SUCCESS;
-	Client *new_client = Client(this->getServer(), 
+	//REVIEW catch throw in stoi
+	Client *new_client = new Client(this->getServer(),
 								executor,
-								Parser::getParam(params, 1),
+								std::stoi(Parser::getParam(params, 1)),
 								Parser::getParam(params, 3));
 	new_client->setName(username);
-	this->_addClient(executor);
-	Logger::info("new user registered: " + new_client.getNickname());
+	this->getServer()._addClient(*new_client, &executor);
+	Logger::info("new user registered: " + new_client->getUID());
 	return SUCCESS;
 }
 

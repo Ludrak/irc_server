@@ -9,7 +9,7 @@ Server::Server(
     const std::string &flags
 ) 
 :   NetworkEntity(serv.getStream(), token, Server::value_type_forward),
-    ServerInfo(info, serv.getVersion(), host)
+    ServerInfo(info, serv.getVersion(), host, flags)
 {
     this->setPassword(serv.getPassword());
     this->setName(name);

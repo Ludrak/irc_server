@@ -77,6 +77,8 @@ uint			CommandHandler::handle(NetworkEntity & executor, std::string data)
 			Logger::debug("command " + command + " (" + executor.getStream().getIP() + ")");
 			return cmd(executor, data.substr(command.size() + 1, data.size() - (command.size() + 1)));
 		}
+		else
+			Logger::warning("Not enought privilegies for: " + command);
 	}
 
 	this->_server._sendMessage(executor, ERR_UNKNOWNCOMMAND(command));

@@ -31,8 +31,8 @@ class ServerInfo
 	protected:
 		std::string			_info;
 		std::string			_version;
-		std::string			_flags;
 		std::string			_host;
+		std::string			_flags;
 };
 
 #endif //SERVERINFO_HPP

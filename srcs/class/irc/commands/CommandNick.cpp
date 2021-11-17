@@ -24,19 +24,29 @@ CommandNick::~CommandNick()
 uint					CommandNick::operator()(NetworkEntity & executor, std::string params)
 {
 	if (executor.getPassword() != this->getServer()._password)
+	{
+		Logger::error("Nick: invalid password/" + executor.getPassword() + "/" + this->getServer()._password);
 		return SUCCESS;
+	}
 	else if (executor.getFamily() == SERVER_ENTITY_FAMILY)
 		return this->_nickFromServer(static_cast<Server &>(executor), params);
 	else if (Parser::nbParam(params) == 0) 
 	{
+		Logger::warning("NickFromUnregistered");
 		this->getServer()._sendMessage(executor, ERR_NONICKNAMEGIVEN()); //TODO handle Nick other params coming from server
 		return EXIT_FAILURE;
 	}	
 	std::string nick = Parser::getParam(params, 0);
 	if (Parser::validNickname(nick) == false)
+	{
 		this->getServer()._sendMessage(executor, ERR_ERRONEUSNICKNAME(nick));
+		return SUCCESS;
+	}
 	else if (this->getServer().alreadyInUseUID(nick) == true)
+	{
 		this->getServer()._sendMessage(executor, ERR_NICKNAMEINUSE(nick));
+		return SUCCESS;
+	}
 	else if (executor.getType() & UnRegisteredConnection::value_type)
 		return this->_nickFromUnregistered(static_cast<UnRegisteredConnection &>(executor), nick);
 	else if (executor.getFamily() == CLIENT_ENTITY_FAMILY)
@@ -55,6 +65,8 @@ uint					CommandNick::operator()(NetworkEntity & executor, std::string params)
 
 uint				CommandNick::_nickFromUnregistered(UnRegisteredConnection & executor, std::string & nick)
 {
+	Logger::warning("NickFromUnregistered");
+
 	executor.setUID(nick);
 	return SUCCESS;
 }

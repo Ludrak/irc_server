@@ -103,21 +103,21 @@ command and isn't found.
 characters which do not fall in the defined set.  See
 section x.x.x for details on valid nicknames.
 */
-# define ERR_ERRONEUSNICKNAME(A) "432 :" + A + " Erroneus nickname"
+# define ERR_ERRONEUSNICKNAME(A) "432 " + A + " :Erroneus nickname"
 
 
 /* Returned when a NICK message is processed that results
 in an attempt to change to a currently existing
 nickname.
 */
-# define ERR_NICKNAMEINUSE(A) "433 :" + A + " Nickname is already in use"
+# define ERR_NICKNAMEINUSE(A) "433 " + A + " :Nickname is already in use"
 
 
 /* Returned by a server to a client when it detects a
 nickname collision (registered of a NICK that
 already exists by another server).
 */
-# define ERR_NICKCOLLISION(A) "436 :" + A + " Nickname collision KILL"
+# define ERR_NICKCOLLISION(A) "436 " + A + " :Nickname collision KILL"
 
 
 /* Returned by the server to indicate that the target

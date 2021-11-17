@@ -104,7 +104,8 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 /*
 ** ---------------------------- Client Management -----------------------------
 */
-		void				_addClient(AEntity &client);
+
+		void				_addClient(AEntity &client, UnRegisteredConnection * executor);
 		void				_addServer(AEntity &server);
 		void				_deleteClient(const std::string &nick);
 		void				_deleteServer(const std::string &token);
@@ -135,6 +136,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		friend class CommandPass;
 		friend class CommandNick;
 		friend class CommandUser;
+		friend class CommandPrivmsg;
 
 };
 
