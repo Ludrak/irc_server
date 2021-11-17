@@ -34,11 +34,6 @@ class CommandHandler;
 
 class IRCServer : public ANode, public AEntity, public ServerInfo
 {
-	friend class CommandHandler;
-	friend class CommandPass;
-	friend class CommandNick;
-	friend class CommandUser;
-
 	public:
 		static const uint	value_type;
 
@@ -101,16 +96,19 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		void				_onClientJoin( SockStream &s );
 		void				_onClientRecv( SockStream &s, Package &pkg );
 		void				_onClientQuit( SockStream &s );
+
 		void				_onRecv( SockStream &server,  Package &pkg );
 		void				_onConnect ( SockStream &server );
 		void				_onQuit( SockStream &server );
 
 /*
-** --------------------------------- SocketAction ---------------------------------
+** ---------------------------- Client Management -----------------------------
 */
+		void				_addClient(AEntity &client);
+		void				_addServer(AEntity &server);
+		void				_deleteClient(const std::string &nick);
+		void				_deleteServer(const std::string &token);
 
-//TODO remove _reply
-		bool				_reply(Client & client, ushort statusCode, std::string target = "", std::string target2 = "");
 		AEntity				*_registerClient(AEntity & client, int type);
 		void				_registerServer(AEntity & server, int type);
 		void				_sendMessage(AEntity & target, const std::stringstream &message, const AEntity *except=NULL);
@@ -119,13 +117,25 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		void				_sendMessage(SockStream & target, const std::string &message);
 
 /*
-** --------------------------------- DEBUG ---------------------------------
+** ----------------------------------- DBG ---------------------------------
 */
 		void				_printServerState( void );
 /*
 ** --------------------------------- COMMANDS ---------------------------------
 */
 		void				_initCommands(void);
+
+		/* CommandHandler is friend so that it can access server maps & other method */
+		/* even if they're not public, this means that the server fields will still  */
+		/* be protected by IRCServer without having to pass a reference to 			 */
+		/* CommandHandler -> ACommand -> CommandX to get fields from IRCServer	     */
+		friend class CommandHandler;
+		/* friend keyword does'nt support inheritance so we have to friend every     */
+		/* command class                                                             */
+		friend class CommandPass;
+		friend class CommandNick;
+		friend class CommandUser;
+
 };
 
 #endif /* ******************************************************* IRCSERVER_H */

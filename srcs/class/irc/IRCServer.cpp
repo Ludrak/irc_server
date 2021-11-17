@@ -1,6 +1,6 @@
 #include "IRCServer.hpp"
 
-const uint				IRCServer::value_type = 1333;
+const uint				IRCServer::value_type = 42;
 
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
@@ -23,6 +23,8 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
 
+
+
 IRCServer::~IRCServer()
 {
 	// delete all entities
@@ -32,9 +34,13 @@ IRCServer::~IRCServer()
 	}
 }
 
+
+
 /*
 ** --------------------------------- METHODS ----------------------------------
 */
+
+
 
 // TODO REFRACTOR
 void			IRCServer::_printServerState( void )
@@ -66,6 +72,9 @@ void			IRCServer::_printServerState( void )
 	// }
 }
 
+
+
+
 bool							IRCServer::connectToNetwork(const std::string & host, ushort port, std::string & password)
 {
 	// this->_forword_socket = new SockStream(host, port);
@@ -83,8 +92,7 @@ bool							IRCServer::connectToNetwork(const std::string & host, ushort port, st
 	}
 	catch (const AClient::ConnectionException &e)
 	{
-		// connection exception, we are root on that server
-
+		// connection exception, we are root on that server until another connection succeeds
 		Logger::info ("Forward connection failed: running server as root node");
 		return false;
 	}
@@ -93,96 +101,103 @@ bool							IRCServer::connectToNetwork(const std::string & host, ushort port, st
 
 
 
-// REVIEW REFRACTORED
-AEntity						*IRCServer::_registerClient(AEntity & entity, int type)
-{
-	int t = type & ~AEntity::value_type & ~NetworkEntity::value_type & ~RelayedEntity::value_type;
-	switch (t)
+
+/*
+** ----------------------------- Client management --------------------------------
+*/
+
+
+
+void							IRCServer::_addClient(AEntity &client)
+{	
+	if (client.getFamily() == CLIENT_ENTITY_FAMILY)
 	{
-		/* register client from UnRegisteredConnection */
-		/* UnRegisteredConnection must have all infomations to create a client now */
-		case Client::value_type:
+		bool already_exists;
+
+		already_exists = this->_entities.insert(std::make_pair(client.getUID(), &client)).second;
+		if (already_exists)
 		{
-			//REVIEW use reinterpret_cast here instead of dynamic_cast
-			UnRegisteredConnection *connection = dynamic_cast<UnRegisteredConnection*>(&entity);
-			if (connection == NULL)
-			{
-				Logger::critical("client registered from unregistered connection isn't already connected");
-				return NULL;
-			}
-			Client	*client = new Client(*this, *connection, 0, "real_name");
-			this->_clients.insert(std::make_pair(client->getUID(), client));
-			this->_entities.insert(std::make_pair(client->getUID(), client));
-			//TODO delete the lost UnRegisteredConnection
-			this->_unregistered_connections.erase(&connection->getStream());
-			Logger::info ("new user joined : " + client->getName() + " (" + client->getUID() + "@" + client->getStream().getIP() + ")");
-			return client;
+			Logger::critical("double insertion in _entities: trying to add a new client to an already used nickname");
+			return;
 		}
-		
-		/* register client from RelayedClient */
-		/* in here we assume that the RelayedClient has successfully been created */
-		case RelayedClient::value_type:
+		already_exists = this->_clients.insert(std::make_pair(client.getUID(), &client)).second;
+		if (already_exists)
 		{
-			//REVIEW use reinterpret_cast here instead of dynamic_cast
-			RelayedClient *relay_client = dynamic_cast<RelayedClient*>(&entity);
-			this->_clients.insert(std::make_pair(relay_client->getUID(), relay_client));
-			this->_entities.insert(std::make_pair(relay_client->getUID(), relay_client));
-			Logger::info ("new user joined : " + relay_client->getName() + " (" + relay_client->getUID() + "@" + relay_client->getServer().getStream().getIP() + " is " + ntos(relay_client->getHopCount()) + " hops(s) away)");
-			return relay_client;
+			Logger::critical("double insertion in _clients: trying to add a new client to an already used nickname");
+			return;
 		}
-		default:
-			Logger::critical("setting as registered a client with an unknown type: " + ntos(type));
-			return NULL;
+		return ;
 	}
-	return NULL;
+	Logger::critical("bad entity insertion: trying to add a non-client family entity to _addClient()");
 }
 
-//REVIEW NEW
-void							IRCServer::_registerServer(AEntity &entity, const int type)
-{
-	int t = type & ~AEntity::value_type & ~NetworkEntity::value_type & ~RelayedEntity::value_type;
-	switch (t)
+
+
+void							IRCServer::_addServer(AEntity &server)
+{	
+	if (server.getFamily() == SERVER_ENTITY_FAMILY)
 	{
-		/* register server from UnRegisteredConnection */
-		/* UnRegisteredConnection must have all infomations to create a server now */
-		case Server::value_type:
-		{
-			UnRegisteredConnection *connection = dynamic_cast<UnRegisteredConnection*>(&entity);
-			if (connection == NULL)
-			{
-				Logger::critical("client registered from unregistered connection isn't already connected");
-				return ;
-			}
-			Server *server = new Server(*connection, "token", "name", "info", "hostname");
-			this->_servers.insert(std::make_pair(server->getUID(), server));
-			this->_entities.insert(std::make_pair(server->getUID(), server));
-			this->_unregistered_connections.erase(&connection->getStream());
-			Logger::info ("new server connected to network : " + server->getName() + " (" + server->getUID() + "@" + server->getStream().getIP() + ")");
-			break;
-		}
+		bool already_exists;
 
-		/* register server from RelayedServer */
-		/* in here we assume that the RelayedServer has successfully been created */
-		case RelayedServer::value_type:
+		already_exists = this->_entities.insert(std::make_pair(server.getUID(), &server)).second;
+		if (already_exists)
 		{
-			RelayedServer *relay_server = dynamic_cast<RelayedServer*>(&entity);
-			this->_servers.insert(std::make_pair(relay_server->getUID(), relay_server));
-			this->_entities.insert(std::make_pair(relay_server->getUID(), relay_server));
-			Logger::info ("new server connected to network : " + relay_server->getName() + " (" + relay_server->getUID() + "@" + relay_server->getServer().getStream().getIP() + " is " + ntos(relay_server->getHopCount()) + " hops(s) away)");
-			break;
+			Logger::critical("double insertion in _entities: trying to add a new server to an already used nickname");
+			return;
 		}
-
-		default:
-			Logger::critical("setting as registered a server with an unknown type: " + ntos(type));
-			return ;
+		already_exists = this->_servers.insert(std::make_pair(server.getUID(), &server)).second;
+		if (already_exists)
+		{
+			Logger::critical("double insertion in _servers: trying to add a new server to an already used nickname");
+			return;
+		}
+		return ;
 	}
+	Logger::critical("bad entity insertion: trying to add a non-server family entity to _addServer()");
 }
 
-// TODO REFRACTOR ALL
-// REVIEW UGLY REFRACTORED VERSION
+
+
+void							IRCServer::_deleteClient(const std::string &nick)
+{
+	if (this->_entities.count(nick) == 1)
+	{
+		delete this->_entities[nick];
+		this->_entities.erase(nick);
+		if (this->_clients.erase(nick) != 1)
+		{
+			Logger::critical("bad deletion in _clients: trying to delete a new client which does not exist");
+			return;
+		}
+		return ;
+	}
+	Logger::critical("bad deletion in _entity: trying to delete a new client which does not exist");
+}
+
+
+
+void							IRCServer::_deleteServer(const std::string &nick)
+{
+	if (this->_entities.count(nick) == 1)
+	{
+		delete this->_entities[nick];
+		this->_entities.erase(nick);
+		if (this->_servers.erase(nick) != 1)
+		{
+			Logger::critical("bad deletion in _servers: trying to delete a new server which does not exist");
+			return;
+		}
+		return ;
+	}
+	Logger::critical("bad deletion in _entity: trying to delete a new server which does not exist");
+}
+
+
+
+
+
 void							IRCServer::_sendMessage(AEntity & target, const std::string &message, const AEntity *except)
 {
-	//TODO add server prefix
 	int type = target.getType() & ~AEntity::value_type & ~NetworkEntity::value_type & ~RelayedEntity::value_type;
 	switch (type)
 	{
@@ -233,16 +248,24 @@ void							IRCServer::_sendMessage(AEntity & target, const std::string &message,
 	}
 }
 
+
+
 void							IRCServer::_sendMessage(AEntity & target, const std::stringstream &message, const AEntity *except)
 {
 	this->_sendMessage(target, message.str(), except);
 }
+
+
+
 
 void							IRCServer::_sendMessage(SockStream & target, const std::stringstream &message)
 {
 	Package *pkg = new Package(this->_protocol, this->_protocol.format(message.str()), &target);
 	this->sendPackage(pkg, target);
 }
+
+
+
 
 void							IRCServer::_sendMessage(SockStream & target, const std::string &message)
 {
@@ -251,13 +274,14 @@ void							IRCServer::_sendMessage(SockStream & target, const std::string &messa
 }
 
 
+
 /*
-** --------------------------------- EVENTS ----------------------------------
+** ----------------------------- Server events ----------------------------------
 */
 
-/***** Server events *****/
 
-// REVIEW REFRACTORED
+
+
 void						IRCServer::_onClientJoin(SockStream & s)
 {
 	UnRegisteredConnection *connection(new UnRegisteredConnection(s));
@@ -268,7 +292,8 @@ void						IRCServer::_onClientJoin(SockStream & s)
 }
 
 
-// REVIEW REFRACTORED
+
+
 void							IRCServer::_onClientRecv(SockStream & s, Package & pkg)
 {
 	NetworkEntity *entity = getEntityByStream(s);
@@ -278,6 +303,8 @@ void							IRCServer::_onClientRecv(SockStream & s, Package & pkg)
 	if (ret)
 		Logger::error("something bad happened in handler");
 }
+
+
 
 
 // TODO REFRACTOR ALL
@@ -327,7 +354,13 @@ void							IRCServer::_onClientQuit(SockStream &s)
 	}*/
 }
 
+
+
+
 /***** Client events *****/
+
+
+
 
 // TODO REFRACTOR AND HANDLE FORWARD
 void						IRCServer::_onRecv(SockStream &server, Package &pkg)
@@ -336,6 +369,9 @@ void						IRCServer::_onRecv(SockStream &server, Package &pkg)
 	(void)pkg;	
 	Logger::warning("TODO HANDLE server received");
 }
+
+
+
 
 // TODO REFRACTOR AND HANDLE FORWARD
 void				IRCServer::_onConnect ( SockStream &server)
@@ -347,6 +383,9 @@ void				IRCServer::_onConnect ( SockStream &server)
 	this->_sendMessage(server, ss);
 }
 
+
+
+
 // TODO REFRACTOR AND HANDLE FORWARD
 void				IRCServer::_onQuit( SockStream &server)
 {
@@ -355,10 +394,16 @@ void				IRCServer::_onQuit( SockStream &server)
 	Logger::warning("TODO handle netsplit with forward network");
 }
 
+
+
+
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
 */
-// REVIEW REFRACTORED
+
+
+
+
 NetworkEntity*						IRCServer::getEntityByStream(SockStream & s)
 {
 	/* get in unregistered list */
@@ -371,10 +416,16 @@ NetworkEntity*						IRCServer::getEntityByStream(SockStream & s)
 	return (NULL);
 }
 
+
+
+
 const IProtocol&				IRCServer::getProtocol( void ) const
 {
 	return this->_protocol;
 }
+
+
+
 
 UnRegisteredConnection*		IRCServer::getUnRegisteredConnectionByUID(std::string UID)
 {
@@ -386,9 +437,15 @@ UnRegisteredConnection*		IRCServer::getUnRegisteredConnectionByUID(std::string U
 	return NULL;
 }
 
+
+
+
 /*
 ** --------------------------------- COMMANDS ---------------------------------
 */
+
+
+
 
 void							IRCServer::_initCommands( void )
 {
@@ -401,6 +458,9 @@ void							IRCServer::_initCommands( void )
 	// this->_handle.addCommand<CommandMode>("MODE");
 
 }
+
+
+
 
 bool							IRCServer::alreadyInUseUID(std::string & uid) const 
 {
@@ -416,7 +476,9 @@ bool							IRCServer::alreadyInUseUID(std::string & uid) const
 	return false;
 }
 
-// REVIEW NEW
+
+
+
 // prefix format -> :<server_uid>[!<user_uid>@<host_uid>]SPACE
 std::string							IRCServer::makePrefix(const AEntity *user, const AEntity *host_server)
 {
@@ -436,7 +498,9 @@ std::string							IRCServer::makePrefix(const AEntity *user, const AEntity *host
 	return (prefix);
 }
 
-// REVIEW NEW
+
+
+
 // prefix format -> :<server_uid>[!<user_uid>@<host_uid>]SPACE
 bool								IRCServer::parsePrefix(const std::string &prefix, Server **const sender_server, RelayedClient **const user, RelayedServer **const host_server)
 {
@@ -487,180 +551,5 @@ bool								IRCServer::parsePrefix(const std::string &prefix, Server **const sen
 	}
 	return (true);
 }
-
-// REVIEW REFRACTORED FOR NEW ARCH                   
-// INFO : we need to be able to execute any command for any clients type
-// INFO : RelayedClient and RelayedServer just need to send back the command to target server
-// int			IRCServer::execute(AEntity *e, std::string data)
-// {
-// 	Server			*sender = NULL;
-// 	AEntity			*client = NULL;
-// 	AEntity			*client_host = NULL;
-// 	if (data[0] == ':')
-// 	{
-// 		this->parsePrefix(data.substr(0, data.find(" ")), &sender, reinterpret_cast<RelayedClient**>(&client), reinterpret_cast<RelayedServer**>(&client_host));
-// 		data = data.substr(data.find(" ") + 1, data.size() - data.find(" ") - 1);
-// 		if (sender == NULL)
-// 			return (1);
-// 	}
-// 	std::string command = data.substr(0, data.find(" "));
-
-// 	if (e->getType() & Client::value_type || client)
-// 	{
-// 		/* no prefix defined so we use executor */
-// 		if (!client)
-// 			client = reinterpret_cast<Client*>(e);
-		
-// 		/* check if command is part of list of operations */
-// 		if (this->_userCommands.count(command) == 0)
-// 		{
-// 			if (client->getType() & Client::value_type)
-// 			{
-// 				Logger::debug("user sent command not found (" + client->getUID() + "@" + reinterpret_cast<Client*>(client)->getStream().getIP() + ")");
-// 				std::stringstream ss(ERR_UNKNOWNCOMMAND(data)); 
-// 				this->_sendMessage(reinterpret_cast<Client*>(client)->getStream(), ss);
-// 			}
-// 			else if (client->getType() & RelayedClient::value_type)
-// 			{
-// 				Logger::debug("relayed user sent unknown command (" + client->getUID() + "@" + reinterpret_cast<RelayedClient*>(client)->getServer().getStream().getIP() + ")");
-// 				std::stringstream ss(ERR_UNKNOWNCOMMAND(data)); 
-// 				this->_sendMessage(reinterpret_cast<RelayedClient*>(client)->getServer().getStream(), ss);
-// 			}
-// 			return (1);
-// 		}
-// 		/* execute command from command list */
-// 		return ((this->*(_userCommands[command]))(*client, data.substr(command.size() + 1, data.size() - (command.size() + 1))));
-// 	}
-// 	else if ((e->getFamily() & SERVER_ENTITY_FAMILY) && sender)
-// 	{
-// 		/* check if command is part of list of operations */
-// 		if (this->_serverCommands.count(command) == 0)
-// 		{
-// 			if (e->getType() & Server::value_type)
-// 			{
-// 				Logger::debug("server sent unknown command (" + e->getUID() + "@" + reinterpret_cast<Server*>(client)->getStream().getIP() + ")");
-// 				std::stringstream ss(ERR_UNKNOWNCOMMAND(data)); 
-// 				this->_sendMessage(reinterpret_cast<Server*>(client)->getStream(), ss);
-// 			}
-// 			else if (client->getType() == RelayedServer::value_type)
-// 			{
-// 				Logger::debug("relayed server sent unknown command  (" + client->getUID() + "@" + reinterpret_cast<RelayedServer*>(client)->getServer().getStream().getIP() + ")");
-// 				std::stringstream ss(ERR_UNKNOWNCOMMAND(data)); 
-// 				this->_sendMessage(reinterpret_cast<RelayedServer*>(client)->getServer().getStream(), ss);
-// 			}
-// 			return (1);
-// 		}
-// 		/* execute command from command list */
-// 		return ((this->*(_serverCommands[command]))(*client, data.substr(command.size() + 1, data.size() - (command.size() + 1))));
-// 	}
-// 	// TODO ADD UNREGISTERED                                
-// 	// TODO find a way to fit all 3 client types in one call
-// 	Logger::critical("Command '" + command + "' has no viable executor");
-// 	return (1);
-// }
-
-// TODO REFRACTOR ALL
-// TODO (still) move away ! 
-// uint		IRCServer::_commandSERVER(Client & client, std::string cmd)
-// {
-// 	//TODO see what to do when no param specified
-// 	Logger::debug("<" + ntos(client.getStream().getSocket()) + "> Command<SERVER> with args: " + cmd );
-// 	if (Parser::nbParam(cmd) < 4)
-// 		return SUCCESS;
-// 	std::string	serverName = Parser::getParam(cmd, 0);
-// 	int			hopCount = std::stoi(Parser::getParam(cmd, 1));
-// 	std::string	info = Parser::getParam(cmd, 3);
-	
-// 	uint token = 0;
-// 	try
-// 	{
-// 		token = std::stoi(Parser::getParam(cmd, 2));
-// 		if (token > 999)
-// 			throw ;
-// 	}
-// 	catch(const std::exception& e)
-// 	{
-// 		// TODO invalid token ?
-// 		Logger::error ("Server trying to connect has invalid token: \"" + Parser::getParam(cmd, 2) + "\"");
-// 		return (SUCCESS);
-// 	}
-
-// 	if (token == this->_token || this->_ircClients.count(std::to_string (token)) == 1)
-// 	{
-// 		Logger::error("already regristered server ! (" + client.getStream().getIP() + ")");
-// 		Logger::error("closing connection to " + client.getStream().getIP() + " to preserve network stability.");
-// 		//TODO this->disconnect(client.getStream());
-// 		return ERR_ALREADYREGISTRED;
-// 	}
-// 	if (client.getType() == Client::value_type_unknown)
-// 	{
-// 		if (hopCount != 0)
-// 		{
-// 			/* cannot introduce new server behind while not regristered */
-// 			Logger::error ("unregistered client tries to introduce new server behind himself");
-// 			return (SUCCESS); // ?
-// 		}
-// 		else
-// 		{
-// 			client.setNickname(serverName);
-// 			client.setHopCount(hopCount);
-// 			client.setSID(std::to_string(token));
-// 			client.setServerDescription(info);
-// 			this->_setRegistered(client, Client::value_type_server);
-// 			this->_printServerState();
-// 			Logger::info("new server connected to network: " + serverName + " (" + client.getSID() + "@" + client.getStream().getIP() + ")");
-// 		}
-// 	}
-// 	else if (hopCount == 0)
-// 	{
-
-// 		/* server trying to register twice */
-// 		Logger::error("Server " + client.getSID() + "@" + client.getStream().getIP() + " tried to register twice");
-// 		return (SUCCESS); // ?
-// 	}
-// 	else if (hopCount > 0)
-// 	{
-// 		/* 
-// 		** if server_reference was registered by client we need to pass it a reference 
-// 		** to it's sockstream so that we can communicate with it later easily
-// 		*/ 
-// 		Client *server_reference = new Client(client.getStream());
-// 		server_reference->setNickname(serverName);
-// 		server_reference->setHopCount(hopCount);
-// 		server_reference->setSID(std::to_string(token));
-// 		server_reference->setServerDescription(info);
-// 		server_reference->setRelayed(true);
-// 		this->_setRegistered(*server_reference, Client::value_type_server);
-// 		this->_printServerState();
-// 		Logger::info("new server connected to sub network: " + serverName + " (" + server_reference->getSID() + "@" + server_reference->getStream().getIP() + " is " + ntos(hopCount) + " hop(s) away)");
-// 	}
-
-// 	// relay to forward and all connected servers
-// 	// meantime relay all infos about our connections to new server
-// 	std::stringstream relay_all_ss;
-// 	relay_all_ss << "SERVER " << serverName << " " << (hopCount + 1) << " " << token << " :" << info;
-// 	if (this->_forwardSocket != 0)
-// 	{
-// 		Logger::debug("relaying server connection to forward server (" + this->_sockets[this->_forwardSocket]->getIP() + ")");
-// 		this->_sendMessage(*this->_sockets[this->_forwardSocket], relay_all_ss);
-// 		//relay_new_ss << "SERVER " <<  << " " << (hopCount + 1) << " " << token << " :" << info;
-// 		// TODO SEND / RECV FORWARD INFORMATIONS
-// 	}
-// 	for (std::map<std::string, AEntity *>::iterator it = this->_ircClients.begin(); it != this->_ircClients.end(); it++)
-// 	{
-// 		if (it->second->getType() == Client::value_type_server && reinterpret_cast<Client*>(it->second)->getSID() != client.getSID())
-// 		{
-// 			Client *srv = reinterpret_cast<Client*>(it->second);
-// 			Logger::debug("relaying server connection to connected server (" + srv->getStream().getIP() + ")");
-// 			this->_sendMessage(*it->second, relay_all_ss);
-// 			// TODO how to implement multiple backward relays
-			
-// 			//std::stringstream relay_new_ss;
-// 			//relay_new_ss << "SERVER " << srv->getNickname() << " " << srv->getHopCount() + 1 << " " << srv->getSID() << " :" << srv->getServerDescription();
-// 			//this->_sendMessage(*server_reference, relay_new_ss);
-// 		}
-// 	}
-// 	return (SUCCESS);
-// }
 
 /* ************************************************************************** */
