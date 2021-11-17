@@ -22,6 +22,4 @@ class CommandJoin : public ACommand
 
 };
 
-std::ostream &			operator<<( std::ostream & o, CommandJoin const & i );
-
 #endif /* ***************************************************** COMMANDJOIN_HPP */

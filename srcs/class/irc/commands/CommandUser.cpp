@@ -63,14 +63,18 @@ uint				CommandUser::_commandUSERunknown(UnRegisteredConnection & executor, std:
 	//REVIEW set more params syntax check
 	if (Parser::validUser(username) == false)
 		return SUCCESS;
-	//REVIEW catch throw in stoi
-	Client *new_client = new Client(this->getServer(),
-								executor,
-								std::stoi(Parser::getParam(params, 1)),
-								Parser::getParam(params, 3));
-	new_client->setName(username);
-	this->getServer()._addClient(*new_client, &executor);
-	Logger::info("new user registered: " + new_client->getUID());
+	try {
+		Client *new_client = new Client(this->getServer(),
+									executor,
+									std::stoi(Parser::getParam(params, 1)),
+									Parser::getParam(params, 3));
+		new_client->setName(username);
+		this->getServer()._addClient(*new_client, &executor);
+		Logger::info("new user registered: " + new_client->getUID());
+	} catch (const std::invalid_argument & e)
+	{
+		Logger::debug("Invalid mode argument (not a number)");
+	}
 	return SUCCESS;
 }
 

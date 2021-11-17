@@ -6,18 +6,18 @@
 /* Used to indicate the nickname parameter supplied to a
 command is currently unused.
 */
-# define ERR_NOSUCHNICK(A) "401 :" + A + " No such nick/channel"
+# define ERR_NOSUCHNICK(A) "401 " + A + " :No such nick/channel"
 
 
 /* Used to indicate the server name given currently
 doesn't exist.
 */
-# define ERR_NOSUCHSERVER(A) "402 :" + A + " No such server"
+# define ERR_NOSUCHSERVER(A) "402 " + A + " :No such server"
 
 
 /* Used to indicate the given channel name is invalid.
 */
-# define ERR_NOSUCHCHANNEL(A) "403 :" + A + " No such channel"
+# define ERR_NOSUCHCHANNEL(A) "403 " + A + " :No such channel"
 
 
 /* Sent to a user who is either (a) not on a channel
@@ -25,14 +25,14 @@ which is mode +n or (b) not a chanop (or mode +v) on
 a channel which has mode +m set and is trying to send
 a PRIVMSG message to that channel.
 */
-# define ERR_CANNOTSENDTOCHAN(A) "404 :" + A + " Cannot send to channel"
+# define ERR_CANNOTSENDTOCHAN(A) "404 " + A + " :Cannot send to channel"
 
 
 /* Sent to a user when they have joined the maximum
 number of allowed channels and they try to join
 another channel.
 */
-# define ERR_TOOMANYCHANNELS(A) "405 :" + A + " You have joined too many channels"
+# define ERR_TOOMANYCHANNELS(A) "405 " + A + " :You have joined too many channels"
 
 
 /* Returned by WHOWAS to indicate there is no history
@@ -169,7 +169,7 @@ to be parsed in detail.
 indicate to the client that it didn't supply enough
 parameters.
 */
-# define ERR_NEEDMOREPARAMS(A) "461 :" + A + " Not enough parameters"
+# define ERR_NEEDMOREPARAMS(A) "461 " + A + " :Not enough parameters"
 
 
 /* Returned by the server to any link which tries to
@@ -203,11 +203,11 @@ explicitly deny connections to you.
 
 # define ERR_KEYSET(A) "467 :" + A + " Channel key already set"
 
-# define ERR_CHANNELISFULL(A) "471 :" + A + " Cannot join channel (+l)"
+# define ERR_CHANNELISFULL(A) "471 " + A + " :Cannot join channel (+l)"
 
-# define ERR_UNKNOWNMODE(A) "472 :" + A + " is unknown mode char to me"
+# define ERR_UNKNOWNMODE(A) "472 " + A + " :is unknown mode char to me"
 
-# define ERR_INVITEONLYCHAN(A) "473 :" + A + " Cannot join channel (+i)"
+# define ERR_INVITEONLYCHAN(A) "473 " + A + " :Cannot join channel (+i)"
 
 # define ERR_BANNEDFROMCHAN(A) "474 :" + A + " Cannot join channel (+b)"
 
@@ -224,7 +224,7 @@ MODE messages) must return this error if the client
 making the attempt is not a chanop on the specified
 channel.
 */
-# define ERR_CHANOPRIVSNEEDED(A) "482 :" + A + " You're not channel operator"
+# define ERR_CHANOPRIVSNEEDED(A) "482 " + A + " :You're not channel operator"
 
 
 /* Any attempts to use the KILL command on a server
