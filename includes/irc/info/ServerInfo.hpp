@@ -12,7 +12,8 @@ class ServerInfo
 		ServerInfo(
 			const std::string	&info,
 			const std::string	&version,
-			const std::string	&host
+			const std::string	&host,
+			const std::string	&flags
 		);
 
 		const std::string&	getInfo( void ) const;
