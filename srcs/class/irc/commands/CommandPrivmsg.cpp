@@ -48,12 +48,15 @@ uint					CommandPrivmsg::operator()(NetworkEntity & executor, std::string params
 				if (reinterpret_cast<Channel *>(target)->isRegistered(static_cast<Client&>(executor)) == false)
 				{
 					Logger::debug("Privmsg: not in channel");
-					this->getServer()._sendMessage(executor, ERR_CANNOTSENDTOCHAN(target->getUID()));
+					this->getServer()._sendMessage(executor.getStream(), ERR_CANNOTSENDTOCHAN(target->getUID()));
 					return SUCCESS;
 				}
 			}
 			Logger::info(executor.getUID() + " send message to " + target->getUID());
-			this->getServer()._sendMessage(*target, Parser::getParam(params, 1));
+			std::string msg = Parser::getParam(params, 1);
+			msg = this->getServer().makePrefix(&executor, &this->getServer()) + "PRIVMSG " + target->getUID() + " :" + msg;
+			Logger::debug(std::string("MSG = ") + msg);
+			this->getServer()._sendMessage(*target, msg);
 			break ;
 	}
 	return SUCCESS;

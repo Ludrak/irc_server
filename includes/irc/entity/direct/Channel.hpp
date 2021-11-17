@@ -30,6 +30,15 @@ class Channel : public AEntity, public ASockHandler, public ChannelInfo
 		bool				isRegistered(Client & client);
 		void				broadcastPackage(Package & pkg, const SockStream * except = NULL);
 		void            	delSocket(const SockStream &sock);
+	
+		std::list<Client *>::iterator		clientBegin( void );
+		std::list<Client *>::const_iterator	clientBegin( void ) const;
+		std::list<Client *>::iterator		clientEnd( void );
+		std::list<Client *>::const_iterator	clientEnd( void ) const;
+		std::list<Client *>::iterator		operatorBegin( void );
+		std::list<Client *>::const_iterator	operatorBegin( void ) const;
+		std::list<Client *>::iterator		operatorEnd( void );
+		std::list<Client *>::const_iterator	operatorEnd( void ) const;
 
 		//TODO := check for passing M_REGISTRATION_LIMITED to AEntity beacause used by Client too and add a test on this flag before sayin 'cannot inc or dec'
 	private:
