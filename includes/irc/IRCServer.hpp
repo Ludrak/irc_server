@@ -45,7 +45,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		IRCServer(ushort port = IRC_DEFAULT_PORT, const std::string &password = IRC_DEFAULT_PASS, const std::string &host = IRC_DEFAULT_HOST);
 		virtual ~IRCServer();
 
-		//bool				setNetworkConnection(const std::string & host, ushort port, std::string & password);
+		bool						connectToNetwork(const std::string & host, ushort port, std::string & password);
 		const IProtocol&			getProtocol( void ) const;
 		Channel*					getChannel(int ChannelUID);
 		NetworkEntity*				getEntityByStream(SockStream & s);

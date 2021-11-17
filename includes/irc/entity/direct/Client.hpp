@@ -15,7 +15,12 @@ class Client : public NetworkEntity, public ClientInfo
 		static const uint	value_type = CLIENT_ENTITY_TYPE;
 	
 	public:
-		Client (const UnRegisteredConnection &client);
+		Client(
+			const IRCServer                 &server_reference,
+			const UnRegisteredConnection    &client,
+			const uint                      mode,
+			const std::string               &real_name
+		);
 		~Client();
 };
 

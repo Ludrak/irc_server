@@ -10,8 +10,16 @@ class RelayedServer : public RelayedEntity, public ServerInfo
 	public:
 		static const uint		value_type = RELAYED_SERVER_ENTITY_TYPE;
 
-    public:
-        RelayedServer(Server &relay, const int hop, const std::string token, const std::string name, const std::string info, const std::string &password);
+		public:
+			RelayedServer(
+				Server              &relay,
+				const int           hop,
+				const std::string   &token,
+				const std::string   &name,
+				const std::string   &info,
+				const std::string   &version,
+				const std::string   &host
+			);
 };
 
 

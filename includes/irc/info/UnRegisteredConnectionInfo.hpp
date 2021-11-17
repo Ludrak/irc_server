@@ -3,7 +3,7 @@
 
 # include "CommonInfo.hpp"
 
-class UnRegisteredConnectionInfo : public CommonInfo
+class UnRegisteredConnectionInfo
 {
 	public:
 		const std::string&	getVersion( void ) const;

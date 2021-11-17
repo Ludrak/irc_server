@@ -1,31 +1,22 @@
 # include "ClientInfo.hpp"
 
-ClientInfo::ClientInfo(const std::string &name, const std::string &real_name, const uint &mode, const std::string &pass)
-: CommonInfo()
+ClientInfo::ClientInfo(
+	const std::string &real_name,
+	const uint mode,
+	const std::string &server_token,
+	const std::string &server_host
+)
+:	_mode(mode),
+	_realname(real_name),
+	_serverToken(server_token),
+	_host(server_host),
+	_serverOp(false),
+	_concurrentChannels(0),
+	_concurrentChannelsMax(NB_CLIENT_REGISTRATION_MAX)
 {
-	this->_name = name;
-	this->_realname = real_name;
-	this->_mode = mode;
-	this->_password = pass;
 }
 
-ClientInfo::ClientInfo(const UnRegisteredConnectionInfo &reference)
-: CommonInfo(),	_mode(0), _concurrentChannels(0), _concurrentChannelsMax(NB_CLIENT_REGISTRATION_MAX),
-_realname("default real name"), _serverToken("420"), _host("127.0.0.1"), _privilege(0)
-{
-	this->_name = reference.getName();
-	this->_password = reference.getPassword();
-}
-
-ClientInfo::ClientInfo(const ClientInfo &copy)
-: CommonInfo(),	_mode(copy.getMode()), _concurrentChannels(copy.getConcurrentChannels()), _concurrentChannelsMax(NB_CLIENT_REGISTRATION_MAX),
-_realname(copy.getRealname()), _serverToken(copy.getServerToken()), _host(copy.getHostname()), _privilege(copy.isPrivilegied())
-{
-	this->_name = copy.getName();
-	this->_password = copy.getPassword();
-}
-
-bool						ClientInfo::isFull( void ) const
+bool						ClientInfo::maxChannelAccessReached( void ) const
 {
 	return (this->_concurrentChannels == this->_concurrentChannelsMax);
 }
@@ -38,6 +29,26 @@ uint						ClientInfo::getConcurrentChannels( void ) const
 uint						ClientInfo::getConcurrentChannelsMax( void ) const
 {
 	return this->_concurrentChannelsMax;
+}
+
+void						ClientInfo::incrementJoinedChannels( void )
+{
+	if (this->_concurrentChannels == this->_concurrentChannelsMax)
+	{
+		Logger::critical("Incrementing number of joined channel at max value");
+		return;
+	}
+	this->_concurrentChannels++;
+}
+
+void						ClientInfo::decrementJoinedChannels( void )
+{
+	if (this->_concurrentChannels == 0)
+	{
+		Logger::critical("Decrementing number of joined channel at zero value");
+		return;
+	}
+	this->_concurrentChannels--;
 }
 
 /* mode */
@@ -71,18 +82,39 @@ const std::string&			ClientInfo::getRealname( void ) const
 	return this->_realname;
 }
 
+void						ClientInfo::setRealname( const std::string &realname )
+{
+	this->_realname = realname;
+}
+
 const std::string&			ClientInfo::getServerToken( void ) const
 {
-	return this->_serverToken;
+	return (this->_serverToken);
+}
+
+void						ClientInfo::setServerToken( const std::string &token )
+{
+	this->_serverToken = token;
 }
 
 const std::string&			ClientInfo::getHostname( void ) const
 {
-	return this->_host;
+	return (this->_host);
 }
 
-bool						ClientInfo::isPrivilegied( void ) const
+void						ClientInfo::setHostname( const std::string &host )
 {
-	return (this->_privilege > 0);
+	this->_host = host;
 }
+
+bool						ClientInfo::isServerOP( void ) const
+{
+	return (this->_serverOp > 0);
+}
+
+void						ClientInfo::setServerOP( const bool op )
+{
+	this->_serverOp = op;
+}
+
 
