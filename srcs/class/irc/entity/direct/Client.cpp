@@ -21,3 +21,24 @@ Client::~Client()
 {
 
 }
+
+const std::list<Channel*>	&Client::getChannels() const
+{
+    return (this->_channels);
+}
+
+
+int 						Client::joinChannel(Channel &channel)
+{
+    this->_channels.push_back(&channel);
+    if (!this->incrementJoinedChannels())
+        return (1);
+    if (!channel.incrementJoinedClients())
+        return (2);
+    return (0);
+}
+
+void                        Client::leaveAllChannels(void)
+{
+    this->_channels = std::list<Channel*>();
+}

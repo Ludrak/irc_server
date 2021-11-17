@@ -21,7 +21,15 @@ class Client : public NetworkEntity, public ClientInfo
 			const uint                      mode,
 			const std::string               &real_name
 		);
+
+		const std::list<Channel*>	&getChannels() const;
+		int							joinChannel(Channel &channel);
+		void                        leaveAllChannels(void);
+
 		~Client();
+	
+	private:
+		std::list<Channel*>		_channels;
 };
 
 #endif /* ********************************************************** CLIENT_H */

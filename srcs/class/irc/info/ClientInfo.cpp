@@ -31,24 +31,26 @@ uint						ClientInfo::getConcurrentChannelsMax( void ) const
 	return this->_concurrentChannelsMax;
 }
 
-void						ClientInfo::incrementJoinedChannels( void )
+bool						ClientInfo::incrementJoinedChannels( void )
 {
 	if (this->_concurrentChannels == this->_concurrentChannelsMax)
 	{
 		Logger::critical("Incrementing number of joined channel at max value");
-		return;
+		return false;
 	}
 	this->_concurrentChannels++;
+	return true;
 }
 
-void						ClientInfo::decrementJoinedChannels( void )
+bool						ClientInfo::decrementJoinedChannels( void )
 {
 	if (this->_concurrentChannels == 0)
 	{
 		Logger::critical("Decrementing number of joined channel at zero value");
-		return;
+		return false;
 	}
 	this->_concurrentChannels--;
+	return true;
 }
 
 /* mode */

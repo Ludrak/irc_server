@@ -135,6 +135,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		friend class CommandPass;
 		friend class CommandNick;
 		friend class CommandUser;
+		friend class CommandJoin;
 
 };
 

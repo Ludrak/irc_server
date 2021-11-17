@@ -23,8 +23,8 @@ class ClientInfo
 		bool				maxChannelAccessReached( void ) const;
 		uint				getConcurrentChannels( void ) const; 
 		uint				getConcurrentChannelsMax( void ) const;
-		void				incrementJoinedChannels( void );
-		void				decrementJoinedChannels( void );
+		bool				incrementJoinedChannels( void );
+		bool				decrementJoinedChannels( void );
 
 		/* mode */
 		uint				getMode( void ) const;
