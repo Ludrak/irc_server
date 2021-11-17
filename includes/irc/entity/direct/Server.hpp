@@ -20,7 +20,8 @@ class Server : public NetworkEntity, public ServerInfo
 			const std::string &token,
 			const std::string &name,
 			const std::string &info,
-			const std::string &host
+			const std::string &host,
+			const std::string &flags
 		);
 };
 

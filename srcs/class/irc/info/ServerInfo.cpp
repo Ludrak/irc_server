@@ -3,11 +3,13 @@
 ServerInfo::ServerInfo(
 	const std::string	&info,
 	const std::string	&version,
-	const std::string	&host
+	const std::string	&host,
+	const std::string	&flags
 )
 :	_info(info),
 	_version(version),
-	_host(host)
+	_host(host),
+	_flags(flags)
 {
 }
 

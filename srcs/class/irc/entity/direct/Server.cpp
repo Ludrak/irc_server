@@ -5,7 +5,8 @@ Server::Server(
     const std::string &token,
     const std::string &name,
     const std::string &info,
-    const std::string &host
+    const std::string &host,
+    const std::string &flags
 ) 
 :   NetworkEntity(serv.getStream(), token, Server::value_type_forward),
     ServerInfo(info, serv.getVersion(), host)

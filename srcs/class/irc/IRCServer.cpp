@@ -8,7 +8,7 @@ const uint				IRCServer::value_type = 1333;
 //REVIEW Server name maximum 63 character
 // TODO set server token, name & info 
 IRCServer::IRCServer(ushort port, const std::string & password, const std::string &host)
-: ASockManager(), ANode(host), AEntity(IRCServer::value_type, "token"), ServerInfo("name", "info", "pass"), _handler(*this), _protocol()
+: ASockManager(), ANode(host), AEntity(IRCServer::value_type, "token"), ServerInfo("name", "info", "pass", "IRC|amazircd"), _handler(*this), _protocol()
 {
 	this->_initCommands();
 	Logger::debug("IRCServer constructor");
