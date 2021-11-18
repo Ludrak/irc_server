@@ -22,7 +22,7 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 	Logger::info("IRC Server:");
 	Logger::info("- host     : " + ntos(host));
 	Logger::info("- port     : " + ntos(port));
-	Logger::info("- password :" + ntos(password));
+	Logger::info("- password : " + ntos(password));
 	this->setPassword(password);
 
 	this->listenOn(port, this->_protocol);
@@ -309,48 +309,20 @@ void							IRCServer::_onClientRecv(SockStream & s, Package & pkg)
 // TODO REFRACTOR ALL
 void							IRCServer::_onClientQuit(SockStream &s)
 {
-	(void)s;
-	//TODO erase client from _connections
-	//TODO erase client from _unregistered (if unregistered)
-	//TODO erase client from _entities
-	/*Client* cli = this->getClientBySockStream(s);
-	if (cli == NULL)
+	NetworkEntity*	nEntity	= getEntityByStream(s);
+	if (nEntity != NULL)
 	{
-		Logger::critical("SockStream without Client associated !!! " + ntos(s.getSocket()));
-		return ;
-	}
-	if (cli->isRegistered())
-	{
-		Logger::warning("Client " + cli->getNickname() + " disconnected.");
-		cli->leaveAllChannels();
-		if (cli->getType() == Client::value_type_server)
-		{*/
-			/* for server SID is used as unique identifier */
-			/* disconnect all servers correspondig to that socket since those servers are now netsplitted from the network */
-			/*for (std::map<std::string, AEntity *>::iterator it = this->_ircClients.begin(); it != this->_ircClients.end();)
-			{
-				Client *lost_server = reinterpret_cast<Client*>(it->second);
-				if (it->second->getType() == Client::value_type_server && lost_server->getStream().getSocket() == s.getSocket())
-				{
-					if (lost_server->isRelayed())
-						Logger::warning("netsplit occured ! lost connection from server " + lost_server->getSID() + "@" + lost_server->getStream().getIP());
-					delete this->_ircClients[lost_server->getSID()];
-					this->_ircClients.erase(it++);
-				}
-				else ++it;
-			}
-			return ;
-		}
-		std::string nick = cli->getNickname();
-		delete this->_ircClients[nick];
-		this->_ircClients.erase(nick);
+		this->_entities.erase(nEntity->getUID());
+		this->_clients.erase(nEntity->getUID());
+		this->_servers.erase(nEntity->getUID());
+		this->_connections.erase(&nEntity->getStream());
+		this->_unregistered_connections.erase(&nEntity->getStream());
+		delete nEntity;
 	}
 	else
 	{
-		Logger::warning("unknown client " + ntos(s.getSocket()) + " disconnected.");
-		delete cli;
-		this->_pendingConnections.remove(cli);
-	}*/
+		Logger::critical("ClientQuit: No entity corresponding was found.");
+	}
 }
 
 
