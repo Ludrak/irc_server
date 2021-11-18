@@ -62,7 +62,17 @@ t_pollevent		AClient::_pollOutClients(SockStream & sock)
 		delete &current_pkg;
 		sock.getPendingData().remove(&current_pkg);
 		if (sock.getPendingData().size() == 0)
+		{
+#ifndef KQUEUE
 			sock.delPollEvent(POLLOUT);
+#else
+		for (std::vector<struct kevent>::iterator it = this->_k_events.begin();
+			it != this->_k_events.end();
+			++it)
+			if (it->ident == sock.getSocket())
+				sock.delkQueueEvents(*it, EVFILT_WRITE);
+#endif
+		}
 	}
 	return (POLL_SUCCESS);
 }
@@ -72,14 +82,22 @@ t_pollevent		AClient::_pollOutClients(SockStream & sock)
 t_pollevent		AClient::_pollFromServers(SockStream & sock, int event)
 {	
 	/* client in sock has returned positive event */
+#ifndef KQUEUE
 	if (event & POLLIN)
+#else
+	if (event == EVFILT_READ)
+#endif
 	{
 		/* client socket is readable */
 		t_pollevent ev = this->_pollInClients(sock);
 		if (ev == POLL_DELETE)
 			return (POLL_DELETE);
 	}
+#ifndef KQUEUE
 	if (event & POLLOUT)
+#else
+	if (event == EVFILT_WRITE)
+#endif
 	{
 		/* client socket is writable */
 		this->_pollOutClients(sock);
@@ -100,7 +118,13 @@ t_pollevent     AClient::_onPollEvent(int socket, int event)
 
 void			AClient::sendServerPackage( Package *pkg, SockStream &server_recipient )
 {
-	server_recipient.setPollEvent(POLLOUT);
+#ifndef KQUEUE
+	server_recipient.delPollEvent(POLLOUT);
+#else
+	for (std::vector<struct kevent>::iterator it = this->_k_events.begin(); it != this->_k_events.end(); ++it)
+		if (it->ident == server_recipient.getSocket())
+			server_recipient.setkQueueEvents(*it, EVFILT_WRITE);
+#endif
 	pkg->setRecipient(&server_recipient);
 	server_recipient.getPendingData().push_back(pkg);
 }

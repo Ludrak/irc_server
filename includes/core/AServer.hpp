@@ -8,6 +8,7 @@ class AServer;
 # include <vector>
 # include <poll.h>
 # include <map>
+# include <netdb.h>
 # include "ASockManager.hpp"
 
 class AServer : public virtual ASockManager

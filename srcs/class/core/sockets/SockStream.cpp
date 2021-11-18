@@ -6,20 +6,43 @@
 
 //TODO CHeck return values
 SockStream::SockStream(IProtocol & protocol)
-: _type(UNKNOWN), _poll_events(POLLIN), _protocol(&protocol), _recieved_data(protocol)
+:	_type(UNKNOWN),
+#ifndef KQUEUE
+	_poll_events(POLLIN),
+#else
+	_kqueue_events(EVFILT_READ),
+#endif
+	_protocol(&protocol),
+	_recieved_data(protocol)
 {
 	Logger::debug("default SockStream constructor");
 	this->_createSocket("127.0.0.1", 8080);
 }
 
 SockStream::SockStream(const std::string &host, uint16_t port, IProtocol & protocol)
-: _type(UNKNOWN), _poll_events(POLLIN), _protocol(&protocol), _recieved_data(protocol)
+:	_type(UNKNOWN),
+#ifndef KQUEUE
+	_poll_events(POLLIN),
+#else
+	_kqueue_events(EVFILT_READ),
+#endif
+	_protocol(&protocol),
+	_recieved_data(protocol)
 {
 	this->_createSocket(host, port);
 }
 
 SockStream::SockStream(ushort socket, const sockaddr_in &address, IProtocol & protocol)
-: _socket(socket), _type(UNKNOWN), _poll_events(POLLIN), _addr(address), _protocol(&protocol), _recieved_data(protocol)
+:	_socket(socket),
+	_type(UNKNOWN),
+#ifndef KQUEUE
+	_poll_events(POLLIN),
+#else
+	_kqueue_events(EVFILT_READ),
+#endif
+	_addr(address),
+	_protocol(&protocol),
+	_recieved_data(protocol)
 {
 }
 
@@ -71,6 +94,7 @@ IProtocol						*SockStream::getProtocol( void ) const
 	return this->_protocol;
 }
 
+#ifndef KQUEUE
 int								SockStream::getPollEvents() const 
 {
 	return (this->_poll_events);
@@ -83,7 +107,22 @@ void							SockStream::delPollEvent(int event)
 {
 	this->_poll_events &= ~event;
 }
-
+#else
+int								SockStream::getkQueueEvents() const 
+{
+	return (this->_kqueue_events);
+}
+void							SockStream::setkQueueEvents(struct kevent &ev, int event)
+{
+	//this->_kqueue_events |= event;
+	EV_SET(&ev, ev.ident, event, EV_ADD, 0, 0, NULL);
+}
+void							SockStream::delkQueueEvents(struct kevent &ev, int event)
+{
+	//this->_kqueue_events &= ~event;
+	EV_SET(&ev, ev.ident, event, EV_DISABLE, 0, 0, NULL);
+}
+#endif
 
 void							SockStream::setPackageProtocol(IProtocol &proto)
 {

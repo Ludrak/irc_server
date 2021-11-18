@@ -8,6 +8,7 @@ ASockManager::ASockManager() : ASockHandler()
 
 void            ASockManager::delSocket(const SockStream &sock)
 {
+#ifndef KQUEUE
 	for (std::vector<pollfd>::iterator it = this->_poll_fds.begin(); it != this->_poll_fds.end(); it++)
 	{
 		if (it->fd == sock.getSocket())
@@ -16,9 +17,11 @@ void            ASockManager::delSocket(const SockStream &sock)
 			break ;
 		}
 	}
+#endif
 	ASockHandler::delSocket(sock);
 }
 
+#ifndef KQUEUE
 void            ASockManager::run( void )
 {
     struct pollfd pfd;
@@ -63,4 +66,54 @@ void            ASockManager::run( void )
         }
     }
 }
+#else
+void            ASockManager::run( void )
+{
+    struct kevent                new_event;
+    int                          kq;
 
+    /* init kqueue */
+    kq = kqueue();
+    if (kq == -1)
+    {
+        Logger::error("kqueue() failed");
+        return ;
+    }
+
+    /* add events to list */
+    for (std::map<ushort, SockStream*>::iterator it = this->_sockets.begin(); it != this->_sockets.end(); ++it)    
+    {   
+        EV_SET(&new_event, it->first, EVFILT_READ, EV_ADD, 0, 0, NULL);
+        this->_k_events.push_back(new_event);
+    }
+
+	Logger::info("Manager running using kqueue");
+    for (;;)
+    {
+        struct kevent events_triggered[this->_k_events.size()];
+        int nev = kevent(kq, this->_k_events.data(), this->_k_events.size(), events_triggered, this->_k_events.size(), NULL);
+
+        if (nev == -1)
+            Logger::error("kevent() failed: " + ntos(strerror(errno)));
+
+        size_t sz = this->_sockets.size();
+        for (int i = 0; i < nev; i++)
+        {
+            if (events_triggered[i].flags & EV_ERROR)
+            {
+                Logger::critical("event error: " + ntos(strerror(events_triggered[i].data)));
+                return ;
+            }
+            try {
+                this->_onPollEvent(events_triggered[i].ident, events_triggered[i].filter);
+            }
+            catch (Package::SizeExceededException & e)
+            {
+                Logger::warning(e.what());
+            }
+            if (this->_sockets.size() != sz)
+                break;
+        }
+    }
+}
+#endif
