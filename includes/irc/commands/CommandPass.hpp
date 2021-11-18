@@ -22,6 +22,4 @@ class CommandPass : public ACommand
 
 };
 
-std::ostream &			operator<<( std::ostream & o, CommandPass const & i );
-
 #endif /* ***************************************************** COMMANDPASS_HPP */

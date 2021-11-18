@@ -30,12 +30,13 @@ const std::list<Channel*>	&Client::getChannels() const
 
 int 						Client::joinChannel(Channel &channel)
 {
-    this->_channels.push_back(&channel);
     if (!this->incrementJoinedChannels())
         return (1);
-    if (!channel.incrementJoinedClients())
-        return (2);
-    return (0);
+    uint ret = channel.addClient(*this);
+	if (ret != SUCCESS)
+		return ret;
+    this->_channels.push_back(&channel);
+	return SUCCESS;
 }
 
 void                        Client::leaveAllChannels(void)

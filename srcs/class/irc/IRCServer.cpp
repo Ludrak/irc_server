@@ -1,6 +1,8 @@
 #include "IRCServer.hpp"
 
-const uint				IRCServer::value_type = 42;
+//REVIEW is it a good idea?
+// const uint				IRCServer::value_type = Server::value_type | Client::value_type;
+const uint				IRCServer::value_type = Server::value_type;
 
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
@@ -55,30 +57,15 @@ IRCServer::~IRCServer()
 void			IRCServer::_printServerState( void )
 {
 	Logger::warning("TODO print server state");
-	// Logger::debug("Server : p: " + ntos(this->_pendingConnections.size()) + ", r: " + ntos(this->_ircClients.size()) );
-	// Logger::debug("pending:");
-	// for (std::list<Client *>::iterator it = this->_pendingConnections.begin(); it != this->_pendingConnections.end(); ++it)
-	// 	Logger::debug("   - N: " + (*it)->getNickname() + " / P: " + (*it)->getPassword() + " / R: " + ntos((*it)->isRegistered()) + " / S: " + ntos((*it)->getStream().getSocket()));
-	// Logger::debug("registered:");
-	// for (std::map<std::string, AEntity *>::iterator it = this->_ircClients.begin(); it != this->_ircClients.end(); ++it)
-	// {
-	// 	if (it->second->getType() == Channel::value_type_channel)
-	// 	{
-	// 		Channel *chan = reinterpret_cast<Channel *>(it->second);
-	// 		Logger::debug("Channel K:" + it->first + " / N: " + chan->getNickname() + " / P: " + chan->getPassword());
-	// 		if (chan->getCreator() == NULL)
-	// 			Logger::debug("Channel creator: NULL");
-	// 		else
-	// 			Logger::debug("Channel creator: " + chan->getCreator()->getNickname());
-	// 		Logger::debug("Channel moderated: " + ntos(chan->isEnable(M_MODERATED)) );
-
-	// 	}
-	// 	else
-	// 	{
-	// 		Client * cli = reinterpret_cast<Client *>(it->second);
-	// 		Logger::debug("   - K:" + it->first + " / N: " + it->second->getNickname() + " / P: " + cli->getPassword() + " / R: " + ntos(cli->isRegistered()));
-	// 	}
-	// }
+	Logger::info("--- Channels ---");
+	for (std::map<std::string, Channel *>::const_iterator it = this->_channels.begin(); it != this->_channels.end(); ++it)
+	{
+		Logger::info("-- " + it->second->getUID() + " " + ntos(it->second->getConcurrentClients()) + "/" + ntos(it->second->getConcurrentClientsMax()));
+		for (std::list<Client *>::iterator itc = it->second->clientBegin(); itc != it->second->clientEnd(); ++itc)
+		{
+			Logger::info("\t- " + (*itc)->getUID());
+		}
+	}
 }
 
 
@@ -134,7 +121,7 @@ void							IRCServer::_addClient(AEntity &client, UnRegisteredConnection * execu
 	if (!this->_entities.insert(std::make_pair(client.getUID(), &client)).second)
 		Logger::critical("double insertion in _entities: trying to add a new client to an already used nickname");
 	else if (!this->_clients.insert(std::make_pair(client.getUID(), &client)).second)
-		Logger::critical("double insertion in _clients: trying to add a new client to an already used nickname");
+		Logger::critical("double insertion in _clients: trying to add a new client to an already used nickname");// TODO ~ error
 	else if (client.getType() & ~RelayedEntity::value_type && !this->_connections.insert(std::make_pair(&static_cast<Client &>(client).getStream(), reinterpret_cast<NetworkEntity *>(&client))).second)
 		Logger::critical("double insertion in _connections: trying to add a new client to an already used nickname");
 	return ;
@@ -207,14 +194,17 @@ void							IRCServer::_deleteServer(const std::string &nick)
 
 void							IRCServer::_sendMessage(AEntity & target, const std::string &message, const AEntity *except)
 {
-	int type = target.getType() & ~AEntity::value_type & ~NetworkEntity::value_type & ~RelayedEntity::value_type;
+	int type = target.getType() & ~AEntity::value_type & ~NetworkEntity::value_type & ~RelayedEntity::value_type;// TODO ~ error
 	switch (type)
 	{
 		case Channel::value_type :
 		{
 			Logger::debug("Sending channel message");
 			Package package(this->_protocol, this->_protocol.format(message));
-			reinterpret_cast<Channel*>(&target)->broadcastPackage(package, &reinterpret_cast<const Client*>(except)->getStream());
+			// &reinterpret_cast<const Client*>(except)->getStream();
+			(void)except;
+			//TODO add except when sending a Channel message (don't send to request initiator)
+			reinterpret_cast<Channel*>(&target)->broadcastPackage(package);
 			break;
 		}
 		case Client::value_type :
@@ -461,10 +451,10 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandUser>("USER");
 	this->_handler.addCommand<CommandPass>("PASS");
 	this->_handler.addCommand<CommandNick>("NICK");
-	// this->handle.addComand<CommandServer>("SERVER");
-	// this->_handle.addCommand<CommandPrivmsg>("PRIVMSG");
-	// this->_handle.addCommand<CommandJoin>("JOIN");
-	// this->_handle.addCommand<CommandMode>("MODE");
+	this->_handler.addCommand<CommandPrivmsg>("PRIVMSG");
+	this->_handler.addCommand<CommandJoin>("JOIN");
+	// this->handler.addComand<CommandServer>("SERVER");
+	// this->_handler.addCommand<CommandMode>("MODE");
 
 }
 
@@ -488,21 +478,21 @@ bool							IRCServer::alreadyInUseUID(std::string & uid) const
 
 
 
-// prefix format -> :<server_uid>[!<user_uid>@<host_uid>]SPACE
+// prefix format -> Server-Server: <server_uid>SPACE
+// prefix format -> Server-Client: <nickname>[!<username>@<host_uid>]SPACE
 std::string							IRCServer::makePrefix(const AEntity *user, const AEntity *host_server)
 {
 	std::string prefix = ":";
-	prefix += this->getUID();
 
 	if (user && host_server 
 	&& (user->getType() & Client::value_type || user->getType() & RelayedClient::value_type)
 	&& (host_server->getType() & Server::value_type || host_server->getType() & RelayedServer::value_type))
 	{
-		prefix += "!" + user->getUID() + "@" + host_server->getUID() + " ";
+		prefix += user->getUID() + "!" + user->getName() + "@" + host_server->getUID() + " ";
 	}
 	else
 	{
-		prefix += " ";
+		prefix += this->getUID() + " ";
 	}
 	return (prefix);
 }
@@ -520,7 +510,7 @@ bool								IRCServer::parsePrefix(const std::string &prefix, Server **const sen
 	{
 		/* parse sender */
 		std::string token = prefix.substr(1, prefix.find ("!") - 1);
-		if (this->_servers.count(token) != 1 || this->_servers[token]->getType() & ~Server::value_type)
+		if (this->_servers.count(token) != 1 || this->_servers[token]->getType() & ~Server::value_type)// TODO ~ error
 		{
 			Logger::critical("extended prefix sender server is not a direct server");
 			return (false);
@@ -529,7 +519,7 @@ bool								IRCServer::parsePrefix(const std::string &prefix, Server **const sen
 
 		/* parse sender client nickname */
 		token = prefix.substr(prefix.find ("!") + 1, prefix.find("@") - prefix.find ("!") - 1);
-		if (this->_clients.count(token) != 1 || this->_clients[token]->getType() & ~RelayedClient::value_type)
+		if (this->_clients.count(token) != 1 || this->_clients[token]->getType() & ~RelayedClient::value_type)// TODO ~ error
 		{
 			Logger::critical("extended prefix username is not a relayed client");
 			return (false);
@@ -538,7 +528,7 @@ bool								IRCServer::parsePrefix(const std::string &prefix, Server **const sen
 
 		/* parse host server */
 		token = prefix.substr(prefix.find("@") + 1, prefix.size() - prefix.find("!") - 1);
-		if (this->_servers.count(token) != 1 || this->_servers[token]->getType() & ~RelayedServer::value_type)
+		if (this->_servers.count(token) != 1 || this->_servers[token]->getType() & ~RelayedServer::value_type)// TODO ~ error
 		{
 			Logger::critical("extended prefix host is not a relayed server");
 			return (false);
@@ -551,7 +541,7 @@ bool								IRCServer::parsePrefix(const std::string &prefix, Server **const sen
 		*user = NULL;
 		*sender_server = NULL;
 		std::string token = prefix.substr(1, prefix.size() - 1);
-		if (this->_servers.count(token) != 1 || this->_servers[token]->getType() & ~Server::value_type)
+		if (this->_servers.count(token) != 1 || this->_servers[token]->getType() & ~Server::value_type) // TODO ~ error
 		{
 			Logger::critical("extended prefix sender server is not a direct server");
 			return (false);

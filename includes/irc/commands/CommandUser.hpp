@@ -23,6 +23,4 @@ class CommandUser : public ACommand
 
 };
 
-std::ostream &			operator<<( std::ostream & o, CommandUser const & i );
-
 #endif /* ***************************************************** COMMANDUSER_HPP */

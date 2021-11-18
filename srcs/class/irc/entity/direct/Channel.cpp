@@ -7,6 +7,8 @@
 Channel::Channel(const std::string & channelName) : AEntity(Channel::value_type, channelName), ASockHandler(), _creator(NULL)
 {
 	this->_uid = channelName;
+	this->_concurrentClients = 0;
+	this->_concurrentClientsMax = 10;
 }
 
 Channel::Channel( const Channel & src ) : AEntity(Channel::value_type, src.getUID()), ASockHandler(), _clients(src._clients), _operators(src._operators)
@@ -54,12 +56,11 @@ std::ostream &			operator<<( std::ostream & o, Channel const & i )
 uint				Channel::addClient(Client & client)
 {
 	// TODO send right reply / inc /dec registration
+	//TODO change incRegistration for being blocked only when mode `l` is actived
 	if (this->isRegistered(client) == true)
-		return 3;//ERR_ALREADYREGISTRED;
-	//else if (client.incRegistration() == false)
-		return 2;//ERR_TOOMANYCHANNELS;
-	//else if (this->incRegistration() == false)
-		return 1;//ERR_CHANNELISFULL;
+		return 2;//ERR_ALREADYREGISTRED;
+	else if (this->incrementJoinedClients() == false)
+		return 4;//ERR_CHANNELISFULL;
 	this->_clients.push_back(&client);
 	this->addSocket(client.getStream());
 	Logger::info("<" + client.getUID() + "> join channel <" + this->getUID() + ">");
@@ -129,5 +130,44 @@ void					Channel::setCreator(Client & client)
 	this->_creator = &client;
 }
 
+std::list<Client *>::iterator		Channel::clientBegin( void )
+{
+	return this->_clients.begin();
+}
+
+std::list<Client *>::const_iterator	Channel::clientBegin( void ) const
+{
+	return this->_clients.begin();
+}
+
+std::list<Client *>::iterator		Channel::clientEnd( void )
+{
+	return this->_clients.end();
+}
+
+std::list<Client *>::const_iterator	Channel::clientEnd( void ) const
+{
+	return this->_clients.end();
+}
+
+std::list<Client *>::iterator		Channel::operatorBegin( void )
+{
+	return this->_operators.begin();
+}
+
+std::list<Client *>::const_iterator	Channel::operatorBegin( void ) const
+{
+	return this->_operators.begin();
+}
+
+std::list<Client *>::iterator		Channel::operatorEnd( void )
+{
+	return this->_operators.end();
+}
+
+std::list<Client *>::const_iterator	Channel::operatorEnd( void ) const
+{
+	return this->_operators.end();
+}
 
 /* ************************************************************************** */

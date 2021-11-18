@@ -25,6 +25,8 @@ class CommandHandler;
 # include "CommandPass.hpp"
 # include "CommandNick.hpp"
 # include "CommandUser.hpp"
+# include "CommandPrivmsg.hpp"
+# include "CommandJoin.hpp"
 
 # define SUCCESS				0
 

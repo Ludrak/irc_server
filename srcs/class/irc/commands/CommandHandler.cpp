@@ -80,8 +80,8 @@ uint			CommandHandler::handle(NetworkEntity & executor, std::string data)
 		else
 			Logger::warning("Not enought privilegies for: " + command);
 	}
-
-	this->_server._sendMessage(executor, ERR_UNKNOWNCOMMAND(command));
+	else
+		this->_server._sendMessage(executor, ERR_UNKNOWNCOMMAND(command));
 	return SUCCESS;
 }
 
