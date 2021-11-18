@@ -121,7 +121,7 @@ void							IRCServer::_addClient(AEntity &client, UnRegisteredConnection * execu
 	if (!this->_entities.insert(std::make_pair(client.getUID(), &client)).second)
 		Logger::critical("double insertion in _entities: trying to add a new client to an already used nickname");
 	else if (!this->_clients.insert(std::make_pair(client.getUID(), &client)).second)
-		Logger::critical("double insertion in _clients: trying to add a new client to an already used nickname");
+		Logger::critical("double insertion in _clients: trying to add a new client to an already used nickname");// TODO ~ error
 	else if (client.getType() & ~RelayedEntity::value_type && !this->_connections.insert(std::make_pair(&static_cast<Client &>(client).getStream(), reinterpret_cast<NetworkEntity *>(&client))).second)
 		Logger::critical("double insertion in _connections: trying to add a new client to an already used nickname");
 	return ;
@@ -194,7 +194,7 @@ void							IRCServer::_deleteServer(const std::string &nick)
 
 void							IRCServer::_sendMessage(AEntity & target, const std::string &message, const AEntity *except)
 {
-	int type = target.getType() & ~AEntity::value_type & ~NetworkEntity::value_type & ~RelayedEntity::value_type;
+	int type = target.getType() & ~AEntity::value_type & ~NetworkEntity::value_type & ~RelayedEntity::value_type;// TODO ~ error
 	switch (type)
 	{
 		case Channel::value_type :
@@ -510,7 +510,7 @@ bool								IRCServer::parsePrefix(const std::string &prefix, Server **const sen
 	{
 		/* parse sender */
 		std::string token = prefix.substr(1, prefix.find ("!") - 1);
-		if (this->_servers.count(token) != 1 || this->_servers[token]->getType() & ~Server::value_type)
+		if (this->_servers.count(token) != 1 || this->_servers[token]->getType() & ~Server::value_type)// TODO ~ error
 		{
 			Logger::critical("extended prefix sender server is not a direct server");
 			return (false);
@@ -519,7 +519,7 @@ bool								IRCServer::parsePrefix(const std::string &prefix, Server **const sen
 
 		/* parse sender client nickname */
 		token = prefix.substr(prefix.find ("!") + 1, prefix.find("@") - prefix.find ("!") - 1);
-		if (this->_clients.count(token) != 1 || this->_clients[token]->getType() & ~RelayedClient::value_type)
+		if (this->_clients.count(token) != 1 || this->_clients[token]->getType() & ~RelayedClient::value_type)// TODO ~ error
 		{
 			Logger::critical("extended prefix username is not a relayed client");
 			return (false);
@@ -528,7 +528,7 @@ bool								IRCServer::parsePrefix(const std::string &prefix, Server **const sen
 
 		/* parse host server */
 		token = prefix.substr(prefix.find("@") + 1, prefix.size() - prefix.find("!") - 1);
-		if (this->_servers.count(token) != 1 || this->_servers[token]->getType() & ~RelayedServer::value_type)
+		if (this->_servers.count(token) != 1 || this->_servers[token]->getType() & ~RelayedServer::value_type)// TODO ~ error
 		{
 			Logger::critical("extended prefix host is not a relayed server");
 			return (false);
@@ -541,7 +541,7 @@ bool								IRCServer::parsePrefix(const std::string &prefix, Server **const sen
 		*user = NULL;
 		*sender_server = NULL;
 		std::string token = prefix.substr(1, prefix.size() - 1);
-		if (this->_servers.count(token) != 1 || this->_servers[token]->getType() & ~Server::value_type)
+		if (this->_servers.count(token) != 1 || this->_servers[token]->getType() & ~Server::value_type) // TODO ~ error
 		{
 			Logger::critical("extended prefix sender server is not a direct server");
 			return (false);
