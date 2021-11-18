@@ -22,7 +22,9 @@ class SockStream;
 # include "Logger.hpp"
 # include "ntos.hpp"
 
-# define KQUEUE
+/* Disabling KQUEUE mode for now, need some fix */
+/* ERROR: cannot send package after USER registration */
+//# define KQUEUE
 
 # define RECV_BUFFER_SZ	255
 # define SEND_BUFFER_SZ	255
