@@ -1,5 +1,6 @@
 #include "IRCServer.hpp"
 #include <exception>
+#include <iomanip>
 
 /*
 **	Subject specified:
@@ -193,8 +194,14 @@ int		main(int ac, char **av)
 		else if (arg_code == ARG_ERROR)
 			return (EXIT_FAILURE);
 
+		/* unknown argument */
+		if (std::strncmp(av[argn], "--", 2) == 0)
+		{
+			Logger::error("unknown argument: " + ntos(av[argn]));
+			return (EXIT_FAILURE);
+		}
 		/* port */
-		if (isNumber(av[argn]) && server_port == 0)
+		else if (isNumber(av[argn]) && server_port == 0)
 			server_port = std::stoi(av[argn++]);
 		/* password */
 		else if (server_pass.empty())
@@ -231,15 +238,18 @@ int		main(int ac, char **av)
 
 	std::cout << "* Server infos:" << std::endl;
 	std::cout << "* - name:            " << server_name << std::endl;
-	std::cout << "* - token:           " << server_token << std::endl;
+	std::cout << "* - token:           " << std::setfill('0') << std::setw(3) << server_token << std::endl;
 	std::cout << "* - max connections: " << server_max_connections << std::endl;
 	std::cout << "* - info:            " << server_info << std::endl;
 	std::cout << "*************************************************" << std::endl;
 
-	// Logger::setLogLevel(INFO);
+	Logger::setLogLevel(INFO);
 	IRCServer server(server_port, server_pass, server_host);
+	std::stringstream ss;
+	ss << std::setfill('0') << std::setw(3) << server_token;
+
 	server.setName(server_name);
-	server.setUID(std::to_string(server_token));
+	server.setUID(ss.str());
 	server.setInfo(server_info);
 	server.setMaxConnection(server_max_connections);
 	if (has_network_connection)

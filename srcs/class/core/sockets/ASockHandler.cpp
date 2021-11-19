@@ -27,7 +27,13 @@ SockStream      *ASockHandler::getSocket(const ushort socket)
 void		    ASockHandler::sendPackage( Package *pkg, SockStream &recipient)
 {
     Logger::debug("added package " + ntos(pkg) + " to pending list of " + recipient.getIP());
+#ifndef KQUEUE
 	recipient.setPollEvent(POLLOUT);
+#else
+	for (std::vector<struct kevent>::iterator it = this->_k_events.begin(); it != this->_k_events.end(); ++it)
+		if (it->ident == recipient.getSocket())
+			recipient.setkQueueEvents(*it, EVFILT_WRITE);
+#endif
 	pkg->setRecipient(&recipient);
 	recipient.getPendingData().push_back(pkg);
 }

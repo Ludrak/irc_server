@@ -2,14 +2,14 @@
 
 Server::Server(
     const UnRegisteredConnection &serv,
-    const std::string &token,
-    const std::string &name,
-    const std::string &info,
-    const std::string &host,
-    const std::string &flags
+    const std::string   &token,
+    const std::string   &name,
+    const std::string   &info,
+    const std::string   &host,
+    const int           type
 ) 
-:   NetworkEntity(serv.getStream(), token, Server::value_type_forward),
-    ServerInfo(info, serv.getVersion(), host, flags)
+:   NetworkEntity(serv.getStream(), token, type),
+    ServerInfo(info, serv.getVersion(), host, serv.getFlags())
 {
     this->setPassword(serv.getPassword());
     this->setName(name);

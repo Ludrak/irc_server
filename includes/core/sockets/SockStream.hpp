@@ -15,10 +15,17 @@ class SockStream;
 # include <vector>
 # include <unistd.h>
 # include <poll.h>
+# include <sys/event.h>
+# include <sys/types.h>
 # include <list>
+# include <netdb.h>
 # include "Package.hpp"
 # include "Logger.hpp"
 # include "ntos.hpp"
+
+/* Disabling KQUEUE mode for now, need some fix */
+/* ERROR: cannot send package after USER registration */
+//# define KQUEUE
 
 # define RECV_BUFFER_SZ	255
 # define SEND_BUFFER_SZ	255
@@ -63,21 +70,33 @@ class SockStream
 		Package						&getRecievedData(void);
 		std::list<Package*>			&getPendingData(void);
 
+#ifndef KQUEUE
 		int							getPollEvents(void) const;
 		void						setPollEvent(int event);
 		void						delPollEvent(int event);
+#else
+		int							getkQueueEvents(void) const;
+		void						setkQueueEvents(struct kevent &ev, int event);
+		void						delkQueueEvents(struct kevent &ev, int event);
+#endif
 
 		t_sock_type					getType(void) const;
 		void						setType( const t_sock_type type );
 
-		std::string					getIP(void);
-		void						setIP(const std::string &ip_format);
+		const std::string			&getIP(void) const;		
+		const std::string			&getHost(void) const;
 
 	protected:
 		ushort						_socket;
 		t_sock_type					_type;
+# ifndef KQUEUE
 		int							_poll_events;
+# else
+		int							_kqueue_events;
+#endif
 		struct sockaddr_in			_addr;
+		std::string					_ip;
+		std::string					_host;
 		IProtocol					*_protocol;
 
 	private:

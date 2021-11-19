@@ -8,7 +8,7 @@ template<typename T>
 std::string ntos ( T Number )
 {
 	std::ostringstream ss;
-	ss << Number;
+	ss << std::boolalpha << Number;
 	return ss.str();
 }
 

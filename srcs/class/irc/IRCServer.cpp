@@ -22,7 +22,7 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 	Logger::info("IRC Server:");
 	Logger::info("- host     : " + ntos(host));
 	Logger::info("- port     : " + ntos(port));
-	Logger::info("- password :" + ntos(password));
+	Logger::info("- password : " + ntos(password));
 	this->setPassword(password);
 
 	this->listenOn(port, this->_protocol);
@@ -118,7 +118,7 @@ bool							IRCServer::connectToNetwork(const std::string & host, ushort port, st
 	catch (const AClient::ConnectionException &e)
 	{
 		// connection exception, we are root on that server until another connection succeeds
-		Logger::info ("Forward connection failed: running server as root node");
+		Logger::warning ("Forward connection failed: running server as root node");
 		return false;
 	}
 	return true;
@@ -151,34 +151,33 @@ void							IRCServer::_addClient(AEntity &client, UnRegisteredConnection * execu
 		Logger::critical("double insertion in _entities: trying to add a new client to an already used nickname");
 	else if (!this->_clients.insert(std::make_pair(client.getUID(), &client)).second)
 		Logger::critical("double insertion in _clients: trying to add a new client to an already used nickname");// TODO ~ error
-	else if (client.getType() & ~RelayedEntity::value_type && !this->_connections.insert(std::make_pair(&static_cast<Client &>(client).getStream(), reinterpret_cast<NetworkEntity *>(&client))).second)
+	else if (!(client.getType() & RelayedEntity::value_type) && !this->_connections.insert(std::make_pair(&static_cast<Client &>(client).getStream(), reinterpret_cast<NetworkEntity *>(&client))).second)
 		Logger::critical("double insertion in _connections: trying to add a new client to an already used nickname");
 	return ;
 }
 
 
 
-void							IRCServer::_addServer(AEntity &server)
+void							IRCServer::_addServer(AEntity &server, UnRegisteredConnection * executor)
 {	
-	if (server.getFamily() == SERVER_ENTITY_FAMILY)
+	if (server.getFamily() != SERVER_ENTITY_FAMILY)
 	{
-		bool already_exists;
-
-		already_exists = this->_entities.insert(std::make_pair(server.getUID(), &server)).second;
-		if (already_exists)
-		{
-			Logger::critical("double insertion in _entities: trying to add a new server to an already used nickname");
-			return;
-		}
-		already_exists = this->_servers.insert(std::make_pair(server.getUID(), &server)).second;
-		if (already_exists)
-		{
-			Logger::critical("double insertion in _servers: trying to add a new server to an already used nickname");
-			return;
-		}
+		Logger::critical("bad entity insertion: trying to add a non-server family entity to _addServer()");
 		return ;
 	}
-	Logger::critical("bad entity insertion: trying to add a non-server family entity to _addServer()");
+
+	if (executor != NULL) // RELAYED
+	{
+		this->_unregistered_connections.erase(&executor->getStream());
+		this->_connections.erase(&executor->getStream());
+		delete executor;
+	}
+	if (!this->_entities.insert(std::make_pair(server.getUID(), &server)).second)
+		Logger::critical("double insertion in _entities: trying to add a new server to an already used nickname");
+	else if (!this->_servers.insert(std::make_pair(server.getUID(), &server)).second)
+		Logger::critical("double insertion in _servers: trying to add a new server to an already used nickname");
+	else if (!(server.getType() & RelayedEntity::value_type) && !this->_connections.insert(std::make_pair(&static_cast<Server &>(server).getStream(), reinterpret_cast<NetworkEntity *>(&server))).second)
+		Logger::critical("double insertion in _connections: trying to add a new server to an already used nickname");
 }
 
 
@@ -252,9 +251,16 @@ void							IRCServer::_sendMessage(AEntity & target, const std::string &message,
 		}
 		case Server::value_type :
 		{
-			Logger::debug("Sending Server message");
+			Logger::debug("Sending Server message: " + message);
 			Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<Server*>(&target)->getStream());
 			this->sendPackage(package, reinterpret_cast<Server*>(&target)->getStream());
+			break;
+		}
+		case Server::value_type_forward :
+		{
+			Logger::debug("Sending Forward Server message: " + message);
+			Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<Server*>(&target)->getStream());
+			this->sendServerPackage(package, reinterpret_cast<Server*>(&target)->getStream());
 			break;
 		}
 		case RelayedServer::value_type :
@@ -301,7 +307,49 @@ void							IRCServer::_sendMessage(SockStream & target, const std::string &messa
 	this->sendPackage(pkg, target);
 }
 
+void							IRCServer::_sendAllClients(const std::string &message, AEntity *except)
+{
+	for (std::map<std::string, AEntity *>::iterator it = this->_clients.begin(); 
+	it != this->_clients.end(); 
+	++it)
+	{
+		if (except && except->getUID() == it->second->getUID())
+			continue ;
+		Package *pkg;
+		if (it->second->getType() & Client::value_type)
+		{
+			SockStream& sock = static_cast<SockStream&>(reinterpret_cast<Client*>(it->second)->getStream());
+			pkg = new Package(this->_protocol, this->_protocol.format(message), &sock);
+			this->sendPackage(pkg, sock);
+		}
+		else if (it->second->getType() & RelayedClient::value_type)
+		{
+			SockStream& sock = static_cast<SockStream&>(reinterpret_cast<RelayedClient*>(it->second)->getServer().getStream());
+			pkg = new Package(this->_protocol, this->_protocol.format(message), &sock);
+			this->sendPackage(pkg, sock);
+		}
+		else
+			Logger::critical("non client family entity in server list");
+	}
+}
 
+void							IRCServer::_sendAllServers(const std::string &message, AEntity *except)
+{
+	for (std::map<std::string, AEntity *>::iterator it = this->_servers.begin();
+	it != this->_servers.end(); 
+	++it)
+	{
+		if (except && except->getUID() == it->second->getUID())
+			continue ;
+		Package *pkg;
+		if (it->second->getType() & (Server::value_type | Server::value_type_forward))
+		{
+			SockStream& sock = static_cast<SockStream&>(reinterpret_cast<Server*>(it->second)->getStream());
+			pkg = new Package(this->_protocol, this->_protocol.format(message), &sock);
+			this->sendPackage(pkg, sock);
+		}
+	}
+}
 
 /*
 ** ----------------------------- Server events ----------------------------------
@@ -338,48 +386,20 @@ void							IRCServer::_onClientRecv(SockStream & s, Package & pkg)
 // TODO REFRACTOR ALL
 void							IRCServer::_onClientQuit(SockStream &s)
 {
-	(void)s;
-	//TODO erase client from _connections
-	//TODO erase client from _unregistered (if unregistered)
-	//TODO erase client from _entities
-	/*Client* cli = this->getClientBySockStream(s);
-	if (cli == NULL)
+	NetworkEntity*	nEntity	= getEntityByStream(s);
+	if (nEntity != NULL)
 	{
-		Logger::critical("SockStream without Client associated !!! " + ntos(s.getSocket()));
-		return ;
-	}
-	if (cli->isRegistered())
-	{
-		Logger::warning("Client " + cli->getNickname() + " disconnected.");
-		cli->leaveAllChannels();
-		if (cli->getType() == Client::value_type_server)
-		{*/
-			/* for server SID is used as unique identifier */
-			/* disconnect all servers correspondig to that socket since those servers are now netsplitted from the network */
-			/*for (std::map<std::string, AEntity *>::iterator it = this->_ircClients.begin(); it != this->_ircClients.end();)
-			{
-				Client *lost_server = reinterpret_cast<Client*>(it->second);
-				if (it->second->getType() == Client::value_type_server && lost_server->getStream().getSocket() == s.getSocket())
-				{
-					if (lost_server->isRelayed())
-						Logger::warning("netsplit occured ! lost connection from server " + lost_server->getSID() + "@" + lost_server->getStream().getIP());
-					delete this->_ircClients[lost_server->getSID()];
-					this->_ircClients.erase(it++);
-				}
-				else ++it;
-			}
-			return ;
-		}
-		std::string nick = cli->getNickname();
-		delete this->_ircClients[nick];
-		this->_ircClients.erase(nick);
+		this->_entities.erase(nEntity->getUID());
+		this->_clients.erase(nEntity->getUID());
+		this->_servers.erase(nEntity->getUID());
+		this->_connections.erase(&nEntity->getStream());
+		this->_unregistered_connections.erase(&nEntity->getStream());
+		delete nEntity;
 	}
 	else
 	{
-		Logger::warning("unknown client " + ntos(s.getSocket()) + " disconnected.");
-		delete cli;
-		this->_pendingConnections.remove(cli);
-	}*/
+		Logger::critical("ClientQuit: No entity corresponding was found.");
+	}
 }
 
 
@@ -393,15 +413,17 @@ void							IRCServer::_onClientQuit(SockStream &s)
 // TODO REFRACTOR AND HANDLE FORWARD
 void						IRCServer::_onRecv(SockStream &server, Package &pkg)
 {
-	(void)server;
-	(void)pkg;	
-	Logger::warning("TODO HANDLE server received");
+	NetworkEntity *entity = getEntityByStream(server);
+	if (!entity || pkg.getData().empty())
+		return ;
+	uint ret = this->_handler.handle(*entity, pkg.getData());
+	if (ret)
+		Logger::error("something bad happened in handler");
 }
 
 
 
 
-// TODO REFRACTOR AND HANDLE FORWARD
 void				IRCServer::_onConnect ( SockStream &server)
 {
 	Logger::info("Connecting to forward server");
@@ -482,8 +504,9 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandNick>("NICK");
 	this->_handler.addCommand<CommandPrivmsg>("PRIVMSG");
 	this->_handler.addCommand<CommandJoin>("JOIN");
-	// this->handler.addComand<CommandServer>("SERVER");
-	// this->_handler.addCommand<CommandMode>("MODE");
+	this->_handler.addCommand<CommandServer>("SERVER");
+	this->_handler.addCommand<CommandError>("ERROR");
+	//his->_handler.addCommand<CommandMode>("MODE");
 
 }
 

@@ -17,9 +17,7 @@ class RelayedServer : public RelayedEntity, public ServerInfo
 				const std::string   &token,
 				const std::string   &name,
 				const std::string   &info,
-				const std::string   &version,
-				const std::string   &host,
-				const std::string   &flags
+				const std::string   &host
 			);
 };
 

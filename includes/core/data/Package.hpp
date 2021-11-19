@@ -29,7 +29,7 @@ class Package
 		};
 
 	public:
-		Package( const IProtocol &protocol, const std::string &data="", const SockStream *recipient=NULL ) throw(Package::SizeExceededException, Package::InvalidProtocolException);
+		Package( const IProtocol &protocol, const std::string &data="", const SockStream *recipient=NULL, const bool is_explosive=false ) throw(Package::SizeExceededException, Package::InvalidProtocolException);
 		Package( Package const &src );
 		virtual ~Package();
 
@@ -40,6 +40,7 @@ class Package
 		void				nflush( uint n );
 
 		bool				isInvalid( void ) const;
+		bool				isExplosive( void );
 		std::string			getData( void ) const;
 		std::string			getRawData( void ) const;
 		SockStream      	*getRecipient( void ) const;
@@ -50,6 +51,7 @@ class Package
 		bool				_is_invalid;
 		const IProtocol		*_protocol;
 		const SockStream	*_recipient;
+		bool				_explosive;
 
 		bool				_checksum( void );
 };

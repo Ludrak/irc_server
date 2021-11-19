@@ -9,7 +9,7 @@ uint					AServer::_defaultMaxConnections = 30;
 
 AServer::AServer( const std::string &host ) : ASockManager(), _host(host), _running(false), _maxConnections(AServer::_defaultMaxConnections)
 {
-	Logger::debug("Constructor AServer: " + host);
+	Logger::debug("Constructor AServer: " + this->_host);
 }
 
 /*
@@ -45,9 +45,12 @@ void						AServer::run()
 t_pollevent					AServer::_pollFromServer(int socket, int event)
 {
 	std::map<ushort, SockStream*>::iterator it = this->_sockets.find(socket);
+#ifndef KQUEUE
 	if (it == this->_sockets.end() || it->second->getType() != SERVER || ~event & POLLIN)
+#else
+	if (it == this->_sockets.end() || it->second->getType() != SERVER || ~event == EVFILT_READ)
+#endif
 		return (POLL_NOTFOUND);
-	
 	/* server socket was written, accept incomming connection */
 	sockaddr_in		client_addr;
 	socklen_t		client_addr_len;
@@ -63,6 +66,11 @@ t_pollevent					AServer::_pollFromServer(int socket, int event)
 	client_ss->setType(REMOTE_CLIENT);
 	this->addSocket(*client_ss);
 	this->_onClientJoin(*client_ss);
+#ifdef KQUEUE
+	struct kevent new_event;
+	EV_SET(&new_event, client_sock, EVFILT_READ | EVFILT_WRITE, EV_ADD, 0, 0, NULL);
+	this->_k_events.push_back(new_event);
+#endif
 	return (POLL_SUCCESS);
 }
 
@@ -74,14 +82,22 @@ t_pollevent					AServer::_pollFromClients(int socket, int event)
 	if (it == this->_sockets.end() || it->second->getType() != REMOTE_CLIENT)
 		return (POLL_NOTFOUND);
 	/* client socket has returned positive event */
+#ifndef KQUEUE
 	if (event & POLLIN)
+#else
+	if (event == EVFILT_READ)
+#endif
 	{
 		/* client socket is readable */
 		t_pollevent ev = this->_pollInClients(*it->second);
 		if (ev == POLL_DELETE)
 			return (POLL_DELETE);
 	}
+#ifndef KQUEUE
 	if (event & POLLOUT)
+#else
+	if (event == EVFILT_WRITE)
+#endif
 	{
 		/* client socket is writable */
 		this->_pollOutClients(*it->second);
@@ -138,11 +154,26 @@ t_pollevent					AServer::_pollOutClients(SockStream & sock)
 
 	if (current_pkg.isInvalid() || current_pkg.getRawData().empty())
 	{
-		Logger::debug("sent & deleted package " + ntos(&current_pkg) + ntos(" of ") + sock.getIP());
+		Logger::debug("sent & deleted package " + ntos(&current_pkg) + ntos(" of ") + sock.getIP() + " explosive: " + ntos(current_pkg.isExplosive()));
+		if (current_pkg.isExplosive())
+		{		
+			Logger::debug("activated explosive package " + ntos(&current_pkg) + ntos(" of ") + sock.getIP());
+			delete &current_pkg;
+			this->disconnect(sock);
+			return (POLL_DELETE);
+		}
 		delete &current_pkg;
 		sock.getPendingData().remove(&current_pkg);
 		if (sock.getPendingData().size() == 0)
+		{
+#ifndef KQUEUE
 			sock.delPollEvent(POLLOUT);
+#else	
+			for (std::vector<struct kevent>::iterator it = this->_k_events.begin(); it != this->_k_events.end(); ++it)
+				if (it->ident == sock.getSocket())
+					sock.delkQueueEvents(*it, EVFILT_WRITE);
+#endif
+		}
 	}
 	return (POLL_SUCCESS);
 }
@@ -152,14 +183,20 @@ t_pollevent					AServer::_pollOutClients(SockStream & sock)
 
 t_pollevent					AServer::_onPollEvent(int socket, int event)
 {
+	if (this->_sockets[socket] && event == EV_EOF) {
+		return POLL_DELETE;
+	}
+
 	/* trying to read events from clients first */
 	t_pollevent ev = this->_pollFromClients(socket, event);
 	if (ev != POLL_NOTFOUND)
 		return ev;
+
 	/* if no client has the corresponding socket, search on server sockets */
 	ev = this->_pollFromServer(socket, event);
 	if (ev != POLL_NOTFOUND)
 		return ev;
+	
 	/* data wasn't addressed to server */
 	return (POLL_NOTFOUND);
 }
@@ -188,6 +225,16 @@ bool						AServer::listenOn( ushort port, IProtocol &protocol )
 void		    			AServer::disconnect( SockStream &client )
 {
 	Logger::info("disconnect client:" + client.getIP());
+#ifdef KQUEUE
+	for (std::vector<struct kevent>::iterator it = this->_k_events.begin(); it != this->_k_events.end(); ++it)
+	{
+		if (it->ident == client.getSocket())
+		{
+			this->_k_events.erase(it);
+			break;
+		}
+	}
+#endif
 	this->_onClientQuit(client);
 	this->delSocket(client);
 }

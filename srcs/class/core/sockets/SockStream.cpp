@@ -6,20 +6,49 @@
 
 //TODO CHeck return values
 SockStream::SockStream(IProtocol & protocol)
-: _type(UNKNOWN), _poll_events(POLLIN), _protocol(&protocol), _recieved_data(protocol)
+:	_type(UNKNOWN),
+#ifndef KQUEUE
+	_poll_events(POLLIN),
+#else
+	_kqueue_events(EVFILT_READ),
+#endif
+	_ip(""),
+	_host(""),
+	_protocol(&protocol),
+	_recieved_data(protocol)
 {
 	Logger::debug("default SockStream constructor");
 	this->_createSocket("127.0.0.1", 8080);
 }
 
 SockStream::SockStream(const std::string &host, uint16_t port, IProtocol & protocol)
-: _type(UNKNOWN), _poll_events(POLLIN), _protocol(&protocol), _recieved_data(protocol)
+:	_type(UNKNOWN),
+#ifndef KQUEUE
+	_poll_events(POLLIN),
+#else
+	_kqueue_events(EVFILT_READ),
+#endif
+	_ip(""),
+	_host(""),
+	_protocol(&protocol),
+	_recieved_data(protocol)
 {
 	this->_createSocket(host, port);
 }
 
 SockStream::SockStream(ushort socket, const sockaddr_in &address, IProtocol & protocol)
-: _socket(socket), _type(UNKNOWN), _poll_events(POLLIN), _addr(address), _protocol(&protocol), _recieved_data(protocol)
+:	_socket(socket),
+	_type(UNKNOWN),
+#ifndef KQUEUE
+	_poll_events(POLLIN),
+#else
+	_kqueue_events(EVFILT_READ),
+#endif
+	_addr(address),
+	_ip(""),
+	_host(""),
+	_protocol(&protocol),
+	_recieved_data(protocol)
 {
 }
 
@@ -40,11 +69,27 @@ void							SockStream::_createSocket(const std::string &host, uint16_t port, sa_
 {
 	if ((this->_socket = socket(family, sock_type, 0)) < 0)
 		throw SockStream::SocketCreationException();
+
+	struct hostent *hostent = gethostbyname(host.c_str());
+	if (hostent && hostent->h_addr_list && *hostent->h_addr_list)
+	{
+		this->_ip = inet_ntoa(*((struct in_addr*)hostent->h_addr_list[0]));
+		struct hostent *h = gethostbyaddr(*hostent->h_addr_list, hostent->h_length, hostent->h_addrtype);
+		if (h)
+			this->_host = h->h_name;
+		else 
+			this->_host = this->_ip;
+	}
+	else
+	{
+		Logger::error("Unable to resolve host: " + host);
+		return ;
+	}
 	
 	bzero(reinterpret_cast<void *>(&this->_addr), sizeof(this->_addr));
 	this->_addr.sin_port = htons(port);
 	this->_addr.sin_family = family;
-	this->_addr.sin_addr.s_addr = inet_addr(host.c_str());
+	this->_addr.sin_addr.s_addr = inet_addr(this->_ip.c_str());
 }
 
 void							SockStream::close( void )
@@ -71,6 +116,7 @@ IProtocol						*SockStream::getProtocol( void ) const
 	return this->_protocol;
 }
 
+#ifndef KQUEUE
 int								SockStream::getPollEvents() const 
 {
 	return (this->_poll_events);
@@ -83,7 +129,22 @@ void							SockStream::delPollEvent(int event)
 {
 	this->_poll_events &= ~event;
 }
-
+#else
+int								SockStream::getkQueueEvents() const 
+{
+	return (this->_kqueue_events);
+}
+void							SockStream::setkQueueEvents(struct kevent &ev, int event)
+{
+	//this->_kqueue_events |= event;
+	EV_SET(&ev, ev.ident, event, EV_ADD, 0, 0, NULL);
+}
+void							SockStream::delkQueueEvents(struct kevent &ev, int event)
+{
+	//this->_kqueue_events &= ~event;
+	EV_SET(&ev, ev.ident, event, EV_DISABLE, 0, 0, NULL);
+}
+#endif
 
 void							SockStream::setPackageProtocol(IProtocol &proto)
 {
@@ -115,16 +176,14 @@ void							SockStream::setType( const t_sock_type type )
 	this->_type = type;
 }
 
-/*IP FORMAT: XXX.XXX.XXX.XXX:PORT */
-void							SockStream::setIP(const std::string &ip_format)
+const std::string				&SockStream::getIP(void) const
 {
-	inet_aton(ip_format.substr(0, ip_format.find(":")).c_str(), &this->_addr.sin_addr);
-	this->_addr.sin_port = std::stoi(ip_format.substr(ip_format.find(":") + 1, ip_format.size() - (ip_format.find(":") + 1)));
+	return (this->_ip);
 }
 
-std::string						SockStream::getIP()
+const std::string				&SockStream::getHost(void) const
 {
-	return (inet_ntoa(this->_addr.sin_addr) + std::string(":") + ntos(ntohs(this->_addr.sin_port)));
+	return (this->_host);
 }
 
 /* ************************************************************************** */
