@@ -17,11 +17,11 @@ class Server : public NetworkEntity, public ServerInfo
 		/* type is set to SERVER_ENTITY_TYPE */
 		Server(
 			const UnRegisteredConnection &serv,
-			const std::string &token,
-			const std::string &name,
-			const std::string &info,
-			const std::string &host,
-			const std::string &flags
+			const std::string   &token,
+			const std::string   &name,
+			const std::string   &info,
+			const std::string   &host,
+			const int           type
 		);
 };
 

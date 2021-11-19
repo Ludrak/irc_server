@@ -12,6 +12,8 @@ SockStream::SockStream(IProtocol & protocol)
 #else
 	_kqueue_events(EVFILT_READ),
 #endif
+	_ip(""),
+	_host(""),
 	_protocol(&protocol),
 	_recieved_data(protocol)
 {
@@ -26,6 +28,8 @@ SockStream::SockStream(const std::string &host, uint16_t port, IProtocol & proto
 #else
 	_kqueue_events(EVFILT_READ),
 #endif
+	_ip(""),
+	_host(""),
 	_protocol(&protocol),
 	_recieved_data(protocol)
 {
@@ -41,6 +45,8 @@ SockStream::SockStream(ushort socket, const sockaddr_in &address, IProtocol & pr
 	_kqueue_events(EVFILT_READ),
 #endif
 	_addr(address),
+	_ip(""),
+	_host(""),
 	_protocol(&protocol),
 	_recieved_data(protocol)
 {
@@ -63,11 +69,27 @@ void							SockStream::_createSocket(const std::string &host, uint16_t port, sa_
 {
 	if ((this->_socket = socket(family, sock_type, 0)) < 0)
 		throw SockStream::SocketCreationException();
+
+	struct hostent *hostent = gethostbyname(host.c_str());
+	if (hostent && hostent->h_addr_list && *hostent->h_addr_list)
+	{
+		this->_ip = inet_ntoa(*((struct in_addr*)hostent->h_addr_list[0]));
+		struct hostent *h = gethostbyaddr(*hostent->h_addr_list, hostent->h_length, hostent->h_addrtype);
+		if (h)
+			this->_host = h->h_name;
+		else 
+			this->_host = this->_ip;
+	}
+	else
+	{
+		Logger::error("Unable to resolve host: " + host);
+		return ;
+	}
 	
 	bzero(reinterpret_cast<void *>(&this->_addr), sizeof(this->_addr));
 	this->_addr.sin_port = htons(port);
 	this->_addr.sin_family = family;
-	this->_addr.sin_addr.s_addr = inet_addr(host.c_str());
+	this->_addr.sin_addr.s_addr = inet_addr(this->_ip.c_str());
 }
 
 void							SockStream::close( void )
@@ -154,16 +176,14 @@ void							SockStream::setType( const t_sock_type type )
 	this->_type = type;
 }
 
-/*IP FORMAT: XXX.XXX.XXX.XXX:PORT */
-void							SockStream::setIP(const std::string &ip_format)
+const std::string				&SockStream::getIP(void) const
 {
-	inet_aton(ip_format.substr(0, ip_format.find(":")).c_str(), &this->_addr.sin_addr);
-	this->_addr.sin_port = std::stoi(ip_format.substr(ip_format.find(":") + 1, ip_format.size() - (ip_format.find(":") + 1)));
+	return (this->_ip);
 }
 
-std::string						SockStream::getIP()
+const std::string				&SockStream::getHost(void) const
 {
-	return (inet_ntoa(this->_addr.sin_addr) + std::string(":") + ntos(ntohs(this->_addr.sin_port)));
+	return (this->_host);
 }
 
 /* ************************************************************************** */

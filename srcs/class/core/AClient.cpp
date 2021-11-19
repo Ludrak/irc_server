@@ -119,7 +119,7 @@ t_pollevent     AClient::_onPollEvent(int socket, int event)
 void			AClient::sendServerPackage( Package *pkg, SockStream &server_recipient )
 {
 #ifndef KQUEUE
-	server_recipient.delPollEvent(POLLOUT);
+	server_recipient.setPollEvent(POLLOUT);
 #else
 	for (std::vector<struct kevent>::iterator it = this->_k_events.begin(); it != this->_k_events.end(); ++it)
 		if (it->ident == server_recipient.getSocket())

@@ -243,10 +243,13 @@ int		main(int ac, char **av)
 	std::cout << "* - info:            " << server_info << std::endl;
 	std::cout << "*************************************************" << std::endl;
 
-	// Logger::setLogLevel(INFO);
+	Logger::setLogLevel(INFO);
 	IRCServer server(server_port, server_pass, server_host);
+	std::stringstream ss;
+	ss << std::setfill('0') << std::setw(3) << server_token;
+
 	server.setName(server_name);
-	server.setUID(std::to_string(server_token));
+	server.setUID(ss.str());
 	server.setInfo(server_info);
 	server.setMaxConnection(server_max_connections);
 	if (has_network_connection)

@@ -9,13 +9,6 @@ uint					AServer::_defaultMaxConnections = 30;
 
 AServer::AServer( const std::string &host ) : ASockManager(), _host(host), _running(false), _maxConnections(AServer::_defaultMaxConnections)
 {
-	/*struct hostent *hostent = gethostbyname(host.c_str());
-	if (hostent && hostent->h_addr_list && *hostent->h_addr_list)
-	{
-		struct hostent *host_addr = gethostbyaddr(*hostent->h_addr_list, hostent->h_length, hostent->h_addrtype);
-		this->_host = host_addr->h_name;
-		Logger::info("got hostname : " + this->_host);
-	}*/
 	Logger::debug("Constructor AServer: " + this->_host);
 }
 
@@ -161,7 +154,14 @@ t_pollevent					AServer::_pollOutClients(SockStream & sock)
 
 	if (current_pkg.isInvalid() || current_pkg.getRawData().empty())
 	{
-		Logger::debug("sent & deleted package " + ntos(&current_pkg) + ntos(" of ") + sock.getIP());
+		Logger::debug("sent & deleted package " + ntos(&current_pkg) + ntos(" of ") + sock.getIP() + " explosive: " + ntos(current_pkg.isExplosive()));
+		if (current_pkg.isExplosive())
+		{		
+			Logger::debug("activated explosive package " + ntos(&current_pkg) + ntos(" of ") + sock.getIP());
+			delete &current_pkg;
+			this->disconnect(sock);
+			return (POLL_DELETE);
+		}
 		delete &current_pkg;
 		sock.getPendingData().remove(&current_pkg);
 		if (sock.getPendingData().size() == 0)

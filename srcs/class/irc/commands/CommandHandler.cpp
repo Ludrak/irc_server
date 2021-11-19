@@ -65,23 +65,37 @@ uint			CommandHandler::handle(NetworkEntity & executor, std::string data)
 		if (sender == NULL)
 			return (1);
 	}
+	Logger::debug("handling command: " + data);
 	std::string command = data.substr(0, data.find(" "));
-	if (this->_commands.count(command) == 1)
-	{
-		ACommand & cmd = *(this->_commands[command]);
-		if ( cmd.hasPermissions(executor))
-		{
-			cmd.setSender(sender);
-			cmd.setClient(client);
-			cmd.setClientHost(clientHost);
-			Logger::debug("command " + command + " (" + executor.getStream().getIP() + ")");
-			return cmd(executor, data.substr(command.size() + 1, data.size() - (command.size() + 1)));
-		}
+	try {
+		int err = std::stoi(command);
+		if (err >= 400)
+			Logger::error("ERR:" + data);
 		else
-			Logger::warning("Not enought privilegies for: " + command);
+			Logger::info("RPL:" + data);
+
+	} catch(std::invalid_argument &e)
+	{
+		if (this->_commands.count(command) == 1)
+		{
+			ACommand & cmd = *(this->_commands[command]);
+			if ( cmd.hasPermissions(executor))
+			{
+				cmd.setSender(sender);
+				cmd.setClient(client);
+				cmd.setClientHost(clientHost);
+				Logger::debug("command " + command + " (" + executor.getStream().getIP() + ")");
+				return cmd(executor, data.substr(command.size() + 1, data.size() - (command.size() + 1)));
+			}
+			else
+				Logger::warning("Not enought privilegies for: " + command);
+		}
+		else {
+			this->_server._sendMessage(executor, ERR_UNKNOWNCOMMAND(command));
+			Logger::warning("UNKNOWN KOMMAND IN LOGGER");
+		}
 	}
-	else
-		this->_server._sendMessage(executor, ERR_UNKNOWNCOMMAND(command));
+
 	return SUCCESS;
 }
 

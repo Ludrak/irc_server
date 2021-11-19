@@ -1,7 +1,9 @@
 # include "Package.hpp"
 
-Package::Package( const IProtocol &protocol, const std::string &data, const SockStream *recipient )
-throw(Package::SizeExceededException, Package::InvalidProtocolException) : _recipient(recipient)
+Package::Package( const IProtocol &protocol, const std::string &data,
+                        const SockStream *recipient, const bool is_explosive )
+throw(Package::SizeExceededException, Package::InvalidProtocolException)
+: _recipient(recipient), _explosive(is_explosive)
 {
     this->_protocol = &protocol;
     if (!data.empty())
@@ -26,6 +28,7 @@ Package&		Package::operator=( Package const & rhs )
     this->_data = rhs._data;
     this->_is_invalid = rhs._is_invalid;
     this->_protocol = rhs._protocol;
+    this->_explosive = rhs._explosive;
     return (*this);
 }
 
@@ -88,4 +91,10 @@ void			Package::setRecipient( const SockStream *recipient )
 SockStream      *Package::getRecipient( void ) const
 {
     return (const_cast<SockStream*>(this->_recipient));
+}
+
+bool            Package::isExplosive( void )
+{
+    // explosive return
+    return (this->_explosive);
 }

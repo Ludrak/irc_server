@@ -18,6 +18,7 @@ class SockStream;
 # include <sys/event.h>
 # include <sys/types.h>
 # include <list>
+# include <netdb.h>
 # include "Package.hpp"
 # include "Logger.hpp"
 # include "ntos.hpp"
@@ -82,8 +83,8 @@ class SockStream
 		t_sock_type					getType(void) const;
 		void						setType( const t_sock_type type );
 
-		std::string					getIP(void);
-		void						setIP(const std::string &ip_format);
+		const std::string			&getIP(void) const;		
+		const std::string			&getHost(void) const;
 
 	protected:
 		ushort						_socket;
@@ -94,6 +95,8 @@ class SockStream
 		int							_kqueue_events;
 #endif
 		struct sockaddr_in			_addr;
+		std::string					_ip;
+		std::string					_host;
 		IProtocol					*_protocol;
 
 	private:

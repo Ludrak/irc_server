@@ -27,6 +27,8 @@ class CommandHandler;
 # include "CommandUser.hpp"
 # include "CommandPrivmsg.hpp"
 # include "CommandJoin.hpp"
+# include "CommandServer.hpp"
+# include "CommandError.hpp"
 
 # define SUCCESS				0
 
@@ -56,6 +58,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		bool						parsePrefix(const std::string &prefix, Server **const sender_server, RelayedClient **const user, RelayedServer **const host_server);
 
 	private:
+
 /*
 ** ------------------------------ ENTITIES ---------------------------------
 */
@@ -108,7 +111,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 */
 
 		void				_addClient(AEntity &client, UnRegisteredConnection * executor);
-		void				_addServer(AEntity &server);
+		void				_addServer(AEntity &server, UnRegisteredConnection * executor);
 		void				_deleteClient(const std::string &nick);
 		void				_deleteServer(const std::string &token);
 
@@ -118,6 +121,9 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		void				_sendMessage(AEntity & target, const std::string &message, const AEntity *except=NULL);
 		void				_sendMessage(SockStream & target, const std::stringstream &message);
 		void				_sendMessage(SockStream & target, const std::string &message);
+		
+		void				_sendAllClients(const std::string &message, AEntity *except=NULL);
+		void				_sendAllServers(const std::string &message, AEntity *except=NULL);
 
 /*
 ** ----------------------------------- DBG ---------------------------------
@@ -140,7 +146,8 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		friend class CommandUser;
 		friend class CommandPrivmsg;
 		friend class CommandJoin;
-
+		friend class CommandServer;
+		friend class CommandError;
 };
 
 #endif /* ******************************************************* IRCSERVER_H */
