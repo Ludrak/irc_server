@@ -80,7 +80,8 @@ COMMANDS_HEADERS	=	CommandHandler.hpp \
 						CommandNick.hpp \
 						CommandUser.hpp \
 						CommandPrivmsg.hpp \
-						CommandJoin.hpp
+						CommandJoin.hpp 
+						# CommandNjoin.hpp
 
 # Librarys (only for local archives in project folder)
 LIBRARYS	= 

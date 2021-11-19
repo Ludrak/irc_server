@@ -66,6 +66,35 @@ void			IRCServer::_printServerState( void )
 			Logger::info("\t- " + (*itc)->getUID());
 		}
 	}
+	Logger::info("--- servers ---");
+	for (std::map<std::string, AEntity *>::const_iterator it = this->_servers.begin(); it != this->_servers.end(); ++it)
+	{
+		if (it->second->getType() & (Server::value_type | Server::value_type_forward))
+		{
+			Server *server = reinterpret_cast<Server*>(it->second);
+			Logger::info("-- " + server->getUID() + 
+				"\n - name: " + server->getName() +
+				"\n - host:" + server->getHostname() +
+				"\n - flags:" + server->getFlags() +
+				"\n - info" + server->getInfo());
+		}
+		else if (it->second->getType() & RelayedServer::value_type)
+		{
+			RelayedServer* server = reinterpret_cast<RelayedServer*>(it->second);
+			Logger::info("-- " + server->getUID() + 
+				"\n - name: " + server->getName() +
+				"\n - hop: " + ntos(server->getHopCount()) +
+				"\n - host:" + server->getHostname() +
+				"\n - relay" + server->getServer().getUID() +
+				"\n - info" + server->getInfo());
+		}
+		else
+		{
+			Logger::error("Invalid server list member type");
+		}
+
+
+	}
 }
 
 
