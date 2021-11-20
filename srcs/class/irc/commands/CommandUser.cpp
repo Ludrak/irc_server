@@ -71,6 +71,10 @@ uint				CommandUser::_commandUSERunknown(UnRegisteredConnection & executor, std:
 		new_client->setName(username);
 		this->getServer()._addClient(*new_client, &executor);
 		Logger::info("new user registered: " + new_client->getUID());
+		//Forward and backward this information:
+		std::stringstream reply_msg;
+		reply_msg << "NICK " << new_client->getUID() << " 1 " << new_client->getName() << " " << new_client->getHostname() << " " << new_client->getServerToken() << " " << new_client->getModeString() << " " << new_client->getRealname();
+		this->getServer()._sendAllServers(reply_msg.str());
 	} catch (const std::invalid_argument & e)
 	{
 		Logger::debug("Invalid mode argument (not a number)");

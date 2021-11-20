@@ -28,6 +28,7 @@ class ClientInfo
 
 		/* mode */
 		uint				getMode( void ) const;
+		std::string			getModeString( void );
 		bool				isEnable( uint modeMask ) const;
 		void				toogleMode( uint modeMask );
 		void				enableMode( uint modeMask );

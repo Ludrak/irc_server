@@ -54,6 +54,7 @@ uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 	
 	if  (this->getServer()._servers.count(tokss.str()) || tokss.str() == this->getServer().getUID())
 	{
+		//TODO change behavior when token is invalid (maybe with ERROR with appropriate message)
 		// TODO prefix
 		Package *explosive = new Package(this->getServer().getProtocol(),
 			this->getServer().getProtocol().format(ERR_ALREADYREGISTRED()), &executor.getStream(), true);
@@ -70,10 +71,11 @@ uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 		this->getServer()._sendAllServers(ss.str(), new_serv);
 		std::stringstream reply_msg;
 		reply_msg << "SERVER " << this->getServer().getName() << " 0 " << this->getServer().getUID() << " :" << this->getServer().getInfo();
-		Logger::debug("Resend (server infos): " + reply_msg.str());
 		if (type & Server::value_type)
 		{
+			Logger::debug("Resend (server infos): " + reply_msg.str());
 			this->getServer()._sendMessage(*new_serv, reply_msg);
+			/* send All servers */
 			for (std::map<std::string, AEntity*>::iterator it = this->getServer()._servers.begin();
 			it != this->getServer()._servers.end();
 			++it)
@@ -91,6 +93,27 @@ uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 				{
 					RelayedServer *server = reinterpret_cast<RelayedServer*>(it->second);
 					reply_msg << "SERVER " << server->getName() << " " << server->getHopCount() + 1 << " " << server->getUID() << " :" << server->getInfo();
+				}
+				else 
+					continue;
+				this->getServer()._sendMessage(*new_serv, reply_msg);
+			}
+			/* send All clients */
+			for (std::map<std::string, AEntity*>::iterator it = this->getServer()._clients.begin();
+			it != this->getServer()._clients.end();
+			++it)
+			{
+				reply_msg.str("");
+				if (it->second->getType() & Client::value_type)
+				{
+					Client *client = reinterpret_cast<Client*>(it->second);
+					reply_msg << "NICK " << client->getUID() << " 1 " << client->getName() << " " << client->getHostname() << " " << client->getServerToken() << " " << client->getModeString() << " " << client->getRealname();
+					// reply_msg << "NICK " << client->getUID() << " 1 " << client->getUID() << " :" << client->getInfo();
+				}
+				else if (it->second->getType() & RelayedClient::value_type)
+				{
+					RelayedClient *client = reinterpret_cast<RelayedClient*>(it->second);
+					reply_msg << "NICK " << client->getUID() << " " << client->getHopCount() + 1 << " " << client->getName() << " " << client->getHostname() << " " << client->getServerToken() << " " << client->getModeString() << " " << client->getRealname();
 				}
 				else 
 					continue;
@@ -131,7 +154,7 @@ uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 		this->getServer().sendPackage(explosive, executor.getStream());
 		return SUCCESS;
 	}
-	Logger::debug("out of function commandServer");
+	Logger::debug("out of function commandServer"); // REVIEW delete this debug after completing server command
 	return SUCCESS;
 }
 
@@ -143,6 +166,11 @@ uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 
 bool				CommandServer::hasPermissions(AEntity & executor)
 {
+	if (executor.getPassword() != this->getServer()._password)
+	{
+		Logger::error("Server: invalid password/" + executor.getPassword() + "/" + this->getServer()._password);
+		return false;
+	}
 	if (executor.getType() & UnRegisteredConnection::value_type)
 		return true;
 	if (executor.getType() & Server::value_type)
@@ -151,6 +179,7 @@ bool				CommandServer::hasPermissions(AEntity & executor)
 		return true;
 	if (executor.getType() & (UnRegisteredConnection::value_type | Server::value_type | Server::value_type_forward))
 		return (true);
+	//TODO make a test for |
 	return (false);
 }
 

@@ -86,14 +86,17 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		typedef uint	(IRCServer::*Operations)(AEntity & exector, std::string params);
 
 		/* Operations lists */
-		CommandHandler				_handler;
+		CommandHandler							_handler;
 
 /*
 ** ------------------------------- PROTOCOL(S) -------------------------------
 */
 
 		/* protocol for data transmission */
-		IRCProtocol										_protocol;
+		IRCProtocol								_protocol;
+
+		//TODO change position 
+		std::string							_forwardPassword;
 
 /*
 ** --------------------------------- EVENTS ---------------------------------

@@ -84,9 +84,50 @@ uint				CommandNick::_nickFromClient(Client & executor, std::string & nick)
 
 uint				CommandNick::_nickFromServer(Server & executor, std::string & params)
 {
-	Logger::error("UnImplemented nick from server");
-	(void ) executor ;
-	(void) params;
+	uint nbParams = Parser::nbParam(params);
+	if (nbParams == 2)
+	{
+		Logger::warning("unhandled 2 arguments NICK between servers");
+		return SUCCESS;
+	}
+	else if (nbParams != 7)
+		return SUCCESS;
+	std::string nick = Parser::getParam(params, 0);
+	if (this->getServer().alreadyInUseUID(nick) == true)
+	{
+		//nick collision
+		Logger::critical("Nick collision unhandled happened");
+		return SUCCESS;
+	}
+	uint hopcount;
+	try {
+		hopcount = std::stoi(Parser::getParam(params, 1));
+	}catch(const std::invalid_argument & e)
+	{
+		Logger::error("Non-number hopcount argument: " + Parser::getParam(params, 1));
+		return SUCCESS;
+	}
+	std::string username = Parser::getParam(params, 2);
+	if (Parser::validUser(username) == false)
+	{
+		Logger::debug("Invalid username, NICK command ignored");
+		return SUCCESS;
+	}
+	std::string host = Parser::getParam(params, 3);
+	//TODO check if valid hostname ?
+	std::string serverToken = Parser::getParam(params, 4);
+	//TODO check if valid severToken ?
+	std::string umode = Parser::getParam(params, 5);
+	(void) umode;
+	//TODO do method that transform umode in form "+iw" to uint
+	std::string realname = Parser::getParam(params, 6);
+	RelayedClient *rClient = new RelayedClient(executor, hopcount + 1, nick, username, realname, 0, serverToken, host );
+	this->getServer()._addClient(*rClient, NULL);
+	Logger::info("New relayed client added: hop +" + ntos(hopcount));
+	//Forward and backward this info
+	std::stringstream reply_msg;
+	reply_msg << "NICK " << rClient->getUID() << " " << rClient->getHopCount() << " " << rClient->getName() << " " << rClient->getHostname() << " " << rClient->getServerToken() << " " << rClient->getModeString() << " " << rClient->getRealname();
+	this->getServer()._sendAllServers(reply_msg.str(), &executor);
 	return SUCCESS;
 }
 

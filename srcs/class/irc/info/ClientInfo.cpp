@@ -79,6 +79,12 @@ uint						ClientInfo::getMode() const
 	return (this->_mode);
 }
 
+std::string					ClientInfo::getModeString( void )
+{
+	//TODO return a string like (+iw) from mode mask
+	return std::string("+i");
+}
+
 const std::string&			ClientInfo::getRealname( void ) const
 {
 	return this->_realname;

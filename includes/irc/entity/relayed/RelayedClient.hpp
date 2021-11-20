@@ -13,7 +13,7 @@ class RelayedClient : public RelayedEntity, public ClientInfo
     public:
 		RelayedClient(
 			Server            &relay,
-			const int         hopcount,
+			const int         hopcount, //TODO pass it uint
 			const std::string &nick,
 			const std::string &name,
 			const std::string &real_name,

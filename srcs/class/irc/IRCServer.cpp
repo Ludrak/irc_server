@@ -15,7 +15,8 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 	AEntity(IRCServer::value_type, "token"),
 	ServerInfo("name", "info", "pass", "IRC|amazircd"),
 	_handler(*this),
-	_protocol()
+	_protocol(),
+	_forwardPassword("")
 {
 	this->_initCommands();
 	Logger::debug("IRCServer constructor");
@@ -102,11 +103,11 @@ void			IRCServer::_printServerState( void )
 
 bool							IRCServer::connectToNetwork(const std::string & host, ushort port, std::string & password)
 {
-	// this->_forword_socket = new SockStream(host, port);
 	Logger::info("Try connecting to network:"); 
-	Logger::info("- host     : " + ntos(host)); 
+	Logger::info("- host     : " + host); 
 	Logger::info("- port     : " + ntos(port)); 
-	Logger::info("- password : " + ntos(password));
+	Logger::info("- password : " + password);
+	this->_forwardPassword = password;
 	try
 	{
 		if (this->connectOn(host, port, this->_protocol) == false)
@@ -140,7 +141,6 @@ void							IRCServer::_addClient(AEntity &client, UnRegisteredConnection * execu
 		Logger::critical("bad entity insertion: trying to add a non-client family entity to _addClient()");
 		return ;
 	}
-
 	if (executor != NULL) // RELAYED
 	{
 		this->_unregistered_connections.erase(&executor->getStream());
@@ -427,8 +427,12 @@ void						IRCServer::_onRecv(SockStream &server, Package &pkg)
 void				IRCServer::_onConnect ( SockStream &server)
 {
 	Logger::info("Connecting to forward server");
-	this->_unregistered_connections.insert(std::make_pair(&server, new UnRegisteredConnection(server)));
+	UnRegisteredConnection *forward = this->_unregistered_connections.insert(std::make_pair(&server, new UnRegisteredConnection(server))).first->second;
+	forward->setPassword(this->_password);
 	std::stringstream ss;
+	ss << "PASS " << this->_forwardPassword << " " << this->getVersion() << " " << this->getFlags();
+	this->_sendMessage(server, ss);
+	ss.str("");
 	ss << "SERVER " << this->_name << " 0 " << this->getUID() << " :" << this->_info; 
 	this->_sendMessage(server, ss);
 }
