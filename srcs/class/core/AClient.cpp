@@ -36,10 +36,10 @@ t_pollevent		AClient::_pollInClients(SockStream & sock)
 		this->delSocket(sock);
 		return (POLL_DELETE);
 	}
-	sock.getRecievedData().addData(buffer);			
-	while (!sock.getRecievedData().isInvalid()){
-		this->_onRecv(sock, sock.getRecievedData());
-		sock.getRecievedData().flush();
+	sock.getReceivedData().addData(buffer);			
+	while (!sock.getReceivedData().isInvalid()){
+		this->_onRecv(sock, sock.getReceivedData());
+		sock.getReceivedData().flush();
 	}
 	return (POLL_SUCCESS);
 }

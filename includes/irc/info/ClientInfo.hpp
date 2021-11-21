@@ -10,7 +10,7 @@
 class ClientInfo
 {
 	public:
-		/* relayed client info (when USER is recieved with hopcount > 0) */
+		/* relayed client info (when USER is received with hopcount > 0) */
 		/* created by command which contains all info about the new client */
 		ClientInfo(
 			const std::string	&real_name,

@@ -15,7 +15,7 @@ SockStream::SockStream(IProtocol & protocol)
 	_ip(""),
 	_host(""),
 	_protocol(&protocol),
-	_recieved_data(protocol)
+	_received_data(protocol)
 {
 	Logger::debug("default SockStream constructor");
 	this->_createSocket("127.0.0.1", 8080);
@@ -31,7 +31,7 @@ SockStream::SockStream(const std::string &host, uint16_t port, IProtocol & proto
 	_ip(""),
 	_host(""),
 	_protocol(&protocol),
-	_recieved_data(protocol)
+	_received_data(protocol)
 {
 	this->_createSocket(host, port);
 }
@@ -48,7 +48,7 @@ SockStream::SockStream(ushort socket, const sockaddr_in &address, IProtocol & pr
 	_ip(""),
 	_host(""),
 	_protocol(&protocol),
-	_recieved_data(protocol)
+	_received_data(protocol)
 {
 }
 
@@ -151,9 +151,9 @@ void							SockStream::setPackageProtocol(IProtocol &proto)
 	this->_protocol = &proto;
 }
 
-Package							&SockStream::getRecievedData()
+Package							&SockStream::getReceivedData()
 {
-	return (this->_recieved_data);
+	return (this->_received_data);
 }
 
 std::list<Package*>				&SockStream::getPendingData()

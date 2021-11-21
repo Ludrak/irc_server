@@ -122,14 +122,14 @@ t_pollevent					AServer::_pollInClients(SockStream & sock)
 		return (POLL_DELETE);
 	}
 	buffer[byte_size] = '\0';
-	sock.getRecievedData().addData(buffer);			
-	while (!sock.getRecievedData().isInvalid()){
+	sock.getReceivedData().addData(buffer);			
+	while (!sock.getReceivedData().isInvalid()){
 		int socket = sock.getSocket();
-		Logger::debug("recieved package from " + sock.getIP());
-		this->_onClientRecv(sock, sock.getRecievedData());
+		Logger::debug("received package from " + sock.getIP());
+		this->_onClientRecv(sock, sock.getReceivedData());
 		if (this->_sockets.count(socket) == 0)
 			return (POLL_DELETE);
-		sock.getRecievedData().flush();
+		sock.getReceivedData().flush();
 	}
 	return (POLL_SUCCESS);
 }

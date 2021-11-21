@@ -67,7 +67,7 @@ class SockStream
 		ushort						getSocket(void) const;
 		const struct sockaddr_in&	getAddress(void) const;
 		IProtocol					*getProtocol(void) const;
-		Package						&getRecievedData(void);
+		Package						&getReceivedData(void);
 		std::list<Package*>			&getPendingData(void);
 
 #ifndef KQUEUE
@@ -100,7 +100,7 @@ class SockStream
 		IProtocol					*_protocol;
 
 	private:
-		Package				 		_recieved_data;
+		Package				 		_received_data;
 		std::list<Package*>			_pending_data;
 
 		SockStream( SockStream const & src );
