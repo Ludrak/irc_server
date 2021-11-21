@@ -22,8 +22,8 @@ class Channel : public AEntity, public ASockHandler, public ChannelInfo
 
 		Channel &		operator=( Channel const & rhs );
 
-		Client				*getCreator(void);
-		void				setCreator(Client & client);
+		const AEntity		*getCreator(void) const;
+		void				setCreator(const AEntity & client);
 
 		uint				addClient(Client & client);
 		uint				removeClient(Client & client);
@@ -42,7 +42,7 @@ class Channel : public AEntity, public ASockHandler, public ChannelInfo
 
 		//TODO := check for passing M_REGISTRATION_LIMITED to AEntity beacause used by Client too and add a test on this flag before sayin 'cannot inc or dec'
 	private:
-		Client*					_creator; //REVIEW Check where to use it
+		const AEntity*			_creator;
 		std::list<Client *> 	_clients;
 		std::list<Client *> 	_operators;
 };

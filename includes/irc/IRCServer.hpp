@@ -29,6 +29,7 @@ class CommandHandler;
 # include "CommandJoin.hpp"
 # include "CommandServer.hpp"
 # include "CommandError.hpp"
+# include "CommandMode.hpp"
 
 # define SUCCESS				0
 
@@ -151,6 +152,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		friend class CommandJoin;
 		friend class CommandServer;
 		friend class CommandError;
+		friend class CommandMode;
 };
 
 #endif /* ******************************************************* IRCSERVER_H */

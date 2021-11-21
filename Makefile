@@ -73,6 +73,7 @@ COMMANDS_SRCS		=	CommandHandler.cpp \
 						CommandUser.cpp \
 						CommandPrivmsg.cpp \
 						CommandJoin.cpp \
+						CommandMode.cpp \
 						CommandError.cpp
 					
 COMMANDS_HEADERS	=	CommandHandler.hpp \
@@ -82,6 +83,7 @@ COMMANDS_HEADERS	=	CommandHandler.hpp \
 						CommandUser.hpp \
 						CommandPrivmsg.hpp \
 						CommandJoin.hpp \
+						CommandMode.hpp \
 						CommandError.hpp
 # CommandNjoin.hpp
 

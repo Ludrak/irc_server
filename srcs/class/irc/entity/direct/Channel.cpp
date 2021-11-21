@@ -120,12 +120,12 @@ bool					Channel::isRegistered(Client & client)
 ** --------------------------------- ACCESSOR ---------------------------------
 */
 
-Client*					Channel::getCreator( void )
+const AEntity*						Channel::getCreator( void ) const
 {
 	return this->_creator;
 }			
 
-void					Channel::setCreator(Client & client)
+void								Channel::setCreator(const AEntity & client)
 {
 	this->_creator = &client;
 }
