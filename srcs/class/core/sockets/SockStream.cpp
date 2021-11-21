@@ -6,10 +6,13 @@
 
 //TODO CHeck return values
 SockStream::SockStream(IProtocol & protocol)
+throw (InvalidHostException)
 :	_type(UNKNOWN),
-#ifndef KQUEUE
+#ifdef	POLL
 	_poll_events(POLLIN),
-#else
+#elif	defined(EPOLL)
+#elif	defined(SELECT)
+#elif	defined(KQUEUE)
 	_kqueue_events(EVFILT_READ),
 #endif
 	_ip(""),
@@ -22,10 +25,12 @@ SockStream::SockStream(IProtocol & protocol)
 }
 
 SockStream::SockStream(const std::string &host, uint16_t port, IProtocol & protocol)
+throw (InvalidHostException)
 :	_type(UNKNOWN),
-#ifndef KQUEUE
+#ifdef	POLL
 	_poll_events(POLLIN),
-#else
+#elif	defined(EPOLL)
+#elif	defined(KQUEUE)
 	_kqueue_events(EVFILT_READ),
 #endif
 	_ip(""),
@@ -39,9 +44,10 @@ SockStream::SockStream(const std::string &host, uint16_t port, IProtocol & proto
 SockStream::SockStream(ushort socket, const sockaddr_in &address, IProtocol & protocol)
 :	_socket(socket),
 	_type(UNKNOWN),
-#ifndef KQUEUE
+#ifdef	POLL
 	_poll_events(POLLIN),
-#else
+#elif	defined(EPOLL)
+#elif	defined(KQUEUE)
 	_kqueue_events(EVFILT_READ),
 #endif
 	_addr(address),
@@ -66,6 +72,7 @@ SockStream::~SockStream()
 */
 
 void							SockStream::_createSocket(const std::string &host, uint16_t port, sa_family_t family, int sock_type)
+throw (SockStream::InvalidHostException)
 {
 	if ((this->_socket = socket(family, sock_type, 0)) < 0)
 		throw SockStream::SocketCreationException();
@@ -73,7 +80,7 @@ void							SockStream::_createSocket(const std::string &host, uint16_t port, sa_
 	struct hostent *hostent = gethostbyname(host.c_str());
 	if (hostent && hostent->h_addr_list && *hostent->h_addr_list)
 	{
-		this->_ip = inet_ntoa(*((struct in_addr*)hostent->h_addr_list[0]));
+		this->_ip = std::string(inet_ntoa(*((struct in_addr*)hostent->h_addr_list[0])));
 		struct hostent *h = gethostbyaddr(*hostent->h_addr_list, hostent->h_length, hostent->h_addrtype);
 		if (h)
 			this->_host = h->h_name;
@@ -81,10 +88,7 @@ void							SockStream::_createSocket(const std::string &host, uint16_t port, sa_
 			this->_host = this->_ip;
 	}
 	else
-	{
-		Logger::error("Unable to resolve host: " + host);
-		return ;
-	}
+		throw InvalidHostException();
 	
 	bzero(reinterpret_cast<void *>(&this->_addr), sizeof(this->_addr));
 	this->_addr.sin_port = htons(port);
@@ -116,7 +120,7 @@ IProtocol						*SockStream::getProtocol( void ) const
 	return this->_protocol;
 }
 
-#ifndef KQUEUE
+#ifdef	POLL
 int								SockStream::getPollEvents() const 
 {
 	return (this->_poll_events);
@@ -129,20 +133,45 @@ void							SockStream::delPollEvent(int event)
 {
 	this->_poll_events &= ~event;
 }
-#else
-int								SockStream::getkQueueEvents() const 
+#elif	defined(EPOLL)
+int								SockStream::getEPollEvents() const 
 {
-	return (this->_kqueue_events);
+	return (this->_epoll_events);
 }
+void							SockStream::setEPollEvent(int event)
+{
+	this->_epoll_events |= event;
+}
+void							SockStream::delEPollEvent(int event)
+{
+	this->_epoll_events &= ~event;
+}
+#elif 	defined(SELECT)
+int								SockStream::getSelectedIOs(void) const
+{
+	return (this->_selectedIO);
+}
+
+void							SockStream::selectIO(int event)
+{
+	this->_selectedIO |= event;
+}
+
+void							SockStream::deselectIO(int event)
+{
+	this->_selectedIO &= ~event;
+}
+
+#elif	defined(KQUEUE)
 void							SockStream::setkQueueEvents(struct kevent &ev, int event)
 {
-	//this->_kqueue_events |= event;
+	Logger::info("Set event " + ntos(event) + " to " + ntos(ev.ident));
 	EV_SET(&ev, ev.ident, event, EV_ADD, 0, 0, NULL);
 }
 void							SockStream::delkQueueEvents(struct kevent &ev, int event)
 {
-	//this->_kqueue_events &= ~event;
-	EV_SET(&ev, ev.ident, event, EV_DISABLE, 0, 0, NULL);
+	Logger::info("Del event " + ntos(event) + " to " + ntos(ev.ident));
+	EV_SET(&ev, ev.ident, event, EV_DELETE, 0, 0, NULL);
 }
 #endif
 

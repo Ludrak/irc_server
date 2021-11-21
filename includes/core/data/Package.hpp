@@ -7,6 +7,7 @@ class SockStream;
 # include <string>
 # include "Protocol.hpp"
 
+
 class Package
 {
 	public:

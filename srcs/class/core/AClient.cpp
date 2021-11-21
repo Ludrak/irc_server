@@ -63,14 +63,20 @@ t_pollevent		AClient::_pollOutClients(SockStream & sock)
 		sock.getPendingData().remove(&current_pkg);
 		if (sock.getPendingData().size() == 0)
 		{
-#ifndef KQUEUE
+#ifdef 	POLL
 			sock.delPollEvent(POLLOUT);
-#else
+#elif	defined(EPOLL)
+#elif	defined(SELECT)
+			sock.deselectIO(SELECT_IO_WRITE);
+#elif	defined(KQUEUE)
 		for (std::vector<struct kevent>::iterator it = this->_k_events.begin();
 			it != this->_k_events.end();
 			++it)
 			if (it->ident == sock.getSocket())
+			{
 				sock.delkQueueEvents(*it, EVFILT_WRITE);
+				sock.setkQueueEvents(*it, EVFILT_READ);
+			}
 #endif
 		}
 	}
@@ -82,9 +88,12 @@ t_pollevent		AClient::_pollOutClients(SockStream & sock)
 t_pollevent		AClient::_pollFromServers(SockStream & sock, int event)
 {	
 	/* client in sock has returned positive event */
-#ifndef KQUEUE
+#ifdef	POLL
 	if (event & POLLIN)
-#else
+#elif	defined(EPOLL)
+#elif	defined(SELECT)
+	if (event & SELECT_IO_READ)
+#elif	defined(KQUEUE)
 	if (event == EVFILT_READ)
 #endif
 	{
@@ -93,9 +102,12 @@ t_pollevent		AClient::_pollFromServers(SockStream & sock, int event)
 		if (ev == POLL_DELETE)
 			return (POLL_DELETE);
 	}
-#ifndef KQUEUE
+#ifdef	POLL
 	if (event & POLLOUT)
-#else
+#elif	defined(EPOLL)
+#elif	defined(SELECT)
+	if (event & SELECT_IO_WRITE)
+#elif	defined(KQUEUE)
 	if (event == EVFILT_WRITE)
 #endif
 	{
@@ -118,12 +130,18 @@ t_pollevent     AClient::_onPollEvent(int socket, int event)
 
 void			AClient::sendServerPackage( Package *pkg, SockStream &server_recipient )
 {
-#ifndef KQUEUE
+#ifdef	POLL
 	server_recipient.setPollEvent(POLLOUT);
-#else
+#elif 	defined(EPOLL)
+#elif	defined(SELECT)
+	server_recipient.selectIO(SELECT_IO_WRITE);
+#elif	defined(KQUEUE)
 	for (std::vector<struct kevent>::iterator it = this->_k_events.begin(); it != this->_k_events.end(); ++it)
 		if (it->ident == server_recipient.getSocket())
+		{
+			server_recipient.delkQueueEvents(*it, EVFILT_READ);
 			server_recipient.setkQueueEvents(*it, EVFILT_WRITE);
+		}
 #endif
 	pkg->setRecipient(&server_recipient);
 	server_recipient.getPendingData().push_back(pkg);
