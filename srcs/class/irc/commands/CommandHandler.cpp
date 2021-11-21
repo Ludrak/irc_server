@@ -55,15 +55,24 @@ std::ostream &			operator<<( std::ostream & o, CommandHandler const & i )
 
 uint			CommandHandler::handle(NetworkEntity & executor, std::string data)
 {
-	Server			*sender = NULL;
-	AEntity			*client = NULL;
-	AEntity			*clientHost = NULL;
+	// Server			*sender = NULL;
+	RelayedClient	*client = NULL;
+	RelayedServer	*clientHost = NULL;
+	std::string		uname;
 	if (data[0] == ':')
 	{
-		this->_server.parsePrefix(data.substr(0, data.find(" ")), &sender, reinterpret_cast<RelayedClient**>(&client), reinterpret_cast<RelayedServer**>(&clientHost));
+		this->_server.parsePrefix(data.substr(0, data.find(" ")), &clientHost, &client, &uname);
 		data = data.substr(data.find(" ") + 1, data.size() - data.find(" ") - 1);
-		if (sender == NULL)
+
+		if (client != NULL)
+		{
+			Logger::debug("prefix client founded: " + client->getUID());
+		}
+		if (clientHost == NULL)
+		{
+			Logger::debug("handler: clientHost is NULL");
 			return (1);
+		}
 	}
 	Logger::debug("handling command: " + data);
 	std::string command = data.substr(0, data.find(" "));
@@ -81,21 +90,23 @@ uint			CommandHandler::handle(NetworkEntity & executor, std::string data)
 			ACommand & cmd = *(this->_commands[command]);
 			if ( cmd.hasPermissions(executor))
 			{
-				cmd.setSender(sender);
+				// cmd.setSender(sender);
 				cmd.setClient(client);
 				cmd.setClientHost(clientHost);
 				Logger::debug("command " + command + " (" + executor.getStream().getIP() + ")");
 				return cmd(executor, data.substr(command.size() + 1, data.size() - (command.size() + 1)));
 			}
 			else
+			{
 				Logger::warning("Not enought privilegies for: " + command);
+				this->_server._sendMessage(executor, ERR_UNKNOWNCOMMAND(command));
+			}
 		}
 		else {
 			this->_server._sendMessage(executor, ERR_UNKNOWNCOMMAND(command));
 			Logger::warning("UNKNOWN KOMMAND IN LOGGER");
 		}
 	}
-
 	return SUCCESS;
 }
 

@@ -242,7 +242,7 @@ void							IRCServer::_sendMessage(AEntity & target, const std::string &message,
 		}
 		case Client::value_type :
 		{
-			Logger::debug("Sending Client message");
+			Logger::debug("Sending Client message: " + message);
 			Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<Client*>(&target)->getStream());
 			this->sendPackage(package, reinterpret_cast<Client*>(&target)->getStream());
 			break;
@@ -382,7 +382,7 @@ void							IRCServer::_onClientRecv(SockStream & s, Package & pkg)
 		return ;
 	uint ret = this->_handler.handle(*entity, pkg.getData());
 	if (ret)
-		Logger::error("something bad happened in handler");
+		Logger::error("onClientRecv: Something bad happened in handler");
 }
 
 
@@ -423,7 +423,7 @@ void						IRCServer::_onRecv(SockStream &server, Package &pkg)
 		return ;
 	uint ret = this->_handler.handle(*entity, pkg.getData());
 	if (ret)
-		Logger::error("something bad happened in handler");
+		Logger::error("onRecv: Something bad happened in handler");
 }
 
 
@@ -512,7 +512,6 @@ std::string					IRCServer::getCreationDate( void ) const
 
 void							IRCServer::_initCommands( void )
 {
-	this->_handler.addCommand<CommandUser>("USER");
 	this->_handler.addCommand<CommandPass>("PASS");
 	this->_handler.addCommand<CommandNick>("NICK");
 	this->_handler.addCommand<CommandUser>("USER");
@@ -565,53 +564,61 @@ std::string							IRCServer::makePrefix(const AEntity *user, const AEntity *host
 
 
 
-// prefix format -> :<server_uid>[!<user_uid>@<host_uid>]SPACE
-bool								IRCServer::parsePrefix(const std::string &prefix, Server **const sender_server, RelayedClient **const user, RelayedServer **const host_server)
+// prefix format -> Server-Server: <server_uid>SPACE
+// prefix format -> Server-Client: <nickname>[!<username>@<host_uid>]SPACE
+bool								IRCServer::parsePrefix(const std::string &prefix,  RelayedServer **const host_server, RelayedClient **const user, std::string *username)
 {
-	if (prefix.find(":") != 1 || !sender_server)
+	if (prefix.find(":") != 0 || !host_server)
 		return (false);
 	/* extended prefix */
-	if (prefix.find("!") != std::string::npos && user && host_server)
+	if (prefix.find("!") != std::string::npos && user && host_server) //REVIEW no host_server here (can have @ witout !)
 	{
 		/* parse sender */
-		std::string token = prefix.substr(1, prefix.find ("!") - 1);
-		if (this->_servers.count(token) != 1 || this->_servers[token]->getType() & ~Server::value_type)// TODO ~ error
+		if (prefix.find("@") == std::string::npos)
+			Logger::debug("@ not found");
+		Logger::debug("Parse extented prefix");
+		std::string firstName = prefix.substr(1, prefix.find ("!") - 1);
+		Logger::debug("Parse firstname: " + firstName);
+		std::string uname = prefix.substr(prefix.find("!") + 1, prefix.find("@") - 1);
+		Logger::debug("Parse username: " + uname);
+		std::string secondName = prefix.substr(prefix.find("@") + 1, prefix.size());
+		Logger::debug("Parse secondName: " + secondName);
+		
+		if (this->_clients.count(firstName) != 1 )
 		{
-			Logger::critical("extended prefix sender server is not a direct server");
+			Logger::critical("Unknown user in prefix: " + firstName);
 			return (false);
 		}
-		*sender_server = reinterpret_cast<Server*>(this->_servers[token]);
+		else if ((this->_clients[firstName]->getType() & RelayedClient::value_type) == false)
+		{
+			Logger::critical("Prefix original sender is not a relayed client");
+			return false;
+		}
+		*user = reinterpret_cast<RelayedClient*>(this->_clients[firstName]);
+		*username = uname;
 
-		/* parse sender client nickname */
-		token = prefix.substr(prefix.find ("!") + 1, prefix.find("@") - prefix.find ("!") - 1);
-		if (this->_clients.count(token) != 1 || this->_clients[token]->getType() & ~RelayedClient::value_type)// TODO ~ error
+		if (this->_servers.count(secondName) != 1)
 		{
-			Logger::critical("extended prefix username is not a relayed client");
+			Logger::critical("Unknown host in prefix: " + secondName);
 			return (false);
 		}
-		*user = reinterpret_cast<RelayedClient*>(this->_clients[token]);
-
-		/* parse host server */
-		token = prefix.substr(prefix.find("@") + 1, prefix.size() - prefix.find("!") - 1);
-		if (this->_servers.count(token) != 1 || this->_servers[token]->getType() & ~RelayedServer::value_type)// TODO ~ error
-		{
-			Logger::critical("extended prefix host is not a relayed server");
-			return (false);
-		}
-		*host_server = reinterpret_cast<RelayedServer*>(this->_servers[token]);
+		*host_server = reinterpret_cast<RelayedServer*>(this->_servers[secondName]);
 	}
 	/* simple prefix */
 	else
 	{
+		Logger::debug("Simple prefix");
 		*user = NULL;
-		*sender_server = NULL;
-		std::string token = prefix.substr(1, prefix.size() - 1);
-		if (this->_servers.count(token) != 1 || this->_servers[token]->getType() & ~Server::value_type) // TODO ~ error
+		std::string serverName = prefix.substr(1, prefix.size() - 1);
+		Logger::debug("Prefix serverName: " + serverName);
+		if (this->_servers.count(serverName) != 1) 
 		{
-			Logger::critical("extended prefix sender server is not a direct server");
+			Logger::critical("Unknown server in prefix: " +serverName);
 			return (false);
 		}
-		*sender_server = reinterpret_cast<Server*>(this->_servers[token]);
+		else if (this->_servers[serverName]->getType() & RelayedServer::value_type)
+			Logger::info("Server in prefix is a RelayedServer" + serverName);
+		*host_server = reinterpret_cast<RelayedServer*>(this->_servers[serverName]);
 	}
 	return (true);
 }

@@ -54,7 +54,11 @@ uint					CommandPrivmsg::operator()(NetworkEntity & executor, std::string params
 			}
 			Logger::info(executor.getUID() + " send message to " + target->getUID());
 			std::string msg = Parser::getParam(params, 1);
-			msg = this->getServer().makePrefix(&executor, &this->getServer()) + "PRIVMSG " + target->getUID() + " :" + msg;
+			// msg = this->getServer().makePrefix(&executor, &this->getServer()) + "PRIVMSG " + target->getUID() + " :" + msg;
+			if (this->getClient() != NULL)
+				msg = this->getServer().makePrefix(this->getClient(), &this->getServer()) + "PRIVMSG " + target->getUID() + " :" + msg;
+			else
+				msg = this->getServer().makePrefix(&executor, &this->getServer()) + "PRIVMSG " + target->getUID() + " :" + msg;
 			Logger::debug(std::string("MSG = ") + msg);
 			this->getServer()._sendMessage(*target, msg);
 			break ;
