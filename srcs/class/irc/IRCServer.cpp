@@ -16,7 +16,8 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 	ServerInfo("name", "info", "pass", "IRC|amazircd"),
 	_handler(*this),
 	_protocol(),
-	_forwardPassword("")
+	_forwardPassword(""),
+	_creationTime(std::time(NULL))
 {
 	this->_initCommands();
 	Logger::debug("IRCServer constructor");
@@ -62,6 +63,10 @@ void			IRCServer::_printServerState( void )
 	for (std::map<std::string, Channel *>::const_iterator it = this->_channels.begin(); it != this->_channels.end(); ++it)
 	{
 		Logger::info("-- " + it->second->getUID() + " " + ntos(it->second->getConcurrentClients()) + "/" + ntos(it->second->getConcurrentClientsMax()));
+		if (it->second->getCreator())
+			Logger::info("Creator: " + it->second->getCreator()->getUID());
+		else
+			Logger::info("Creator: none");
 		for (std::list<Client *>::iterator itc = it->second->clientBegin(); itc != it->second->clientEnd(); ++itc)
 		{
 			Logger::info("\t- " + (*itc)->getUID());
@@ -493,6 +498,10 @@ UnRegisteredConnection*		IRCServer::getUnRegisteredConnectionByUID(std::string U
 
 
 
+std::string					IRCServer::getCreationDate( void ) const
+{
+	return std::ctime(&this->_creationTime);
+}
 
 /*
 ** --------------------------------- COMMANDS ---------------------------------
@@ -506,6 +515,7 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandUser>("USER");
 	this->_handler.addCommand<CommandPass>("PASS");
 	this->_handler.addCommand<CommandNick>("NICK");
+	this->_handler.addCommand<CommandUser>("USER");
 	this->_handler.addCommand<CommandPrivmsg>("PRIVMSG");
 	this->_handler.addCommand<CommandJoin>("JOIN");
 	this->_handler.addCommand<CommandServer>("SERVER");

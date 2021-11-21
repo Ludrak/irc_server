@@ -18,6 +18,7 @@ class CommandUser : public ACommand
 
 		bool				hasPermissions(AEntity & executor);
 		uint				_commandUSERunknown(UnRegisteredConnection & executor, std::string params);
+		void				_sendWelcomeInfos(Client & new_client);
 
 	private:
 

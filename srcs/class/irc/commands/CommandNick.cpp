@@ -39,7 +39,7 @@ uint					CommandNick::operator()(NetworkEntity & executor, std::string params)
 	std::string nick = Parser::getParam(params, 0);
 	if (Parser::validNickname(nick) == false)
 	{
-		this->getServer()._sendMessage(executor, ERR_ERRONEUSNICKNAME(nick));
+		this->getServer()._sendMessage(executor, ERR_ERRONEUSNICKNAME(executor.getUID(), nick));
 		return SUCCESS;
 	}
 	else if (this->getServer().alreadyInUseUID(nick) == true)

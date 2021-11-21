@@ -5,8 +5,9 @@ class Channel;
 class Client;
 class CommandHandler;
 
-# include "status.hpp"
 # include <string>
+# include <ctime>
+# include "status.hpp"
 # include "Channel.hpp"
 # include "Client.hpp"
 # include "Parser.hpp"
@@ -49,14 +50,15 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		const IProtocol&			getProtocol( void ) const;
 		Channel*					getChannel(int ChannelUID);
 		NetworkEntity*				getEntityByStream(SockStream & s);
-
+		std::string					getCreationDate( void ) const;
 		UnRegisteredConnection*		getUnRegisteredConnectionByUID(const std::string UID);
 
 		bool						alreadyInUseUID(std::string & uid) const; 
 
 		/* prefix parser */
 		std::string					makePrefix(const AEntity *user=NULL, const AEntity *host_server=NULL);
-		bool						parsePrefix(const std::string &prefix, Server **const sender_server, RelayedClient **const user, RelayedServer **const host_server);
+		// bool						parsePrefix(const std::string &prefix, Server **const sender_server, RelayedClient **const user, RelayedServer **const host_server);
+		bool						parsePrefix(const std::string &prefix,  RelayedServer **const host_server, RelayedClient **const user, std::string *username);
 
 	private:
 
@@ -98,7 +100,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 
 		//TODO change position 
 		std::string							_forwardPassword;
-
+		time_t								_creationTime;
 /*
 ** --------------------------------- EVENTS ---------------------------------
 */

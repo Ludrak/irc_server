@@ -71,6 +71,8 @@ uint				CommandUser::_commandUSERunknown(UnRegisteredConnection & executor, std:
 		new_client->setName(username);
 		this->getServer()._addClient(*new_client, &executor);
 		Logger::info("new user registered: " + new_client->getUID());
+		/* Send registration informations to new user*/
+		this->_sendWelcomeInfos(*new_client);
 		//Forward and backward this information:
 		std::stringstream reply_msg;
 		reply_msg << "NICK " << new_client->getUID() << " 1 " << new_client->getName() << " " << new_client->getHostname() << " " << new_client->getServerToken() << " " << new_client->getModeString() << " " << new_client->getRealname();
@@ -82,6 +84,17 @@ uint				CommandUser::_commandUSERunknown(UnRegisteredConnection & executor, std:
 	return SUCCESS;
 }
 
+void		CommandUser::_sendWelcomeInfos(Client & new_client)
+{
+	std::string pref = new_client.getUID() + "!" + new_client.getName() + "@" + this->getServer().getUID();
+	Logger::debug("pref = " + pref);
+	//TODO make a IRCServer._reply for adding prefix
+	this->getServer()._sendMessage(new_client, ":" + this->getServer().getUID() + " " + RPL_WELCOME(new_client.getUID(), pref));
+	this->getServer()._sendMessage(new_client, ":" + this->getServer().getUID() + " " + RPL_YOURHOST(new_client.getUID(), this->getServer().getUID(), this->getServer().getVersion()));
+	this->getServer()._sendMessage(new_client, ":" + this->getServer().getUID() + " " + RPL_CREATED(new_client.getUID(), this->getServer().getCreationDate()));
+	// this->getServer()._sendMessage(executor, RPL_MYINFO());
+
+}
 
 /*
 ** --------------------------------- ACCESSOR ---------------------------------

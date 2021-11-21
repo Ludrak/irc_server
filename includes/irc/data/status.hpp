@@ -6,18 +6,18 @@
 /* Used to indicate the nickname parameter supplied to a
 command is currently unused.
 */
-# define ERR_NOSUCHNICK(A) "401 " + A + " :No such nick/channel"
+# define ERR_NOSUCHNICK(A) "401 :" + A + " No such nick/channel"
 
 
 /* Used to indicate the server name given currently
 doesn't exist.
 */
-# define ERR_NOSUCHSERVER(A) "402 " + A + " :No such server"
+# define ERR_NOSUCHSERVER(A) "402 :" + A + " No such server"
 
 
 /* Used to indicate the given channel name is invalid.
 */
-# define ERR_NOSUCHCHANNEL(A) "403 " + A + " :No such channel"
+# define ERR_NOSUCHCHANNEL(A) "403 :" + A + " No such channel"
 
 
 /* Sent to a user who is either (a) not on a channel
@@ -103,14 +103,14 @@ command and isn't found.
 characters which do not fall in the defined set.  See
 section x.x.x for details on valid nicknames.
 */
-# define ERR_ERRONEUSNICKNAME(A) "432 " + A + " :Erroneus nickname"
+# define ERR_ERRONEUSNICKNAME(A, B) "432 " + A + " " + B + " :Erroneus nickname"
 
 
 /* Returned when a NICK message is processed that results
 in an attempt to change to a currently existing
 nickname.
 */
-# define ERR_NICKNAMEINUSE(A) "433 " + A + " :Nickname is already in use"
+# define ERR_NICKNAMEINUSE(A) "433 :" + A + " Nickname is already in use"
 
 
 /* Returned by a server to a client when it detects a
@@ -169,7 +169,7 @@ to be parsed in detail.
 indicate to the client that it didn't supply enough
 parameters.
 */
-# define ERR_NEEDMOREPARAMS(A) "461 " + A + " :Not enough parameters"
+# define ERR_NEEDMOREPARAMS(A) "461 :" + A + " Not enough parameters"
 
 
 /* Returned by the server to any link which tries to
@@ -252,7 +252,7 @@ the a mode flag sent was not recognized.
 /* Error sent to any user trying to view or change the
 user mode for a user other than themselves.
 */
-# define ERR_USERSDONTMATCH() "502 :Cant change mode for other users"
+# define ERR_USERSDONTMATCH() "502 Cant change mode for other users"
 
 
 /*
@@ -594,4 +594,22 @@ is required) in RPL_ADMINEMAIL.
 
 # define RPL_ADMINEMAIL(A) "259 :" + A
 
+/*
+A = recipient
+B = <nick>!<user>@<host>
+*/
+# define RPL_WELCOME(A, B) "001 " + A + " :Welcome to the Internet Relay Network " + B
+
+/* A = servername B = vers */
+# define RPL_YOURHOST(A, B, C) "002 " + A + " :Your host is " + B + ", running version " + C
+
+/* A = <date> */
+# define RPL_CREATED(A, B) "003 " + A + " :This server was created " + B
+
+/*
+A = <servername>
+B = <version>
+C = <available user modes>
+D = <available channelsmode*/
+# define RPL_MYINFO() "004 " + A + " " + B + " " + C + " " + D
 #endif // STATUS_HPP
