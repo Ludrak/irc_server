@@ -520,6 +520,7 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandServer>("SERVER");
 	this->_handler.addCommand<CommandError>("ERROR");
 	this->_handler.addCommand<CommandMode>("MODE");
+	this->_handler.addCommand<CommandQuit>("QUIT");
 }
 
 
