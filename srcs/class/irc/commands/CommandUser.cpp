@@ -24,7 +24,7 @@ CommandUser::~CommandUser()
 uint					CommandUser::operator()(NetworkEntity & executor, std::string params)
 {
 	if (this->getServer()._entities.count(executor.getUID()) != 0)
-		this->getServer()._sendMessage(executor, ERR_ALREADYREGISTRED());
+		this->getServer()._sendMessage(executor, ERR_ALREADYREGISTRED(executor.getUID()));
 	else if (executor.getType() & UnRegisteredConnection::value_type)
 		return this->_commandUSERunknown(static_cast<UnRegisteredConnection&>(executor), params);
 	else
@@ -75,7 +75,9 @@ uint				CommandUser::_commandUSERunknown(UnRegisteredConnection & executor, std:
 		this->_sendWelcomeInfos(*new_client);
 		//Forward and backward this information:
 		std::stringstream reply_msg;
-		reply_msg << "NICK " << new_client->getUID() << " 1 " << new_client->getName() << " " << new_client->getHostname() << " " << new_client->getServerToken() << " " << new_client->getModeString() << " " << new_client->getRealname();
+		reply_msg << "NICK " << new_client->getUID() << " 1 " << new_client->getName() <<
+			" " << new_client->getHostname() << " " << new_client->getServerToken() <<
+			" " << new_client->getModeString() << " " << new_client->getRealname();
 		this->getServer()._sendAllServers(reply_msg.str());
 	} catch (const std::invalid_argument & e)
 	{

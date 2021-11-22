@@ -55,9 +55,9 @@ uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 	if  (this->getServer()._servers.count(tokss.str()) || tokss.str() == this->getServer().getUID())
 	{
 		//TODO change behavior when token is invalid (maybe with ERROR with appropriate message)
-		// TODO prefix
+		// TODO add prefix
 		Package *explosive = new Package(this->getServer().getProtocol(),
-			this->getServer().getProtocol().format(ERR_ALREADYREGISTRED()), &executor.getStream(), true);
+			this->getServer().getProtocol().format(ERR_ALREADYREGISTRED(executor.getUID())), &executor.getStream(), true);
 		Logger::warning("Send explosive package to executor");
 		this->getServer().sendPackage(explosive, executor.getStream());
 		return SUCCESS;

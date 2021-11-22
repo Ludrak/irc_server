@@ -12,7 +12,7 @@ command is currently unused.
 /* Used to indicate the server name given currently
 doesn't exist.
 */
-# define ERR_NOSUCHSERVER(A) "402 :" + A + " No such server"
+# define ERR_NOSUCHSERVER(A, B) "402 " + A + " " + B + " :No such server"
 
 
 /* Used to indicate the given channel name is invalid.
@@ -169,14 +169,14 @@ to be parsed in detail.
 indicate to the client that it didn't supply enough
 parameters.
 */
-# define ERR_NEEDMOREPARAMS(A, B) "461 " + A + " " + B + " :Not enough parameters"
+# define ERR_NEEDMOREPARAMS(exec, A) "461 " + exec + " " + A + " :Not enough parameters"
 
 
 /* Returned by the server to any link which tries to
 change part of the registered details (such as
 password or user details from second USER message).
 */
-# define ERR_ALREADYREGISTRED() "462 :Unauthorized command (already registered)"
+# define ERR_ALREADYREGISTRED(exec) "462 " + exec + " :Unauthorized command (already registered)"
 
 
 /* Returned to a client which attempts to register with
@@ -191,7 +191,7 @@ is tried.
 a connection for which a password was required and
 was either not given or incorrect.
 */
-# define ERR_PASSWDMISMATCH() "464 :Password incorrect"
+# define ERR_PASSWDMISMATCH(exec) "464 " + exec + " :Password incorrect"
 
 
 /* Returned after an attempt to connect and register
@@ -217,7 +217,7 @@ explicitly deny connections to you.
 must return this error to indicate the attempt was
 unsuccessful.
 */
-# define ERR_NOPRIVILEGES() "481 :Permission Denied You're not an IRC operator"
+# define ERR_NOPRIVILEGES(A) "481 " + A + " :Permission Denied- You're not an IRC operator"
 
 /* Any command requiring 'chanop' privileges (such as
 MODE messages) must return this error if the client
@@ -456,7 +456,7 @@ RPL_ENDOFMOTD (after).
 just successfully issued an OPER message and gained
 operator status.
 */
-# define RPL_YOUREOPER() "381 :You are now an IRC operator"
+# define RPL_YOUREOPER(exec) "381 " + exec + " :You are now an IRC operator"
 
 
 /* If the REHASH option is used and an operator sends
@@ -592,24 +592,24 @@ is required) in RPL_ADMINEMAIL.
 
 # define RPL_ADMINLOC2(A) "258 :" + A
 
-# define RPL_ADMINEMAIL(A) "259 :" + A
+# define RPL_ADMINEMAIL(exec, A) "259 " + exec + " " +  A
 
 /*
 A = recipient
 B = <nick>!<user>@<host>
 */
-# define RPL_WELCOME(A, B) "001 " + A + " :Welcome to the Internet Relay Network " + B
+# define RPL_WELCOME(exec, A) "001 " + exec + " :Welcome to the Internet Relay Network " + A
 
 /* A = servername B = vers */
-# define RPL_YOURHOST(A, B, C) "002 " + A + " :Your host is " + B + ", running version " + C
+# define RPL_YOURHOST(exec, A, B) "002 " + exec + " :Your host is " + A + ", running version " + B
 
 /* A = <date> */
-# define RPL_CREATED(A, B) "003 " + A + " :This server was created " + B
+# define RPL_CREATED(exec, A) "003 " + exec + " :This server was created " + A
 
 /*
 A = <servername>
 B = <version>
 C = <available user modes>
 D = <available channelsmode*/
-# define RPL_MYINFO() "004 " + A + " " + B + " " + C + " " + D
+# define RPL_MYINFO(exec, A, B, C, D) "004 " exec + " :" + A + " " + B + " " + C + " " + D
 #endif // STATUS_HPP

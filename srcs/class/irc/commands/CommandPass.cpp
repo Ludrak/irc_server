@@ -32,7 +32,7 @@ uint					CommandPass::operator()(NetworkEntity & executor, std::string params)
 	if (this->getServer()._entities.count(executor.getUID()) != 0)
 	{
 		Logger::warning("Alredy registered");
-		this->getServer()._sendMessage(executor, ERR_ALREADYREGISTRED());
+		this->getServer()._sendMessage(executor, ERR_ALREADYREGISTRED(executor.getUID()));
 		return SUCCESS;
 	}
 	UnRegisteredConnection & ue = static_cast<UnRegisteredConnection &>(executor);

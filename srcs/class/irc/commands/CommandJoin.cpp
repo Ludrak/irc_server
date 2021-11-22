@@ -70,7 +70,7 @@ uint					CommandJoin::operator()(NetworkEntity & executor, std::string params)
 					this->getServer()._sendMessage(executor, ERR_TOOMANYCHANNELS(executor.getUID()));
                     continue ;
 			    case 2:
-					this->getServer()._sendMessage(executor, ERR_ALREADYREGISTRED());
+					this->getServer()._sendMessage(executor, ERR_ALREADYREGISTRED(executor.getUID()));
                     continue ;
 	            case 4:
 					this->getServer()._sendMessage(executor, ERR_CHANNELISFULL(new_chan->getUID()));
