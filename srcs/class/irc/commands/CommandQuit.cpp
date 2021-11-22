@@ -42,7 +42,7 @@ uint					CommandQuit::operator()(NetworkEntity & executor, std::string params)
 		except = &executor;
 		this->getServer()._entities.erase(origin->getUID());
 		this->getServer()._clients.erase(origin->getUID());
-		Logger::info(origin.getUID() + " is quitting");
+		Logger::info(origin->getUID() + " is quitting");
 		delete origin;
 	}
 	else

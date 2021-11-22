@@ -32,6 +32,7 @@ class CommandHandler;
 # include "CommandError.hpp"
 # include "CommandMode.hpp"
 # include "CommandQuit.hpp"
+# include "CommandOper.hpp"
 
 # define SUCCESS				0
 
@@ -100,8 +101,10 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		IRCProtocol								_protocol;
 
 		//TODO change position 
-		std::string							_forwardPassword;
-		time_t								_creationTime;
+		std::string								_forwardPassword;
+		time_t									_creationTime;
+		std::string								_operName;
+		std::string								_operPassword;
 /*
 ** --------------------------------- EVENTS ---------------------------------
 */
@@ -157,6 +160,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		friend class CommandError;
 		friend class CommandMode;
 		friend class CommandQuit;
+		friend class CommandOper;
 };
 
 #endif /* ******************************************************* IRCSERVER_H */

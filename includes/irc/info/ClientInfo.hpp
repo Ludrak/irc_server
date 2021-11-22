@@ -44,7 +44,7 @@ class ClientInfo
 		void				setHostname( const std::string &host );
 
 		bool				isServerOP( void ) const;
-		void				setServerOP( const bool op );
+		void				setServerOP( const bool op ); //TODO isServerOP check for int greater than 0 but setServerOP allow only a boolean
 
 	protected:
 		uint			_mode;

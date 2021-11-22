@@ -17,7 +17,9 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 	_handler(*this),
 	_protocol(),
 	_forwardPassword(""),
-	_creationTime(std::time(NULL))
+	_creationTime(std::time(NULL)),
+	_operName("becomeOper"),
+	_operPassword("becomeOper")
 {
 	this->_initCommands();
 	Logger::debug("IRCServer constructor");
@@ -521,6 +523,7 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandError>("ERROR");
 	this->_handler.addCommand<CommandMode>("MODE");
 	this->_handler.addCommand<CommandQuit>("QUIT");
+	this->_handler.addCommand<CommandOper>("OPER");
 }
 
 
