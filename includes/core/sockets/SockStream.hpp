@@ -105,6 +105,7 @@ class SockStream
 
 		SockStream( SockStream const & src );
 
+		void						_resolveIP(const std::string &host);
 		void						_createSocket(const std::string &host, uint16_t port, sa_family_t familly = AF_INET, int sock_type = SOCK_STREAM);
 };
 
