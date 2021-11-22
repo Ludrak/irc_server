@@ -523,6 +523,7 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandError>("ERROR");
 	this->_handler.addCommand<CommandMode>("MODE");
 	this->_handler.addCommand<CommandQuit>("QUIT");
+	this->_handler.addCommand<CommandSquit>("SQUIT");
 	this->_handler.addCommand<CommandOper>("OPER");
 }
 
@@ -570,12 +571,12 @@ std::string							IRCServer::makePrefix(const AEntity *user, const AEntity *host
 
 // prefix format -> Server-Server: <server_uid>SPACE
 // prefix format -> Server-Client: <nickname>[!<username>@<host_uid>]SPACE
-bool								IRCServer::parsePrefix(const std::string &prefix,  RelayedServer **const host_server, RelayedClient **const user, std::string *username)
+bool								IRCServer::parsePrefix(const std::string &prefix,  RelayedServer **const host_server, AEntity **const emitter, std::string *username)
 {
 	if (prefix.find(":") != 0 || !host_server)
 		return (false);
 	/* extended prefix */
-	if (prefix.find("!") != std::string::npos && user && host_server) //REVIEW no host_server here (can have @ witout !)
+	if (prefix.find("!") != std::string::npos && emitter && host_server) //REVIEW no host_server here (can have @ witout !)
 	{
 		/* parse sender */
 		if (prefix.find("@") == std::string::npos)
@@ -598,7 +599,7 @@ bool								IRCServer::parsePrefix(const std::string &prefix,  RelayedServer **c
 			Logger::critical("Prefix original sender is not a relayed client");
 			return false;
 		}
-		*user = reinterpret_cast<RelayedClient*>(this->_clients[firstName]);
+		*emitter = reinterpret_cast<RelayedClient*>(this->_clients[firstName]);
 		*username = uname;
 
 		if (this->_servers.count(secondName) != 1)
@@ -612,17 +613,37 @@ bool								IRCServer::parsePrefix(const std::string &prefix,  RelayedServer **c
 	else
 	{
 		Logger::debug("Simple prefix");
-		*user = NULL;
-		std::string serverName = prefix.substr(1, prefix.size() - 1);
-		Logger::debug("Prefix serverName: " + serverName);
-		if (this->_servers.count(serverName) != 1) 
+		*emitter = NULL;
+		std::string uid = prefix.substr(1, prefix.size() - 1);
+		Logger::debug("Prefix uid: " + uid);
+		if (this->_servers.count(uid) == 0) 
 		{
-			Logger::critical("Unknown server in prefix: " +serverName);
-			return (false);
+			if (this->_clients.count(uid) == 0)
+			{
+				Logger::critical("Unknown server/client in prefix: " + uid);
+				return (false);
+			}
+			else if (this->_clients[uid]->getType() & RelayedClient::value_type)
+			{
+				Logger::debug("client in prefix is Relayed: " + uid);
+				*emitter = this->_clients[uid];
+			}
+			else
+			{
+				Logger::debug("client in prefix is Relayed: " + uid);
+				*emitter = this->_clients[uid];	
+			}
 		}
-		else if (this->_servers[serverName]->getType() & RelayedServer::value_type)
-			Logger::info("Server in prefix is a RelayedServer" + serverName);
-		*host_server = reinterpret_cast<RelayedServer*>(this->_servers[serverName]);
+		else if (this->_servers[uid]->getType() & RelayedServer::value_type)
+		{
+			Logger::debug("Server in prefix is Relayed" + uid);
+			*emitter =this->_servers[uid];
+		}
+		else
+		{
+			Logger::debug("Server in prefix is a local" + uid);
+			*emitter =this->_servers[uid];
+		}
 	}
 	return (true);
 }
