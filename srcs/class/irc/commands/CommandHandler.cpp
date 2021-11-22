@@ -56,26 +56,26 @@ std::ostream &			operator<<( std::ostream & o, CommandHandler const & i )
 uint			CommandHandler::handle(NetworkEntity & executor, std::string data)
 {
 	// Server			*sender = NULL;
-	RelayedClient	*client = NULL;
+	AEntity			*emitter = NULL;
 	RelayedServer	*clientHost = NULL;
 	std::string		uname;
 
 	Logger::debug("Raw message: " + data);
 	if (data[0] == ':')
 	{
-		this->_server.parsePrefix(data.substr(0, data.find(" ")), &clientHost, &client, &uname);
+		this->_server.parsePrefix(data.substr(0, data.find(" ")), &clientHost, &emitter, &uname);
 		data = data.substr(data.find(" ") + 1, data.size() - data.find(" ") - 1);
 		data = data.substr(data.find_first_not_of(" "), data.size() - data.find_first_not_of(" "));
 		if (clientHost == NULL)
 		{
+			//REVIEW In the end remove this debug
 			Logger::debug("handler: clientHost is NULL");
-			return (1);
 		}
 	}
-	Logger::debug("Is it a usefull message ? - handling command: " + data);
 	std::string command = data.substr(0, data.find(" "));
 	try {
 		int err = std::stoi(command);
+		//TODO see prefix and redirect message if not for us
 		if (err >= 400)
 			Logger::error("ERR: " + data);
 		else
@@ -89,9 +89,9 @@ uint			CommandHandler::handle(NetworkEntity & executor, std::string data)
 			if ( cmd.hasPermissions(executor))
 			{
 				// cmd.setSender(sender);
-				cmd.setClient(client);
+				cmd.setClient(emitter); //TODO rename setClient and  getClient to setEmitter et getEmitter
 				cmd.setClientHost(clientHost);
-				Logger::debug("command " + command + " (" + executor.getStream().getIP() + ")");
+				Logger::debug("command " + command + " (" + executor.getStream().getHost() + ")");
 				return cmd(executor, data.substr(command.size() + 1, data.size() - (command.size() + 1)));
 			}
 			else

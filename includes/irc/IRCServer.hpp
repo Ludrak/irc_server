@@ -32,6 +32,7 @@ class CommandHandler;
 # include "CommandError.hpp"
 # include "CommandMode.hpp"
 # include "CommandQuit.hpp"
+# include "CommandSquit.hpp"
 # include "CommandOper.hpp"
 
 # define SUCCESS				0
@@ -60,7 +61,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		/* prefix parser */
 		std::string					makePrefix(const AEntity *user=NULL, const AEntity *host_server=NULL);
 		// bool						parsePrefix(const std::string &prefix, Server **const sender_server, RelayedClient **const user, RelayedServer **const host_server);
-		bool						parsePrefix(const std::string &prefix,  RelayedServer **const host_server, RelayedClient **const user, std::string *username);
+		bool						parsePrefix(const std::string &prefix,  RelayedServer **const host_server, AEntity **const user, std::string *username);
 
 	private:
 
@@ -160,6 +161,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		friend class CommandError;
 		friend class CommandMode;
 		friend class CommandQuit;
+		friend class CommandSquit;
 		friend class CommandOper;
 };
 
