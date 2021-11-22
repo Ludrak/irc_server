@@ -41,7 +41,7 @@ uint					CommandPass::operator()(NetworkEntity & executor, std::string params)
 	{
 		case 0:
 			Logger::warning("need more params");
-			this->getServer()._sendMessage(ue, ERR_NEEDMOREPARAMS(std::string("PASS")));
+			this->getServer()._sendMessage(ue, ERR_NEEDMOREPARAMS(executor.getUID(), std::string("PASS")));
 			break ;
 		case 3:
 			ue.setVersion(Parser::getParam(params, 1));

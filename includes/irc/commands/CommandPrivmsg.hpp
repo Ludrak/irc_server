@@ -1,8 +1,6 @@
 #ifndef COMMANDPRIVMSG_HPP
 # define COMMANDPRIVMSG_HPP
 
-# include <iostream>
-# include <string>
 # include "ACommand.hpp"
 
 class CommandPrivmsg : public ACommand

@@ -32,14 +32,13 @@ uint					CommandNick::operator()(NetworkEntity & executor, std::string params)
 		return this->_nickFromServer(static_cast<Server &>(executor), params);
 	else if (Parser::nbParam(params) == 0) 
 	{
-		Logger::warning("NickFromUnregistered");
 		this->getServer()._sendMessage(executor, ERR_NONICKNAMEGIVEN()); //TODO handle Nick other params coming from server
-		return EXIT_FAILURE;
+		return SUCCESS;
 	}	
 	std::string nick = Parser::getParam(params, 0);
 	if (Parser::validNickname(nick) == false)
 	{
-		this->getServer()._sendMessage(executor, ERR_ERRONEUSNICKNAME(executor.getUID(), nick));
+		this->getServer()._sendMessage(executor,":" + this->getServer().getUID() + " " ERR_ERRONEUSNICKNAME(executor.getUID(), nick));
 		return SUCCESS;
 	}
 	else if (this->getServer().alreadyInUseUID(nick) == true)

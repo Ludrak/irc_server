@@ -1,8 +1,6 @@
 #ifndef COMMANDPASS_HPP
 # define COMMANDPASS_HPP
 
-# include <iostream>
-# include <string>
 # include "ACommand.hpp"
 
 class CommandPass : public ACommand

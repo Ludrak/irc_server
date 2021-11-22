@@ -26,7 +26,7 @@ uint					CommandMode::operator()(NetworkEntity & executor, std::string params)
 	uint nbParam = Parser::nbParam(params);
 	if (nbParam == 0)
 	{
-		this->getServer()._sendMessage(executor, ERR_NEEDMOREPARAMS(std::string("MODE")));
+		this->getServer()._sendMessage(executor, ERR_NEEDMOREPARAMS(executor.getUID(), std::string("MODE")));
 		return SUCCESS;
 	}
 	std::string uid = Parser::getParam(params, 0);
@@ -38,7 +38,7 @@ uint					CommandMode::operator()(NetworkEntity & executor, std::string params)
 	{
 		if (nbParam < 2)
 		{
-			this->getServer()._sendMessage(executor, ERR_NEEDMOREPARAMS(std::string("MODE")));
+			this->getServer()._sendMessage(executor, ERR_NEEDMOREPARAMS(executor.getUID(), std::string("MODE")));
 			return SUCCESS;
 		}		
 		this->modeForChannel(nbParam, executor, params);

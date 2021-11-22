@@ -54,7 +54,7 @@ uint				CommandUser::_commandUSERunknown(UnRegisteredConnection & executor, std:
 {
 	if (Parser::nbParam(params) < 4)
 	{
-		this->getServer()._sendMessage(executor, ERR_NEEDMOREPARAMS(std::string("USER")));
+		this->getServer()._sendMessage(executor, ERR_NEEDMOREPARAMS(executor.getUID(), std::string("USER")));
 		return SUCCESS;
 	}
 	else if (executor.getUID().empty() == true)

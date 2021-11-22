@@ -59,29 +59,27 @@ uint			CommandHandler::handle(NetworkEntity & executor, std::string data)
 	RelayedClient	*client = NULL;
 	RelayedServer	*clientHost = NULL;
 	std::string		uname;
+
+	Logger::debug("Raw message: " + data);
 	if (data[0] == ':')
 	{
 		this->_server.parsePrefix(data.substr(0, data.find(" ")), &clientHost, &client, &uname);
 		data = data.substr(data.find(" ") + 1, data.size() - data.find(" ") - 1);
-
-		if (client != NULL)
-		{
-			Logger::debug("prefix client founded: " + client->getUID());
-		}
+		data = data.substr(data.find_first_not_of(" "), data.size() - data.find_first_not_of(" "));
 		if (clientHost == NULL)
 		{
 			Logger::debug("handler: clientHost is NULL");
 			return (1);
 		}
 	}
-	Logger::debug("handling command: " + data);
+	Logger::debug("Is it a usefull message ? - handling command: " + data);
 	std::string command = data.substr(0, data.find(" "));
 	try {
 		int err = std::stoi(command);
 		if (err >= 400)
-			Logger::error("ERR:" + data);
+			Logger::error("ERR: " + data);
 		else
-			Logger::info("RPL:" + data);
+			Logger::info("RPL: " + data);
 
 	} catch(std::invalid_argument &e)
 	{
@@ -98,13 +96,13 @@ uint			CommandHandler::handle(NetworkEntity & executor, std::string data)
 			}
 			else
 			{
-				Logger::warning("Not enought privilegies for: " + command);
-				this->_server._sendMessage(executor, ERR_UNKNOWNCOMMAND(command));
+				Logger::warning("Not enought privilegies (" + command + ")");
+				this->_server._sendMessage(executor, ERR_UNKNOWNCOMMAND(executor.getUID(), command));
 			}
 		}
 		else {
-			this->_server._sendMessage(executor, ERR_UNKNOWNCOMMAND(command));
-			Logger::warning("UNKNOWN KOMMAND IN LOGGER");
+			this->_server._sendMessage(executor, ERR_UNKNOWNCOMMAND(executor.getUID(), command));
+			Logger::warning("Unknown command (" + command + ")");
 		}
 	}
 	return SUCCESS;

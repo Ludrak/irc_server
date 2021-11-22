@@ -72,7 +72,7 @@ are returned when an invalid use of "PRIVMSG $<server>" or "PRIVMSG #<host>" is 
 /* Returned to a registered client to indicate that the
 command sent is unknown by the server.
 */
-# define ERR_UNKNOWNCOMMAND(A) "421 " + A + " :Unknown command"
+# define ERR_UNKNOWNCOMMAND(A, B) "421 " + A + " " + B + " :Unknown command"
 
 
 /* Server's MOTD file could not be opened by the server.
@@ -169,7 +169,7 @@ to be parsed in detail.
 indicate to the client that it didn't supply enough
 parameters.
 */
-# define ERR_NEEDMOREPARAMS(A) "461 :" + A + " Not enough parameters"
+# define ERR_NEEDMOREPARAMS(A, B) "461 " + A + " " + B + " :Not enough parameters"
 
 
 /* Returned by the server to any link which tries to

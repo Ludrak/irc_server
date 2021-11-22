@@ -26,7 +26,7 @@ uint					CommandJoin::operator()(NetworkEntity & executor, std::string params)
     size_t nbParam = Parser::nbParam(params);
 	if ( nbParam == 0)
 	{
-        this->getServer()._sendMessage(executor, ERR_NEEDMOREPARAMS(std::string("JOIN")));
+        this->getServer()._sendMessage(executor, ERR_NEEDMOREPARAMS(executor.getUID(), std::string("JOIN")));
         return SUCCESS;
     }
 	std::list<std::string> channels(Parser::paramToList(Parser::getParam(params, 0)));
