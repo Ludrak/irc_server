@@ -95,7 +95,7 @@ void		CommandUser::_sendWelcomeInfos(Client & new_client)
 	this->getServer()._sendMessage(new_client, ":" + this->getServer().getUID() + " " + RPL_YOURHOST(new_client.getUID(), this->getServer().getUID(), this->getServer().getVersion()));
 	this->getServer()._sendMessage(new_client, ":" + this->getServer().getUID() + " " + RPL_CREATED(new_client.getUID(), this->getServer().getCreationDate()));
 	// this->getServer()._sendMessage(executor, RPL_MYINFO());
-
+	this->getHandler().handle(new_client, ":" + new_client.getUID() + "@" + new_client.getServerToken() + " MOTD");
 }
 
 /*

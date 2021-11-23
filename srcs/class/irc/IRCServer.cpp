@@ -13,7 +13,7 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 :	ASockManager(),
 	ANode(host),
 	AEntity(IRCServer::value_type, "token"),
-	ServerInfo("name", "info", "pass", "IRC|amazircd"),
+	ServerInfo("name", "info", "default hostname", "IRC|amazircd"),
 	_handler(*this),
 	_protocol(),
 	_forwardPassword(""),
@@ -30,6 +30,14 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 	this->setPassword(password);
 
 	this->listenOn(port, this->_protocol);
+	for (std::map<ushort, SockStream *>::iterator it = this->_sockets.begin(); it != this->_sockets.end(); ++it)
+	{
+		if (it->second->getType() == SERVER)
+		{
+			this->ServerInfo::_host = it->second->getHost();
+			break ;
+		}
+	}
 }
 
 /*
@@ -463,8 +471,6 @@ void				IRCServer::_onQuit( SockStream &server)
 */
 
 
-
-
 NetworkEntity*						IRCServer::getEntityByStream(SockStream & s)
 {
 	/* get in unregistered list */
@@ -505,6 +511,13 @@ std::string					IRCServer::getCreationDate( void ) const
 	return std::ctime(&this->_creationTime);
 }
 
+
+std::string					IRCServer::getMotdsPath( void ) const
+{
+	return "/Users/sebastienlecaille/programmation/101/irc_server/conf";
+}
+
+
 /*
 ** --------------------------------- COMMANDS ---------------------------------
 */
@@ -525,6 +538,7 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandQuit>("QUIT");
 	this->_handler.addCommand<CommandSquit>("SQUIT");
 	this->_handler.addCommand<CommandOper>("OPER");
+	this->_handler.addCommand<CommandMotd>("MOTD");
 }
 
 
@@ -576,38 +590,54 @@ bool								IRCServer::parsePrefix(const std::string &prefix,  RelayedServer **c
 	if (prefix.find(":") != 0 || !host_server)
 		return (false);
 	/* extended prefix */
-	if (prefix.find("!") != std::string::npos && emitter && host_server) //REVIEW no host_server here (can have @ witout !)
+	if (prefix.find("@") != std::string::npos && emitter && host_server) //REVIEW no host_server here (can have @ witout !)
 	{
 		/* parse sender */
 		if (prefix.find("@") == std::string::npos)
 			Logger::debug("@ not found");
-		Logger::debug("Parse extented prefix");
-		std::string firstName = prefix.substr(1, prefix.find ("!") - 1);
-		Logger::debug("Parse firstname: " + firstName);
-		std::string uname = prefix.substr(prefix.find("!") + 1, prefix.find("@") - 1);
-		Logger::debug("Parse username: " + uname);
-		std::string secondName = prefix.substr(prefix.find("@") + 1, prefix.size());
-		Logger::debug("Parse secondName: " + secondName);
+		std::string uname;
+		std::string firstName;
+		std::string secondName; 
+		if (prefix.find("!") != std::string::npos)
+		{
+			Logger::debug("Parse extented prefix");
+			firstName = prefix.substr(1, prefix.find ("!") - 1);
+			Logger::debug("Parse firstname: " + firstName);
+			uname = prefix.substr(prefix.find("!") + 1, prefix.find("@") - 1);
+			Logger::debug("Parse username: " + uname);
+			secondName = prefix.substr(prefix.find("@") + 1, prefix.size());
+			Logger::debug("Parse secondName: " + secondName);
+		}
+		else
+		{
+			Logger::debug("Parse extented prefix");
+			firstName = prefix.substr(1, prefix.find ("@") - 1);
+			Logger::debug("Parse firstname: " + firstName);
+			secondName = prefix.substr(prefix.find("@") + 1, prefix.size());
+			Logger::debug("Parse secondName: " + secondName);
+		}
 		
 		if (this->_clients.count(firstName) != 1 )
 		{
 			Logger::critical("Unknown user in prefix: " + firstName);
 			return (false);
 		}
-		else if ((this->_clients[firstName]->getType() & RelayedClient::value_type) == false)
-		{
-			Logger::critical("Prefix original sender is not a relayed client");
-			return false;
-		}
-		*emitter = reinterpret_cast<RelayedClient*>(this->_clients[firstName]);
+		// else if (this->_clients[firstName]->getType() & RelayedClient::value_type) == false)
+		// {
+		// 	Logger::critical("Prefix original sender is not a relayed client");
+		// 	return false;
+		// }
+		*emitter = this->_clients[firstName];
 		*username = uname;
-
-		if (this->_servers.count(secondName) != 1)
+		if (firstName != this->getUID())
 		{
-			Logger::critical("Unknown host in prefix: " + secondName);
-			return (false);
+			if (this->_servers.count(secondName) == 0)
+			{
+				Logger::critical("Unknown host in prefix: " + secondName);
+				return (false);
+			}
+			*host_server = reinterpret_cast<RelayedServer*>(this->_servers[secondName]);
 		}
-		*host_server = reinterpret_cast<RelayedServer*>(this->_servers[secondName]);
 	}
 	/* simple prefix */
 	else

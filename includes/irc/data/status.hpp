@@ -77,7 +77,7 @@ command sent is unknown by the server.
 
 /* Server's MOTD file could not be opened by the server.
 */
-# define ERR_NOMOTD() "422 :MOTD File is missing"
+# define ERR_NOMOTD(exec) "422 " + exec + " :MOTD File is missing"
 
 
 /* Returned by a server in response to an ADMIN message
@@ -446,11 +446,11 @@ each line no longer than 80 characters, using
 by a RPL_MOTDSTART (before the RPL_MOTDs) and an
 RPL_ENDOFMOTD (after).
 */
-# define RPL_MOTDSTART(A) "375 :- " + A + " Message of the day - "
+# define RPL_MOTDSTART(exec, A) "375 " + exec + " :- " + A + " Message of the day - "
 
-# define RPL_MOTD(A) "372 :- " + A 
+# define RPL_MOTD(exec, A) "372 " + exec + ":- " + A 
 
-# define RPL_ENDOFMOTD() "376 :End of /MOTD command"
+# define RPL_ENDOFMOTD(exec) "376 " + exec + " :End of /MOTD command"
 
 /* RPL_YOUREOPER is sent back to a client which has
 just successfully issued an OPER message and gained

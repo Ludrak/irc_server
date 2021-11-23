@@ -34,6 +34,7 @@ class CommandHandler;
 # include "CommandQuit.hpp"
 # include "CommandSquit.hpp"
 # include "CommandOper.hpp"
+# include "CommandMotd.hpp"
 
 # define SUCCESS				0
 
@@ -55,6 +56,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		NetworkEntity*				getEntityByStream(SockStream & s);
 		std::string					getCreationDate( void ) const;
 		UnRegisteredConnection*		getUnRegisteredConnectionByUID(const std::string UID);
+		std::string					getMotdsPath( void ) const;
 
 		bool						alreadyInUseUID(std::string & uid) const; 
 
@@ -163,6 +165,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		friend class CommandQuit;
 		friend class CommandSquit;
 		friend class CommandOper;
+		friend class CommandMotd;
 };
 
 #endif /* ******************************************************* IRCSERVER_H */

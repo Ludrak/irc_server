@@ -49,6 +49,7 @@ uint					CommandOper::operator()(NetworkEntity & executor, std::string params)
 		Logger::info(executor.getUID() + " become a server operator.");
 		this->getServer()._sendMessage(executor, this->getServer().makePrefix(NULL, NULL) + RPL_YOUREOPER(executor.getUID()));
 		//TODO send mode +o message to other servers
+		this->getHandler().handle(executor, ":" + executor.getUID() + "@" + static_cast<Client&>(executor).getServerToken() + " MOTD");
 	}
 	else
 	{

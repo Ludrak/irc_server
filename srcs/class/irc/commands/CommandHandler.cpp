@@ -92,7 +92,11 @@ uint			CommandHandler::handle(NetworkEntity & executor, std::string data)
 				cmd.setClient(emitter); //TODO rename setClient and  getClient to setEmitter et getEmitter
 				cmd.setClientHost(clientHost);
 				Logger::debug("command " + command + " (" + executor.getStream().getHost() + ")");
-				return cmd(executor, data.substr(command.size() + 1, data.size() - (command.size() + 1)));
+				Logger::debug("data =" + data + "-");
+				if (command.size() + 1 > data.size())
+					return cmd(executor, data.substr(command.size(), data.size() - command.size()));
+				else
+					return cmd(executor, data.substr(command.size() + 1, data.size() - (command.size() + 1)));
 			}
 			else
 			{
