@@ -18,7 +18,7 @@ class ASockManager : public ASockHandler
         virtual void        run(void);
         void                delSocket( const SockStream &sock);
     protected:
-# ifndef KQUEUE
+# ifdef POLL
         std::vector<pollfd>           _poll_fds;
 # endif
 

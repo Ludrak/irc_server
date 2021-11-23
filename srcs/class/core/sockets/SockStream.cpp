@@ -163,15 +163,19 @@ void							SockStream::deselectIO(int event)
 }
 
 #elif	defined(KQUEUE)
-void							SockStream::setkQueueEvents(struct kevent &ev, int event)
+void							SockStream::setkQueueEvents(int kq, std::vector<struct kevent> ev_list, struct kevent &ev, int event)
 {
-	Logger::info("Set event " + ntos(event) + " to " + ntos(ev.ident));
+	//Logger::info("Set event " + ntos(event) + " to " + ntos(ev.ident));
 	EV_SET(&ev, ev.ident, event, EV_ADD, 0, 0, NULL);
+	struct timespec *n = NULL;
+	kevent(kq, ev_list.data(), ev_list.size(), NULL, 0, n);
 }
-void							SockStream::delkQueueEvents(struct kevent &ev, int event)
+void							SockStream::delkQueueEvents(int kq, std::vector<struct kevent> ev_list, struct kevent &ev, int event)
 {
-	Logger::info("Del event " + ntos(event) + " to " + ntos(ev.ident));
+	//Logger::info("Del event " + ntos(event) + " to " + ntos(ev.ident));
 	EV_SET(&ev, ev.ident, event, EV_DELETE, 0, 0, NULL);
+	struct timespec *n = NULL;
+	kevent(kq, ev_list.data(), ev_list.size(), NULL, 0, n);
 }
 #endif
 

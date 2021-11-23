@@ -26,6 +26,7 @@ class ASockHandler
     protected:
         std::map<ushort, SockStream *>  _sockets;
 #ifdef KQUEUE
+        int                             _kq;
         std::vector<struct kevent>      _k_events;
 #endif
 };

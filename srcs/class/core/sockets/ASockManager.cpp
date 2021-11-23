@@ -123,6 +123,7 @@ void            ASockManager::run( void )
                 FD_SET(it->second->getSocket(), &write_efds);
         }
 
+        Logger::debug("select()");
         /* selecting which fds are available for IO operations */
         int n_changes = select(big_fd + 1, &read_efds, &write_efds, NULL, NULL);
         if (n_changes == -1)
@@ -173,11 +174,10 @@ void            ASockManager::run( void )
 void            ASockManager::run( void )
 {
     struct kevent                new_event;
-    int                          kq;
 
     /* init kqueue */
-    kq = kqueue();
-    if (kq == -1)
+    this->_kq = kqueue();
+    if (this->_kq == -1)
     {
         Logger::error("kqueue() failed");
         return ;
@@ -186,15 +186,19 @@ void            ASockManager::run( void )
     /* add events to list */
     for (std::map<ushort, SockStream*>::iterator it = this->_sockets.begin(); it != this->_sockets.end(); ++it)    
     {   
-        EV_SET(&new_event, it->first, EVFILT_READ, EV_ADD, 0, 0, NULL);
-        this->_k_events.push_back(new_event);
+        /* Clients sockets are added on onConnect method */
+        if (it->second->getType() != CLIENT)
+        {
+            EV_SET(&new_event, it->first, EVFILT_READ, EV_ADD, 0, 0, NULL);
+            this->_k_events.push_back(new_event);
+        }
     }
 
 	Logger::info("Manager running using kqueue()");
     for (;;)
     {
         struct kevent events_triggered[this->_k_events.size()];
-        int nev = kevent(kq, this->_k_events.data(), this->_k_events.size(), events_triggered, this->_k_events.size(), NULL);
+        int nev = kevent(this->_kq, this->_k_events.data(), this->_k_events.size(), events_triggered, 2, NULL);
 
         if (nev == -1)
             Logger::error("kevent() failed: " + ntos(strerror(errno)));

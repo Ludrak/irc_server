@@ -28,8 +28,9 @@ class SockStream;
 //# define POLL
 //# define EPOLL
 //# define KQUEUE
-# define SELECT
+//# define SELECT
 
+/*
 # if defined(__linux__) && defined(EPOLL)
 #  include <sys/epoll.h>
 # elif defined(KQUEUE) || defined(SELECT) && (defined(__unix__) || defined(BSD) || defined(__APPLE__))
@@ -41,7 +42,22 @@ class SockStream;
 # elif defined(POLL)
 #	include <poll.h>
 # endif
+*/
 
+#if !defined(POLL) && !defined(SELECT) && !defined(KQUEUE)
+# define POLL
+#endif
+
+
+#if		defined(POLL)
+# include <poll.h>
+#elif	defined(SELECT)
+# include <sys/select.h>
+#elif	defined(KQUEUE)
+# include <sys/event.h>
+#else
+# error No poll-system defined, compile with -D <POLL/KQUEUE/SELECT>
+#endif
 
 # define RECV_BUFFER_SZ	255
 # define SEND_BUFFER_SZ	255
@@ -112,8 +128,8 @@ class SockStream
 		void						selectIO(int event);
 		void						deselectIO(int event);
 #elif	defined(KQUEUE)
-		void						setkQueueEvents(struct kevent &ev, int event);
-		void						delkQueueEvents(struct kevent &ev, int event);
+		void						setkQueueEvents(int kq, std::vector<struct kevent> ev_list, struct kevent &ev, int event);
+		void						delkQueueEvents(int kq, std::vector<struct kevent> ev_list, struct kevent &ev, int event);
 #endif
 
 		t_sock_type					getType(void) const;

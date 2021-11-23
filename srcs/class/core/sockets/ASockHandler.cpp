@@ -24,20 +24,20 @@ SockStream      *ASockHandler::getSocket(const ushort socket)
 }
  
 
-void		    ASockHandler::sendPackage( Package *pkg, SockStream &recipient)
+void		    ASockHandler::sendPackage(Package *pkg, SockStream &recipient)
 {
-    Logger::debug("added package " + ntos(pkg) + " to pending list of " + recipient.getIP());
+	Logger::debug("added package " + ntos(pkg) + " to pending list of " + recipient.getIP());
 #ifdef	POLL
 	recipient.setPollEvent(POLLOUT);
 #elif	defined(EPOLL)
 #elif	defined(SELECT)
-	recipient.selectIO(SELECT_IO_READ);
+	recipient.deselectIO(SELECT_IO_READ);
 #elif	defined(KQUEUE)
 	for (std::vector<struct kevent>::iterator it = this->_k_events.begin(); it != this->_k_events.end(); ++it)
 		if (it->ident == recipient.getSocket())
 		{
-			recipient.delkQueueEvents(*it, EVFILT_READ);
-			recipient.setkQueueEvents(*it, EVFILT_WRITE);
+			recipient.delkQueueEvents(this->_kq, this->_k_events, *it, EVFILT_READ);
+			recipient.setkQueueEvents(this->_kq, this->_k_events, *it, EVFILT_WRITE);
 		}
 #endif
 	pkg->setRecipient(&recipient);

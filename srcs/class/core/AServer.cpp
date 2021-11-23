@@ -149,9 +149,23 @@ t_pollevent					AServer::_pollOutClients(SockStream & sock)
 {
 	Package	*current_pkg = *sock.getPendingData().begin();
 
-	char 	buffer[SEND_BUFFER_SZ] = { 0 };
-	if (!current_pkg)
+	if (!current_pkg) {
+#ifdef	POLL
+			sock.delPollEvent(POLLOUT);
+#elif	defined(EPOLL)
+#elif	defined(SELECT)
+			sock.deselectIO(SELECT_IO_WRITE);
+#elif	defined(KQUEUE)
+			for (std::vector<struct kevent>::iterator it = this->_k_events.begin(); it != this->_k_events.end(); ++it)
+				if (it->ident == sock.getSocket())
+				{
+					sock.delkQueueEvents(this->_kq, this->_k_events, *it, EVFILT_WRITE);
+					sock.setkQueueEvents(this->_kq, this->_k_events, *it, EVFILT_READ);
+				}
+#endif
 		return (POLL_ERR);
+	}
+	char 	buffer[SEND_BUFFER_SZ] = { 0 };
 	size_t	buffer_sz = current_pkg->getRawData().size() > SEND_BUFFER_SZ ? SEND_BUFFER_SZ : current_pkg->getRawData().size();
 	std::memcpy(buffer, current_pkg->getRawData().c_str(), buffer_sz);
 
@@ -186,8 +200,8 @@ t_pollevent					AServer::_pollOutClients(SockStream & sock)
 			for (std::vector<struct kevent>::iterator it = this->_k_events.begin(); it != this->_k_events.end(); ++it)
 				if (it->ident == sock.getSocket())
 				{
-					sock.delkQueueEvents(*it, EVFILT_WRITE);
-					sock.setkQueueEvents(*it, EVFILT_READ);
+					sock.delkQueueEvents(this->_kq, this->_k_events, *it, EVFILT_WRITE);
+					sock.setkQueueEvents(this->_kq, this->_k_events, *it, EVFILT_READ);
 				}
 #endif
 		}
@@ -201,9 +215,8 @@ t_pollevent					AServer::_pollOutClients(SockStream & sock)
 t_pollevent					AServer::_onPollEvent(int socket, int event)
 {
 #ifdef KQUEUE
-	if (this->_sockets[socket] && event == EV_EOF) {
+	if (this->_sockets[socket] && event == EV_EOF)
 		return POLL_DELETE;
-	}
 #endif
 
 	/* trying to read events from clients first */
