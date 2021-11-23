@@ -22,13 +22,18 @@ class SockStream;
 # include "ntos.hpp"
 
 /* POLL implemented: working fine but eating up all CPU usage */
-/* KQUEUE implemented: need minor fixes */
-/* EPOLL not implmented: not availaible on macos */
-/* SELECT not yet implemented */
+/* KQUEUE implemented: works fine on bsd and macos, prefer EPOLL on Linux  */
+/* EPOLL not implemented: not availaible on macos */
+/* SELECT implemented: not yet fixed */
 //# define POLL
 //# define EPOLL
 //# define KQUEUE
 //# define SELECT
+
+/* Use SELECT if no default sepcified */
+#if !defined(SELECT) && !defined(KQUEUE) && !defined(EPOLL) && !defined(POLL)
+# define SELECT
+#endif
 
 /*
 # if defined(__linux__) && defined(EPOLL)

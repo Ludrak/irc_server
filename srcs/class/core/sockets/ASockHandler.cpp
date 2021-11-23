@@ -31,7 +31,7 @@ void		    ASockHandler::sendPackage(Package *pkg, SockStream &recipient)
 	recipient.setPollEvent(POLLOUT);
 #elif	defined(EPOLL)
 #elif	defined(SELECT)
-	recipient.deselectIO(SELECT_IO_READ);
+	recipient.selectIO(SELECT_IO_WRITE);
 #elif	defined(KQUEUE)
 	for (std::vector<struct kevent>::iterator it = this->_k_events.begin(); it != this->_k_events.end(); ++it)
 		if (it->ident == recipient.getSocket())

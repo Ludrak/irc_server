@@ -113,17 +113,17 @@ CPP_IFLAGS	+=	$(addprefix -I,$(INC_DIR)) $(addprefix -I,$(shell echo $(HEADER_FI
 CPP_LFLAG	+=	$(addprefix -L,$(addprefix $(LIB_DIR), $(LIBRARYS)))
 
 #   Main rule
-all: kqueue
+all: poll
 	@echo done
 
 select: CPP_FLAGS += -DSELECT
 select: clean $(NAME)
 
 kqueue: CPP_FLAGS += -DKQUEUE
-kqueue: $(NAME)
+kqueue: clean $(NAME)
 
 poll: CPP_FLAGS += -DPOLL
-poll: clean $(NAME)
+poll: $(NAME)
 
 #	check_sources :
 #	simple bash script to check duplicates sources files 
