@@ -16,11 +16,12 @@ class CommandMotd : public ACommand
 
 		CommandMotd &		operator=( CommandMotd const & rhs );
 		uint				operator()(NetworkEntity & executor, std::string params);
+		uint				operator()(NetworkEntity & executor, std::string params, bool useShort);
 
 		bool				hasPermissions(AEntity & executor);
 
 	private:
-
+		bool				_shortEnabled;
 };
 
 #endif /* ***************************************************** COMMANDMOTD_HPP */

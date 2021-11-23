@@ -108,6 +108,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		time_t									_creationTime;
 		std::string								_operName;
 		std::string								_operPassword;
+		bool									_shortMotdEnabled;
 /*
 ** --------------------------------- EVENTS ---------------------------------
 */

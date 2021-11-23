@@ -121,4 +121,12 @@ IRCServer&				CommandHandler::getServer( void )
 	return this->_server;
 }
 
+ACommand*				CommandHandler::getCommand(std::string & command_name)
+{
+	if (this->_commands.count(command_name) == 1)
+		return this->_commands[command_name];
+	else
+		return NULL;
+}
+
 /* ************************************************************************** */

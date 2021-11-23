@@ -19,7 +19,8 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 	_forwardPassword(""),
 	_creationTime(std::time(NULL)),
 	_operName("becomeOper"),
-	_operPassword("becomeOper")
+	_operPassword("becomeOper"),
+	_shortMotdEnabled(true)
 {
 	this->_initCommands();
 	Logger::debug("IRCServer constructor");

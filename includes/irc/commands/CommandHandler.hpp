@@ -31,6 +31,7 @@ class CommandHandler
 				Logger::critical("Handler: Command " + name + " is inserted twice.");
 		}		
 		uint			handle(NetworkEntity & executor, std::string data);
+		ACommand*		getCommand(std::string & command_name);
 
 	private:
 		

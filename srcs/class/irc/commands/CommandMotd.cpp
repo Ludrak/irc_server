@@ -4,7 +4,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-CommandMotd::CommandMotd(CommandHandler & handler) : ACommand(handler)
+CommandMotd::CommandMotd(CommandHandler & handler) : ACommand(handler), _shortEnabled(false)
 {
 }
 
@@ -44,9 +44,12 @@ uint					CommandMotd::operator()(NetworkEntity & executor, std::string params)
 		std::string filename;
 		if (reinterpret_cast<Client*>(emitter)->isServerOP())
 			filename = "/oper.motd";
+		else if (this->_shortEnabled && this->getServer()._shortMotdEnabled)
+			filename = "/ircd.smotd";
 		else
 			filename = "/ircd.motd";
-			std::ifstream	mFile(this->getServer().getMotdsPath() + filename);
+		std::ifstream	mFile(this->getServer().getMotdsPath() + filename);
+		Logger::debug("Use motd file: " + this->getServer().getMotdsPath() + filename);
 		if (!mFile.is_open())
 		{
 			this->getServer()._sendMessage(*emitter,
@@ -63,7 +66,6 @@ uint					CommandMotd::operator()(NetworkEntity & executor, std::string params)
 			mFile.getline(buffer, 80);
 			buffer[mFile.gcount()] = '\0';
 			line = buffer;
-			Logger::debug("READ:<" + line + ">");
 			this->getServer()._sendMessage(*emitter,
 				":" + emitter->getUID() + "@" + reinterpret_cast<Client *>(emitter)->getHostname() + " " +
 				RPL_MOTD(emitter->getUID(), line));
@@ -96,9 +98,16 @@ uint					CommandMotd::operator()(NetworkEntity & executor, std::string params)
 	return SUCCESS;
 }
 
+uint				CommandMotd::operator()(NetworkEntity & executor, std::string params, bool useShort)
+{
+	this->_shortEnabled = useShort;
+	uint ret = this->operator()(executor, params);
+	this->_shortEnabled = false;
+	return ret;
+}
+
 bool				CommandMotd::hasPermissions(AEntity & executor)
 {
-	//TODO implement right for MOTD
 	if (executor.getType() & UnRegisteredConnection::value_type)
 		return false;
 	return true;
