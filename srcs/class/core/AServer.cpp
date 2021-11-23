@@ -45,9 +45,12 @@ void						AServer::run()
 t_pollevent					AServer::_pollFromServer(int socket, int event)
 {
 	std::map<ushort, SockStream*>::iterator it = this->_sockets.find(socket);
-#ifndef KQUEUE
+#ifdef	POLL
 	if (it == this->_sockets.end() || it->second->getType() != SERVER || ~event & POLLIN)
-#else
+#elif	defined(EPOLL)
+#elif	defined(SELECT)
+	if (it == this->_sockets.end() || it->second->getType() != SERVER || ~event & SELECT_IO_READ)
+#elif	defined(KQUEUE)
 	if (it == this->_sockets.end() || it->second->getType() != SERVER || ~event == EVFILT_READ)
 #endif
 		return (POLL_NOTFOUND);
@@ -68,7 +71,7 @@ t_pollevent					AServer::_pollFromServer(int socket, int event)
 	this->_onClientJoin(*client_ss);
 #ifdef KQUEUE
 	struct kevent new_event;
-	EV_SET(&new_event, client_sock, EVFILT_READ | EVFILT_WRITE, EV_ADD, 0, 0, NULL);
+	EV_SET(&new_event, client_sock, EVFILT_READ, EV_ADD, NOTE_LOWAT, 1, NULL);
 	this->_k_events.push_back(new_event);
 #endif
 	return (POLL_SUCCESS);
@@ -82,9 +85,12 @@ t_pollevent					AServer::_pollFromClients(int socket, int event)
 	if (it == this->_sockets.end() || it->second->getType() != REMOTE_CLIENT)
 		return (POLL_NOTFOUND);
 	/* client socket has returned positive event */
-#ifndef KQUEUE
+#ifdef	POLL
 	if (event & POLLIN)
-#else
+#elif	defined(EPOLL)
+#elif	defined(SELECT)
+	if (event & SELECT_IO_READ)
+#elif	defined(KQUEUE)
 	if (event == EVFILT_READ)
 #endif
 	{
@@ -93,9 +99,12 @@ t_pollevent					AServer::_pollFromClients(int socket, int event)
 		if (ev == POLL_DELETE)
 			return (POLL_DELETE);
 	}
-#ifndef KQUEUE
+#ifdef	POLL
 	if (event & POLLOUT)
-#else
+#elif	defined(EPOLL)
+#elif	defined(SELECT)
+	if (event & SELECT_IO_WRITE)
+#elif	defined(KQUEUE)
 	if (event == EVFILT_WRITE)
 #endif
 	{
@@ -138,40 +147,62 @@ t_pollevent					AServer::_pollInClients(SockStream & sock)
 
 t_pollevent					AServer::_pollOutClients(SockStream & sock)
 {
-	Package	&current_pkg = **sock.getPendingData().begin();
+	Package	*current_pkg = *sock.getPendingData().begin();
 
+	if (!current_pkg) {
+#ifdef	POLL
+			sock.delPollEvent(POLLOUT);
+#elif	defined(EPOLL)
+#elif	defined(SELECT)
+			sock.deselectIO(SELECT_IO_WRITE);
+#elif	defined(KQUEUE)
+			for (std::vector<struct kevent>::iterator it = this->_k_events.begin(); it != this->_k_events.end(); ++it)
+				if (it->ident == sock.getSocket())
+				{
+					sock.delkQueueEvents(this->_kq, this->_k_events, *it, EVFILT_WRITE);
+					sock.setkQueueEvents(this->_kq, this->_k_events, *it, EVFILT_READ);
+				}
+#endif
+		return (POLL_ERR);
+	}
 	char 	buffer[SEND_BUFFER_SZ] = { 0 };
-	size_t	buffer_sz = current_pkg.getRawData().size() > SEND_BUFFER_SZ ? SEND_BUFFER_SZ : current_pkg.getRawData().size();
-	std::memcpy(buffer, current_pkg.getRawData().c_str(), buffer_sz);
+	size_t	buffer_sz = current_pkg->getRawData().size() > SEND_BUFFER_SZ ? SEND_BUFFER_SZ : current_pkg->getRawData().size();
+	std::memcpy(buffer, current_pkg->getRawData().c_str(), buffer_sz);
 
-	size_t byte_size = send(current_pkg.getRecipient()->getSocket(), buffer, buffer_sz, 0);
+	size_t byte_size = send(current_pkg->getRecipient()->getSocket(), buffer, buffer_sz, 0);
 	if (byte_size < 0)
 	{
 		Logger::error("send() error on " + sock.getIP() + ntos(" : ") + strerror(errno));
 		return (POLL_ERR);
 	}
-	current_pkg.nflush(byte_size);
+	current_pkg->nflush(byte_size);
 
-	if (current_pkg.isInvalid() || current_pkg.getRawData().empty())
+	if (current_pkg->isInvalid() || current_pkg->getRawData().empty())
 	{
-		Logger::debug("sent & deleted package " + ntos(&current_pkg) + ntos(" of ") + sock.getIP() + " explosive: " + ntos(current_pkg.isExplosive()));
-		if (current_pkg.isExplosive())
+		Logger::debug("sent & deleted package " + ntos(current_pkg) + ntos(" of ") + sock.getIP() + " explosive: " + ntos(current_pkg->isExplosive()));
+		if (current_pkg->isExplosive())
 		{		
-			Logger::debug("activated explosive package " + ntos(&current_pkg) + ntos(" of ") + sock.getIP());
-			delete &current_pkg;
+			Logger::debug("activated explosive package " + ntos(current_pkg) + ntos(" of ") + sock.getIP());
+			delete current_pkg;
 			this->disconnect(sock);
 			return (POLL_DELETE);
 		}
-		delete &current_pkg;
-		sock.getPendingData().remove(&current_pkg);
+		delete current_pkg;
+		sock.getPendingData().remove(current_pkg);
 		if (sock.getPendingData().size() == 0)
 		{
-#ifndef KQUEUE
+#ifdef	POLL
 			sock.delPollEvent(POLLOUT);
-#else	
+#elif	defined(EPOLL)
+#elif	defined(SELECT)
+			sock.deselectIO(SELECT_IO_WRITE);
+#elif	defined(KQUEUE)
 			for (std::vector<struct kevent>::iterator it = this->_k_events.begin(); it != this->_k_events.end(); ++it)
 				if (it->ident == sock.getSocket())
-					sock.delkQueueEvents(*it, EVFILT_WRITE);
+				{
+					sock.delkQueueEvents(this->_kq, this->_k_events, *it, EVFILT_WRITE);
+					sock.setkQueueEvents(this->_kq, this->_k_events, *it, EVFILT_READ);
+				}
 #endif
 		}
 	}
@@ -183,9 +214,10 @@ t_pollevent					AServer::_pollOutClients(SockStream & sock)
 
 t_pollevent					AServer::_onPollEvent(int socket, int event)
 {
-	if (this->_sockets[socket] && event == EV_EOF) {
+#ifdef KQUEUE
+	if (this->_sockets[socket] && event == EV_EOF)
 		return POLL_DELETE;
-	}
+#endif
 
 	/* trying to read events from clients first */
 	t_pollevent ev = this->_pollFromClients(socket, event);

@@ -14,8 +14,6 @@ class SockStream;
 # include <exception>
 # include <vector>
 # include <unistd.h>
-# include <poll.h>
-# include <sys/event.h>
 # include <sys/types.h>
 # include <list>
 # include <netdb.h>
@@ -23,9 +21,48 @@ class SockStream;
 # include "Logger.hpp"
 # include "ntos.hpp"
 
-/* Disabling KQUEUE mode for now, need some fix */
-/* ERROR: cannot send package after USER registration */
+/* POLL implemented: working fine but eating up all CPU usage */
+/* KQUEUE implemented: works fine on bsd and macos, prefer EPOLL on Linux  */
+/* EPOLL not implemented: not availaible on macos */
+/* SELECT implemented: not yet fixed */
+//# define POLL
+//# define EPOLL
 //# define KQUEUE
+//# define SELECT
+
+/* Use SELECT if no default sepcified */
+#if !defined(SELECT) && !defined(KQUEUE) && !defined(EPOLL) && !defined(POLL)
+# define SELECT
+#endif
+
+/*
+# if defined(__linux__) && defined(EPOLL)
+#  include <sys/epoll.h>
+# elif defined(KQUEUE) || defined(SELECT) && (defined(__unix__) || defined(BSD) || defined(__APPLE__))
+#  if defined(KQUEUE) 
+#   include <sys/event.h>
+#  elif defined(SELECT)
+#   include <sys/select.h>
+#  endif
+# elif defined(POLL)
+#	include <poll.h>
+# endif
+*/
+
+#if !defined(POLL) && !defined(SELECT) && !defined(KQUEUE)
+# define POLL
+#endif
+
+
+#if		defined(POLL)
+# include <poll.h>
+#elif	defined(SELECT)
+# include <sys/select.h>
+#elif	defined(KQUEUE)
+# include <sys/event.h>
+#else
+# error No poll-system defined, compile with -D <POLL/KQUEUE/SELECT>
+#endif
 
 # define RECV_BUFFER_SZ	255
 # define SEND_BUFFER_SZ	255
@@ -42,18 +79,29 @@ typedef uint8_t	t_sock_type;
 
 class SockStream
 {
-	class SocketCreationException : public std::exception
+	class InvalidHostException : public std::exception
 	{
-		virtual const char	*what() const throw()
-		{
-			return ("Socket creation failed: ");
-		}
+		public:
+			virtual const char	*what() const throw()
+			{
+				return ("Invalid hostname");
+			}
 	};
 
+	class SocketCreationException : public std::exception
+	{
+		public:
+			virtual const char	*what() const throw()
+			{
+				return ("unable to create socket");
+			}
+	};
+	
+	
 	public:
 		/* server socket constructors */
-		SockStream(IProtocol &protocol);
-		SockStream(const std::string &host, uint16_t port, IProtocol &protocol);
+		SockStream(IProtocol &protocol) throw (InvalidHostException);
+		SockStream(const std::string &host, uint16_t port, IProtocol &protocol) throw (InvalidHostException);
 		/* client socket contructor */
 		SockStream(ushort socket, const sockaddr_in &address, IProtocol &protocol);
 		
@@ -70,14 +118,23 @@ class SockStream
 		Package						&getReceivedData(void);
 		std::list<Package*>			&getPendingData(void);
 
-#ifndef KQUEUE
+#ifdef	POLL
 		int							getPollEvents(void) const;
 		void						setPollEvent(int event);
 		void						delPollEvent(int event);
-#else
-		int							getkQueueEvents(void) const;
-		void						setkQueueEvents(struct kevent &ev, int event);
-		void						delkQueueEvents(struct kevent &ev, int event);
+#elif	defined(EPOLL)
+		int							getEPollEvents(void) const;
+		void						setEPollEvent(int event);
+		void						delEPollEvent(int event);
+#elif	defined(SELECT)
+# define SELECT_IO_WRITE	(1<<1)
+# define SELECT_IO_READ		(1<<2)
+		int							getSelectedIOs(void) const;
+		void						selectIO(int event);
+		void						deselectIO(int event);
+#elif	defined(KQUEUE)
+		void						setkQueueEvents(int kq, std::vector<struct kevent> ev_list, struct kevent &ev, int event);
+		void						delkQueueEvents(int kq, std::vector<struct kevent> ev_list, struct kevent &ev, int event);
 #endif
 
 		t_sock_type					getType(void) const;
@@ -89,9 +146,13 @@ class SockStream
 	protected:
 		ushort						_socket;
 		t_sock_type					_type;
-# ifndef KQUEUE
+# ifdef POLL
 		int							_poll_events;
-# else
+# elif  defined(EPOLL)
+		int							_epoll_events;
+# elif  defined(SELECT)
+		int							_selectedIO;
+# elif 	defined(KQUEUE)
 		int							_kqueue_events;
 #endif
 		struct sockaddr_in			_addr;
@@ -106,7 +167,9 @@ class SockStream
 		SockStream( SockStream const & src );
 
 		void						_resolveIP(const std::string &host);
-		void						_createSocket(const std::string &host, uint16_t port, sa_family_t familly = AF_INET, int sock_type = SOCK_STREAM);
+		void						_createSocket(const std::string &host, uint16_t port,
+										sa_family_t familly = AF_INET, int sock_type = SOCK_STREAM)
+										throw(SockStream::InvalidHostException);
 };
 
 #endif /* ***************************************************** SockStream_H */
