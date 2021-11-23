@@ -113,8 +113,17 @@ CPP_IFLAGS	+=	$(addprefix -I,$(INC_DIR)) $(addprefix -I,$(shell echo $(HEADER_FI
 CPP_LFLAG	+=	$(addprefix -L,$(addprefix $(LIB_DIR), $(LIBRARYS)))
 
 #   Main rule
-all: check_sources check_headers $(NAME)
-	@echo "$(PREFIX_PROJECT) Nothing else to do"
+all: kqueue
+	@echo done
+
+select: CPP_FLAGS += -DSELECT
+select: clean $(NAME)
+
+kqueue: CPP_FLAGS += -DKQUEUE
+kqueue: $(NAME)
+
+poll: CPP_FLAGS += -DPOLL
+poll: clean $(NAME)
 
 #	check_sources :
 #	simple bash script to check duplicates sources files 
@@ -153,7 +162,7 @@ check_headers:
 	fi
 
 #	Linking rule
-$(NAME): $(BIN_DIR) $(OBJS)
+$(NAME): check_headers check_sources $(BIN_DIR) $(OBJS)
 	@$(CLANG) $(OBJS) -o $(NAME) $(CPP_FLAGS) $(CPP_LFLAGS)
 	@echo "$(PREFIX_PROJECT)$(PREFIX_LINK) Linking done for: $(NAME)"
 
