@@ -39,6 +39,7 @@ uint					CommandMotd::operator()(NetworkEntity & executor, std::string params)
 	if (nbParam == 0)
 	{
 		//TODO check and handle emitter == a server
+		//TODO add clean prefixs
 		char buffer[81];
 		std::string filename;
 		if (reinterpret_cast<Client*>(emitter)->isServerOP())
