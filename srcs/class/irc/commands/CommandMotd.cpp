@@ -38,9 +38,8 @@ uint					CommandMotd::operator()(NetworkEntity & executor, std::string params)
 	uint nbParam = Parser::nbParam(params);
 	if (nbParam == 0)
 	{
-		//TODO check and handle emitter == server
+		//TODO check and handle emitter == a server
 		char buffer[81];
-		//TODO handle directory reading
 		std::string filename;
 		if (reinterpret_cast<Client*>(emitter)->isServerOP())
 			filename = "/oper.motd";
@@ -48,10 +47,12 @@ uint					CommandMotd::operator()(NetworkEntity & executor, std::string params)
 			filename = "/ircd.smotd";
 		else
 			filename = "/ircd.motd";
-		std::ifstream	mFile(this->getServer().getMotdsPath() + filename);
-		Logger::debug("Use motd file: " + this->getServer().getMotdsPath() + filename);
-		if (!mFile.is_open())
+		std::string path = this->getServer().getMotdsPath() + filename;
+		std::ifstream	mFile(path);
+		Logger::debug("Use motd file: " + path);
+		if (!mFile.is_open() || !this->isRegularFile(path.c_str()))
 		{
+			Logger::warning("MOTD: file not found: " + path);
 			this->getServer()._sendMessage(*emitter,
 				":" + emitter->getUID() + "@" + reinterpret_cast<Client *>(emitter)->getHostname()	+ " " +
 				ERR_NOMOTD(emitter->getUID()));
@@ -113,6 +114,12 @@ bool				CommandMotd::hasPermissions(AEntity & executor)
 	return true;
 }
 
+int 				CommandMotd::isRegularFile(const char *path)
+{
+    struct stat path_stat;
+    stat(path, &path_stat);
+    return S_ISREG(path_stat.st_mode);
+}
 
 /*
 ** --------------------------------- ACCESSOR ---------------------------------

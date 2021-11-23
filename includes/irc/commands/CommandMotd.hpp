@@ -4,6 +4,7 @@
 # define COMMANDMOTD_HPP
 
 # include <fstream>
+# include <sys/stat.h>
 # include "ACommand.hpp"
 
 class CommandMotd : public ACommand
@@ -19,6 +20,8 @@ class CommandMotd : public ACommand
 		uint				operator()(NetworkEntity & executor, std::string params, bool useShort);
 
 		bool				hasPermissions(AEntity & executor);
+		
+		int					isRegularFile(const char *path);
 
 	private:
 		bool				_shortEnabled;
