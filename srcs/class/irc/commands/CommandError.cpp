@@ -22,11 +22,10 @@ CommandError::~CommandError()
 */
 
 /*
-   Command: PASS
-   Parameters: <password> <version> <flags> [<options>]
+   Command: ERROR
+   Parameters: <error message>
 */
 
-//TODO see ERR_461
 uint					CommandError::operator()(NetworkEntity & executor, std::string params)
 {
 	(void)executor;

@@ -39,6 +39,7 @@ uint					CommandMotd::operator()(NetworkEntity & executor, std::string params)
 	if (nbParam == 0)
 	{
 		//TODO check and handle emitter == a server
+		//TODO check and handle emitter == a relayedClient (cast error)
 		//TODO add clean prefixs
 		char buffer[81];
 		std::string filename;
@@ -55,12 +56,11 @@ uint					CommandMotd::operator()(NetworkEntity & executor, std::string params)
 		{
 			Logger::warning("MOTD: file not found: " + path);
 			this->getServer()._sendMessage(*emitter,
-				":" + emitter->getUID() + "@" + reinterpret_cast<Client *>(emitter)->getHostname()	+ " " +
-				ERR_NOMOTD(emitter->getUID()));
+				reinterpret_cast<Client *>(emitter)->getPrefix() + ERR_NOMOTD(emitter->getUID()));
 			return SUCCESS;
 		}
 		this->getServer()._sendMessage(*emitter,
-			":" + emitter->getUID() + "@" + reinterpret_cast<Client *>(emitter)->getHostname() + " " +
+			reinterpret_cast<Client *>(emitter)->getPrefix() +
 			RPL_MOTDSTART(emitter->getUID(), this->getServer().getUID()));
 		std::string line;
 		while (!mFile.eof())
@@ -69,11 +69,10 @@ uint					CommandMotd::operator()(NetworkEntity & executor, std::string params)
 			buffer[mFile.gcount()] = '\0';
 			line = buffer;
 			this->getServer()._sendMessage(*emitter,
-				":" + emitter->getUID() + "@" + reinterpret_cast<Client *>(emitter)->getHostname() + " " +
-				RPL_MOTD(emitter->getUID(), line));
+				reinterpret_cast<Client *>(emitter)->getPrefix() + RPL_MOTD(emitter->getUID(), line));
 		}
 		this->getServer()._sendMessage(*emitter,
-			":" + emitter->getUID() + "@" + reinterpret_cast<Client *>(emitter)->getHostname() + " " +
+			reinterpret_cast<Client *>(emitter)->getPrefix() +
 			RPL_ENDOFMOTD(emitter->getUID()));
 	}
 	else if (nbParam == 1)
@@ -89,7 +88,7 @@ uint					CommandMotd::operator()(NetworkEntity & executor, std::string params)
 			targetName = "";
 		//TODO put prefix
 		if (emitter->getType() & Client::value_type)
-			this->getServer()._sendMessage(*target, ":" + emitter->getUID() + "@" + reinterpret_cast<Client *>(emitter)->getHostname() + " MOTD " + targetName);
+			this->getServer()._sendMessage(*target,reinterpret_cast<Client *>(emitter)->getPrefix() + " MOTD " + targetName);
 		else if (emitter->getType() & Server::value_type)
 			this->getServer()._sendMessage(*target, ":" + emitter->getUID() + "@" + reinterpret_cast<Server *>(emitter)->getHostname() + " MOTD " + targetName);
 		else if (emitter->getType() & RelayedServer::value_type)
@@ -115,6 +114,7 @@ bool				CommandMotd::hasPermissions(AEntity & executor)
 	return true;
 }
 
+//REVIEW put this method (and ntos) in utils
 int 				CommandMotd::isRegularFile(const char *path)
 {
     struct stat path_stat;

@@ -59,7 +59,6 @@ uint					CommandSquit::operator()(NetworkEntity & executor, std::string params)
 			}
 			//if a server send a SQUIT emitted by a server it's indicate a remote server link has been dropped, handle this update and send update to all others
 			Logger::warning("Server " + serverToken + " had leave the network because: " + comment);
-			//Logger::critical("Handle a pseudo-netsplit here");
 			this->getServer()._entities.erase(serverToken);
 			this->getServer()._servers.erase(serverToken);
 			this->getServer()._sendAllServers(
@@ -100,9 +99,6 @@ uint				CommandSquit::_quitServer(const AEntity & emitter, std::string & serverT
 		Logger::warning("Drop local server link with: " + serverToken + " with cause of: " + comment);
 		Logger::critical("Handle a netsplit here");
 		this->getServer().disconnect(reinterpret_cast<Server*>(server)->getStream());
-	//	this->getServer()._sendAllServers(
-	//		":" + this->getServer().getUID() + " SQUIT " + serverToken + " :" + comment
-	//	);
 	}
 	return SUCCESS;
 }
