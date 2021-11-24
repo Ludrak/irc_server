@@ -171,18 +171,12 @@ bool				CommandServer::hasPermissions(AEntity & executor)
 		Logger::error("Server: invalid password/" + executor.getPassword() + "/" + this->getServer()._password);
 		return false;
 	}
-	if (executor.getType() & UnRegisteredConnection::value_type)
-		return true;
-	if (executor.getType() & Server::value_type)
-		return true;
-	if (executor.getType() & Server::value_type_forward)
-		return true;
+	
 	if (executor.getType() & (UnRegisteredConnection::value_type | Server::value_type | Server::value_type_forward))
 		return (true);
 	//TODO make a test for |
 	return (false);
 }
-
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
 */

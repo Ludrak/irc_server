@@ -69,27 +69,27 @@ IRCServer::~IRCServer()
 // TODO REFRACTOR
 void			IRCServer::_printServerState( void )
 {
-	Logger::warning("TODO print server state");
-	Logger::info("--- Channels ---");
+	Logger::debug("TODO finish print server state");
+	Logger::debug("--- Channels ---");
 	for (std::map<std::string, Channel *>::const_iterator it = this->_channels.begin(); it != this->_channels.end(); ++it)
 	{
-		Logger::info("-- " + it->second->getUID() + " " + ntos(it->second->getConcurrentClients()) + "/" + ntos(it->second->getConcurrentClientsMax()));
+		Logger::debug("-- " + it->second->getUID() + " " + ntos(it->second->getConcurrentClients()) + "/" + ntos(it->second->getConcurrentClientsMax()));
 		if (it->second->getCreator())
-			Logger::info("Creator: " + it->second->getCreator()->getUID());
+			Logger::debug("Creator: " + it->second->getCreator()->getUID());
 		else
-			Logger::info("Creator: none");
+			Logger::debug("Creator: none");
 		for (std::list<Client *>::iterator itc = it->second->clientBegin(); itc != it->second->clientEnd(); ++itc)
 		{
-			Logger::info("\t- " + (*itc)->getUID());
+			Logger::debug("\t- " + (*itc)->getUID());
 		}
 	}
-	Logger::info("--- servers ---");
+	Logger::debug("--- servers ---");
 	for (std::map<std::string, AEntity *>::const_iterator it = this->_servers.begin(); it != this->_servers.end(); ++it)
 	{
 		if (it->second->getType() & (Server::value_type | Server::value_type_forward))
 		{
 			Server *server = reinterpret_cast<Server*>(it->second);
-			Logger::info("-- " + server->getUID() + 
+			Logger::debug("-- " + server->getUID() + 
 				"\n - name: " + server->getName() +
 				"\n - host:" + server->getHostname() +
 				"\n - flags:" + server->getFlags() +
@@ -98,7 +98,7 @@ void			IRCServer::_printServerState( void )
 		else if (it->second->getType() & RelayedServer::value_type)
 		{
 			RelayedServer* server = reinterpret_cast<RelayedServer*>(it->second);
-			Logger::info("-- " + server->getUID() + 
+			Logger::debug("-- " + server->getUID() + 
 				"\n - name: " + server->getName() +
 				"\n - hop: " + ntos(server->getHopCount()) +
 				"\n - host:" + server->getHostname() +
@@ -405,6 +405,31 @@ void							IRCServer::_onClientQuit(SockStream &s)
 	NetworkEntity*	nEntity	= getEntityByStream(s);
 	if (nEntity != NULL)
 	{
+		if (nEntity->getType() & Server::value_type)
+		{
+			Server	*srv = reinterpret_cast<Server*>(nEntity);
+			Logger::warning("lost connection from server (" + srv->getUID() + "!" + srv->getName() + "@" + srv->getHostname() + ")");
+			this->_sendAllServers(":" + srv->getUID() + " SQUIT " + srv->getUID() + " :netsplit occured.");
+			for (std::map<std::string, AEntity*>::iterator it = this->_servers.begin(); it != this->_servers.end(); )
+			{
+				if (it->second->getType() & RelayedServer::value_type)
+				{
+					RelayedServer *relay_srv = reinterpret_cast<RelayedServer*>(it->second);
+					++it;
+					if (relay_srv->getServer().getStream().getSocket() == nEntity->getStream().getSocket())
+					{
+						/* netsplit on that relayed server */
+						Logger::warning("netsplit occured ! lost route to server: "
+							+ relay_srv->getUID() + "!" + relay_srv->getName() + "@" + relay_srv->getHostname());
+						this->_sendAllServers(":" + this->getUID() + " SQUIT " + relay_srv->getUID() + " :netsplit occured.");
+						this->_servers.erase(relay_srv->getUID());
+						this->_entities.erase(relay_srv->getUID());
+						delete relay_srv;
+					}
+				}
+				else ++it;
+			}
+		}
 		this->_entities.erase(nEntity->getUID());
 		this->_clients.erase(nEntity->getUID());
 		this->_servers.erase(nEntity->getUID());
@@ -459,9 +484,44 @@ void				IRCServer::_onConnect ( SockStream &server)
 // TODO REFRACTOR AND HANDLE FORWARD
 void				IRCServer::_onQuit( SockStream &server)
 {
-	(void)server;
-	Logger::warning("Stop connection to forward server");
-	Logger::warning("TODO handle netsplit with forward network");
+	NetworkEntity*	nEntity	= getEntityByStream(server);
+	if (nEntity != NULL)
+	{
+		if (nEntity->getType() & Server::value_type_forward)
+		{
+			Server	*srv = reinterpret_cast<Server*>(nEntity);
+			Logger::warning("lost connection from server (" + srv->getUID() + "!" + srv->getName() + "@" + srv->getHostname() + ")");
+			this->_sendAllServers(":" + srv->getUID() + " SQUIT " + srv->getUID() + " :netsplit occured.");
+			for (std::map<std::string, AEntity*>::iterator it = this->_servers.begin(); it != this->_servers.end(); )
+			{
+				if (it->second->getType() & RelayedServer::value_type)
+				{
+					RelayedServer *relay_srv = reinterpret_cast<RelayedServer*>(it->second);
+					++it;
+					if (relay_srv->getServer().getStream().getSocket() == nEntity->getStream().getSocket())
+					{
+						/* netsplit on that relayed server */
+						Logger::warning("netsplit occured ! lost route to forward server: "
+							+ relay_srv->getUID() + "!" + relay_srv->getName() + "@" + relay_srv->getHostname());
+						this->_sendAllServers(":" + this->getUID() + " SQUIT " + relay_srv->getUID() + " :netsplit occured.");
+						this->_servers.erase(relay_srv->getUID());
+						this->_entities.erase(relay_srv->getUID());
+						delete relay_srv;
+					}
+				}
+				else ++it;
+			}
+		}
+		this->_entities.erase(nEntity->getUID());
+		this->_servers.erase(nEntity->getUID());
+		this->_connections.erase(&nEntity->getStream());
+		this->_unregistered_connections.erase(&nEntity->getStream());
+		delete nEntity;
+	}
+	else
+	{
+		Logger::critical("ClientQuit: No entity corresponding was found.");
+	}
 }
 
 

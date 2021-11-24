@@ -256,7 +256,7 @@ bool						AServer::listenOn( ushort port, IProtocol &protocol )
 
 void		    			AServer::disconnect( SockStream &client )
 {
-	Logger::info("disconnect client:" + client.getIP());
+	Logger::info("disconnecting: " + client.getHost());
 #ifdef KQUEUE
 	for (std::vector<struct kevent>::iterator it = this->_k_events.begin(); it != this->_k_events.end(); ++it)
 	{

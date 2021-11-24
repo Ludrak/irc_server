@@ -48,7 +48,6 @@ uint					CommandPass::operator()(NetworkEntity & executor, std::string params)
 			ue.setFlags(Parser::getParam(params, 2));
 		case 1:
 			ue.setPassword(Parser::getParam(params, 0));
-			Logger::warning("password set");
 			break ;
 		default:
 			Logger::error("Pass: Bad number of arguments");
