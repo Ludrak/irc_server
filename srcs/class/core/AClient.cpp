@@ -1,6 +1,7 @@
 #include "AClient.hpp"
 
-AClient::AClient(void) : ASockManager()
+AClient::AClient(const std::string &ssl_cert_path, const std::string &ssl_key_path)
+: ASockManager(ssl_cert_path, ssl_key_path)
 {
 	Logger::debug("Constructor AClient");
 }
@@ -10,12 +11,17 @@ AClient::~AClient(void)
 }
 
 
-bool			AClient::connectOn(const std::string host, const ushort port, IProtocol &protocol)
+bool			AClient::connectOn(const std::string host, const ushort port, IProtocol &protocol, const bool useTLS)
 {
-	SockStream  *s = new SockStream(host, port, protocol);
+	SockStream  *s = new SockStream(host, port, protocol, useTLS);
 	if (connect(s->getSocket(), reinterpret_cast<const sockaddr*>(&s->getAddress()), sizeof(s->getAddress())) != 0)
 		throw AClient::ConnectionException();
 	s->setType(CLIENT);
+	if (s->hasTLS())
+	{
+		s->initTLS(this->_ssl_ctx);
+		s->connectSSL();
+	}
 	this->addSocket(*s);
 #ifdef KQUEUE
 	struct kevent new_event;
@@ -32,9 +38,18 @@ bool			AClient::connectOn(const std::string host, const ushort port, IProtocol &
 t_pollevent		AClient::_pollInClients(SockStream & sock)
 {
 	char	buffer[RECV_BUFFER_SZ] = { 0 };
-	size_t	byte_size = recv(sock.getSocket(), buffer, RECV_BUFFER_SZ, MSG_DONTWAIT);
+	ssize_t	byte_size;
+	if (sock.hasTLS() && sock.getSSL())
+	{
+		byte_size = SSL_read(sock.getSSL(), buffer, RECV_BUFFER_SZ);
+	}
+	else
+		byte_size = recv(sock.getSocket(), buffer, RECV_BUFFER_SZ, MSG_DONTWAIT);
 	if (byte_size < 0)
+	{
+		Logger::error(std::string("AClient: recv() failed : ") + strerror(errno) + std::string(" on socket <" + ntos(sock.getSocket()) + ">."));
 		return (POLL_ERR);
+	}	
 	else if (byte_size == 0)
 	{
 		this->_onQuit(sock);
@@ -87,9 +102,18 @@ t_pollevent		AClient::_pollOutClients(SockStream & sock)
 	size_t	buffer_sz = current_pkg->getRawData().size() > SEND_BUFFER_SZ ? SEND_BUFFER_SZ : current_pkg->getRawData().size();
 	std::memcpy(buffer, current_pkg->getRawData().c_str(), buffer_sz);
 
-	size_t byte_size = send(current_pkg->getRecipient()->getSocket(), buffer, buffer_sz, 0);
+	ssize_t	byte_size;
+	if (sock.hasTLS() && sock.getSSL())
+		byte_size = SSL_write(current_pkg->getRecipient()->getSSL(), buffer, buffer_sz);
+	else
+		byte_size = send(current_pkg->getRecipient()->getSocket(), buffer, buffer_sz, 0);
+	
 	current_pkg->nflush(byte_size);
-
+	if (byte_size < 0)
+	{
+		Logger::error("AClient: send() error on " + sock.getIP() + ntos(" : ") + strerror(errno));
+		return (POLL_ERR);
+	}
 	if (current_pkg->isInvalid() || current_pkg->getRawData().empty())
 	{
 		delete current_pkg;

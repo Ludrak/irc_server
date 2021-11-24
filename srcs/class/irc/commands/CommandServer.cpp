@@ -166,7 +166,7 @@ uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 
 bool				CommandServer::hasPermissions(AEntity & executor)
 {
-	if (executor.getPassword() != this->getServer()._password)
+	if (!this->getServer()._password.empty() && executor.getPassword() != this->getServer()._password)
 	{
 		Logger::error("Server: invalid password/" + executor.getPassword() + "/" + this->getServer()._password);
 		return false;

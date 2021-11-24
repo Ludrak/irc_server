@@ -9,8 +9,8 @@ const uint				IRCServer::value_type = Server::value_type;
 */
 //REVIEW Server name maximum 63 character
 // TODO set server token, name & info 
-IRCServer::IRCServer(ushort port, const std::string & password, const std::string &host)
-:	ASockManager(),
+IRCServer::IRCServer(ushort port, const std::string & password, const std::string &host, const std::string &ssl_cert_path, const std::string &ssl_key_path, const ushort tls_port)
+:	ASockManager(ssl_cert_path, ssl_key_path),
 	ANode(host),
 	AEntity(IRCServer::value_type, "token"),
 	ServerInfo("name", "info", "default hostname", "IRC|amazircd"),
@@ -31,6 +31,11 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 	this->setPassword(password);
 
 	this->listenOn(port, this->_protocol);
+
+	/* if key and cert are specified, listen on tls port */
+	if (!ssl_cert_path.empty() && !ssl_key_path.empty())
+		this->listenOn(tls_port, this->_protocol, true);
+	
 	for (std::map<ushort, SockStream *>::iterator it = this->_sockets.begin(); it != this->_sockets.end(); ++it)
 	{
 		if (it->second->getType() == SERVER)
@@ -117,7 +122,7 @@ void			IRCServer::_printServerState( void )
 
 
 
-bool							IRCServer::connectToNetwork(const std::string & host, ushort port, std::string & password)
+bool							IRCServer::connectToNetwork(const std::string & host, ushort port, std::string & password, const bool useTLS)
 {
 	Logger::info("Try connecting to network:"); 
 	Logger::info("- host     : " + host); 
@@ -126,7 +131,7 @@ bool							IRCServer::connectToNetwork(const std::string & host, ushort port, st
 	this->_forwardPassword = password;
 	try
 	{
-		if (this->connectOn(host, port, this->_protocol) == false)
+		if (this->connectOn(host, port, this->_protocol, useTLS) == false)
 		{
 			Logger::error("Cannot connect to network");
 			return false;
@@ -379,7 +384,7 @@ void						IRCServer::_onClientJoin(SockStream & s)
 	UnRegisteredConnection *connection(new UnRegisteredConnection(s));
 	this->_unregistered_connections.insert(std::make_pair(&s, connection));
 	this->_connections.insert(std::make_pair(&s, connection));
-	Logger::info("new incomming connection from " + s.getIP());
+	Logger::info("new incomming connection from " + s.getHost());
 	this->_printServerState();
 }
 

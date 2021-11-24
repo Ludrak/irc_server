@@ -5,8 +5,8 @@
 */
 
 //TODO CHeck return values
-SockStream::SockStream(IProtocol & protocol)
-throw (InvalidHostException)
+SockStream::SockStream(IProtocol & protocol, const bool useTLS)
+throw (InvalidHostException, SSLException)
 :	_type(UNKNOWN),
 #ifdef	POLL
 	_poll_events(POLLIN),
@@ -18,14 +18,16 @@ throw (InvalidHostException)
 	_ip(""),
 	_host(""),
 	_protocol(&protocol),
+	_useTLS(useTLS),
+	_cSSL(NULL),
 	_received_data(protocol)
 {
 	Logger::debug("default SockStream constructor");
 	this->_createSocket("127.0.0.1", 8080);
 }
 
-SockStream::SockStream(const std::string &host, uint16_t port, IProtocol & protocol)
-throw (InvalidHostException)
+SockStream::SockStream(const std::string &host, uint16_t port, IProtocol & protocol, const bool useTLS)
+throw (InvalidHostException, SSLException)
 :	_type(UNKNOWN),
 #ifdef	POLL
 	_poll_events(POLLIN),
@@ -36,12 +38,15 @@ throw (InvalidHostException)
 	_ip(""),
 	_host(""),
 	_protocol(&protocol),
+	_useTLS(useTLS),
+	_cSSL(NULL),
 	_received_data(protocol)
 {
 	this->_createSocket(host, port);
 }
 
-SockStream::SockStream(ushort socket, const sockaddr_in &address, IProtocol & protocol)
+SockStream::SockStream(ushort socket, const sockaddr_in &address, IProtocol & protocol, const bool useTLS, SSL_CTX * const ctx)
+throw (SSLException)
 :	_socket(socket),
 	_type(UNKNOWN),
 #ifdef	POLL
@@ -54,13 +59,16 @@ SockStream::SockStream(ushort socket, const sockaddr_in &address, IProtocol & pr
 	_ip(""),
 	_host(""),
 	_protocol(&protocol),
+	_useTLS(useTLS),
+	_cSSL(NULL),
 	_received_data(protocol)
 {
 	struct in_addr ipAddr = address.sin_addr;
 	char ip_str[INET_ADDRSTRLEN];
 	inet_ntop( AF_INET, &ipAddr, ip_str, INET_ADDRSTRLEN );
 	this->_resolveIP(ip_str);
-	//REVIEW don't we need createSocket() here?
+	if (this->_useTLS)
+		this->initTLS(ctx);
 }
 
 /*
@@ -99,7 +107,7 @@ void							SockStream::_resolveIP(const std::string &host)
 }
 
 void							SockStream::_createSocket(const std::string &host, uint16_t port, sa_family_t family, int sock_type)
-throw (SockStream::InvalidHostException)
+throw (SockStream::InvalidHostException, SockStream::SSLException)
 {
 	Logger::debug("create socket");
 	if ((this->_socket = socket(family, sock_type, 0)) < 0)
@@ -109,6 +117,59 @@ throw (SockStream::InvalidHostException)
 	this->_addr.sin_port = htons(port);
 	this->_addr.sin_family = family;
 	this->_addr.sin_addr.s_addr = inet_addr(this->_ip.c_str());
+}
+
+void							SockStream::initTLS(SSL_CTX *ctx) throw (SSLException)
+{
+	if (!ctx)
+	{
+		Logger::critical("Passing null SSL context to SockStream.");
+		return ;
+	}
+	this->_cSSL = SSL_new(ctx);
+//	SSL_set_connect_state(this->_cSSL);
+
+	if (!this->_cSSL)
+	{
+		ERR_print_errors_fp(stderr);
+		//while (SSL_get_error(this->_cSSL, ERR_get_error() > 0))
+		//	Logger::error("SSL structure initialisation failed: " + std::string(ERR_error_string(ERR_get_error(), NULL)));
+		throw SSLException();
+	}
+	//SSL_set_fd(this->_cSSL, this->_socket);
+}
+
+void							SockStream::acceptSSL()
+{
+	SSL_set_fd(this->_cSSL, this->_socket);
+	int err = SSL_accept(this->_cSSL);
+	if (err <= 0)
+	{
+		//TODO 
+		// while (SSL_get_error(this->_cSSL, ERR_get_error()) == 0)
+		// ERR_print_errors_fp(stderr);
+		// Logger::error("Cannot SSL_accept() for client: " + std::string(ERR_error_string(ERR_get_error(), NULL)));
+		ERR_print_errors_fp(stderr);
+		//Logger::error("Cannot SSL_accept() for client: " + std::string(ERR_error_string(SSL_get_error(this->_cSSL, err), NULL)));
+		//Logger::error("Cannot SSL_accept() for client:" + std::string(ERR_error_string(ERR_get_error(), NULL)));
+		//this->_cSSL = NULL;
+		//this->_useTLS = false;
+	}
+}
+
+void							SockStream::connectSSL()
+{
+	SSL_set_connect_state(this->_cSSL);
+	SSL_set_fd(this->_cSSL, this->_socket);
+	int err = SSL_connect(this->_cSSL);
+	if (err <= 0)
+	{
+		ERR_print_errors_fp(stderr);
+		//Logger::error("Cannot SSL_connect() for client:" + std::string(ERR_error_string(ERR_get_error(), NULL)));
+		//this->_cSSL = NULL;
+		//this->_useTLS = false;
+
+	}
 }
 
 void							SockStream::close( void )
@@ -233,5 +294,21 @@ const std::string				&SockStream::getHost(void) const
 {
 	return (this->_host);
 }
+
+void							SockStream::useTLS(const bool use)
+{
+	this->_useTLS = use;
+}
+
+bool							SockStream::hasTLS(void) const
+{
+	return (this->_useTLS);
+}
+
+SSL								*SockStream::getSSL() const
+{
+	return (this->_cSSL);
+} 
+
 
 /* ************************************************************************** */

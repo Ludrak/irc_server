@@ -13,7 +13,7 @@ typedef int t_pollevent;
 class ASockManager : public ASockHandler
 {
     public:
-        ASockManager(void);
+        ASockManager(const std::string &ssl_cert_path="", const std::string &ssl_key_path="");
 
         virtual void        run(void);
         void                delSocket( const SockStream &sock);
@@ -23,6 +23,10 @@ class ASockManager : public ASockHandler
 # endif
 
         virtual t_pollevent _onPollEvent(int socket, int event) = 0;
+    
+    protected:
+        SSL_CTX                       *_ssl_ctx;
+
 };
 
 

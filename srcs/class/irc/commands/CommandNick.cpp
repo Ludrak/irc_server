@@ -23,7 +23,7 @@ CommandNick::~CommandNick()
 
 uint					CommandNick::operator()(NetworkEntity & executor, std::string params)
 {
-	if (executor.getPassword() != this->getServer()._password)
+	if (this->getServer()._password != "" && executor.getPassword() != this->getServer()._password)
 	{
 		Logger::error("Nick: invalid password/" + executor.getPassword() + "/" + this->getServer()._password);
 		return SUCCESS;

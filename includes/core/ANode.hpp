@@ -8,7 +8,7 @@
 class ANode : public AServer, public AClient
 {
 	public:
-		ANode(const std::string & host = "127.0.0.1");
+		ANode(const std::string & host="127.0.0.1", const std::string &ssl_cert_path="", const std::string &ssl_key_path="");
 		virtual ~ANode(void);
 
 

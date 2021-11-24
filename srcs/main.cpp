@@ -53,9 +53,20 @@ bool	isValidServerHost(const std::string &str)
 	return (true);
 }
 
+bool    isValidSSLCert(const std::string &str)
+{
+	(void)str;
+	return true;
+}
+
 bool	isNumber(const std::string &str)
 {
 	return (!str.empty() && str.find_first_not_of("0123456789") == std::string::npos);
+}
+
+bool	isValidPort(const std::string &str)
+{
+	return (isNumber(str));
 }
 
 # define ARG_NOTFOUND	0
@@ -126,6 +137,9 @@ int		main(int ac, char **av)
 	int			server_token = 0;
 	std::string server_info = "Default server informations;";
 	uint		server_max_connections = 20;
+	std::string ssl_cert;
+	std::string ssl_key;
+	ushort		tls_port;
 //	bool		use_crlf = true; // unimpemented ssl
 
 	// get forward server arg
@@ -194,6 +208,37 @@ int		main(int ac, char **av)
 		else if (arg_code == ARG_ERROR)
 			return (EXIT_FAILURE);
 
+		/* SSL pem location */
+		arg_code = getArg("--ssl-cert", argn, ac, av, isValidSSLCert);
+		if (arg_code == ARG_OK)
+		{
+			ssl_cert = std::string(av[argn + 1]);
+			argn += 2;
+			continue;
+		}
+		else if (arg_code == ARG_ERROR)
+			return (EXIT_FAILURE);
+
+		arg_code = getArg("--ssl-key", argn, ac, av, isValidSSLCert);
+		if (arg_code == ARG_OK)
+		{
+			ssl_key = std::string(av[argn + 1]);
+			argn += 2;
+			continue;
+		}
+		else if (arg_code == ARG_ERROR)
+			return (EXIT_FAILURE);
+		
+		arg_code = getArg("--tls-port", argn, ac, av, isValidPort);
+		if (arg_code == ARG_OK)
+		{
+			tls_port = std::stoi(av[argn + 1]);
+			argn += 2;
+			continue;
+		}
+		else if (arg_code == ARG_ERROR)
+			return (EXIT_FAILURE);
+
 		/* unknown argument */
 		if (std::strncmp(av[argn], "--", 2) == 0)
 		{
@@ -243,8 +288,8 @@ int		main(int ac, char **av)
 	std::cout << "* - info:            " << server_info << std::endl;
 	std::cout << "*************************************************" << std::endl;
 
-	Logger::setLogLevel(INFO);
-	IRCServer server(server_port, server_pass, server_host);
+	Logger::setLogLevel(DEBUG);
+	IRCServer server(server_port, server_pass, server_host, ssl_cert, ssl_key, tls_port);
 	std::stringstream ss;
 	ss << std::setfill('0') << std::setw(3) << server_token;
 

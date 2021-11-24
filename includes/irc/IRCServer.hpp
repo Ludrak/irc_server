@@ -38,19 +38,25 @@ class CommandHandler;
 
 # define SUCCESS				0
 
-# define IRC_DEFAULT_HOST "127.0.0.1"
-# define IRC_DEFAULT_PORT 6667
-# define IRC_DEFAULT_PASS ""
+# define IRC_DEFAULT_HOST		"127.0.0.1"
+# define IRC_DEFAULT_PORT		6667
+# define IRC_DEFAULT_TLS_PORT	6697
+# define IRC_DEFAULT_PASS		""
 
 class IRCServer : public ANode, public AEntity, public ServerInfo
 {
 	public:
 		static const uint	value_type;
 
-		IRCServer(ushort port = IRC_DEFAULT_PORT, const std::string &password = IRC_DEFAULT_PASS, const std::string &host = IRC_DEFAULT_HOST);
+		IRCServer(ushort port = IRC_DEFAULT_PORT,
+					const std::string &password = IRC_DEFAULT_PASS,
+					const std::string &host = IRC_DEFAULT_HOST,
+					const std::string &ssl_cert_path="",
+					const std::string &ssl_key_path="",
+					const ushort tls_port=IRC_DEFAULT_TLS_PORT );
 		virtual ~IRCServer();
 
-		bool						connectToNetwork(const std::string & host, ushort port, std::string & password);
+		bool						connectToNetwork(const std::string & host, ushort port, std::string & password, const bool useTLS=false);
 		const IProtocol&			getProtocol( void ) const;
 		Channel*					getChannel(int ChannelUID);
 		NetworkEntity*				getEntityByStream(SockStream & s);

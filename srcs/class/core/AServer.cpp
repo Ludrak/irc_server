@@ -7,7 +7,8 @@ uint					AServer::_defaultMaxConnections = 30;
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-AServer::AServer( const std::string &host ) : ASockManager(), _host(host), _running(false), _maxConnections(AServer::_defaultMaxConnections)
+AServer::AServer( const std::string &host, const std::string &ssl_cert_path, const std::string &ssl_key_path ) 
+: ASockManager(ssl_cert_path, ssl_key_path), _host(host), _running(false), _maxConnections(AServer::_defaultMaxConnections)
 {
 	Logger::debug("Constructor AServer: " + this->_host);
 }
@@ -58,14 +59,17 @@ t_pollevent					AServer::_pollFromServer(int socket, int event)
 	sockaddr_in		client_addr;
 	socklen_t		client_addr_len;
 	int				client_sock;
-	
+
 	client_sock = accept(socket, reinterpret_cast<sockaddr *>(&client_addr), &client_addr_len);
 	if (client_sock <= 0)
 	{
 		Logger::error(ntos("accept() returned a negative value: ") + strerror(errno));
 		return (POLL_NOACCEPT);
 	}
-	SockStream	*client_ss = new SockStream(client_sock, client_addr, *it->second->getProtocol());
+	
+	SockStream	*client_ss = new SockStream(client_sock, client_addr, *it->second->getProtocol(), this->_sockets[socket]->hasTLS(), this->_ssl_ctx);
+	if (client_ss->hasTLS())
+		client_ss->acceptSSL();
 	client_ss->setType(REMOTE_CLIENT);
 	this->addSocket(*client_ss);
 	this->_onClientJoin(*client_ss);
@@ -119,10 +123,19 @@ t_pollevent					AServer::_pollFromClients(int socket, int event)
 t_pollevent					AServer::_pollInClients(SockStream & sock)
 {
 	char	buffer[RECV_BUFFER_SZ + 1] = { 0 };
-	ssize_t	byte_size = recv(sock.getSocket(), buffer, RECV_BUFFER_SZ, MSG_DONTWAIT);
+	ssize_t	byte_size;
+	if (sock.hasTLS() && sock.getSSL())
+	{
+		byte_size = SSL_read(sock.getSSL(), buffer, RECV_BUFFER_SZ);
+	}
+	else
+		byte_size = recv(sock.getSocket(), buffer, RECV_BUFFER_SZ, MSG_DONTWAIT);
 	if (byte_size < 0)
 	{
-		Logger::error(std::string("recv() failed : ") + strerror(errno) + std::string(" on socket <" + ntos(sock.getSocket()) + ">."));
+		if (sock.hasTLS() && sock.getSSL())
+			ERR_print_errors_fp(stderr);
+
+		Logger::error(std::string("AServer: recv() failed : ") + strerror(errno) + std::string(" on socket <" + ntos(sock.getSocket()) + ">."));
 		return POLL_ERR;
 	}
 	else if (byte_size == 0) 
@@ -169,10 +182,14 @@ t_pollevent					AServer::_pollOutClients(SockStream & sock)
 	size_t	buffer_sz = current_pkg->getRawData().size() > SEND_BUFFER_SZ ? SEND_BUFFER_SZ : current_pkg->getRawData().size();
 	std::memcpy(buffer, current_pkg->getRawData().c_str(), buffer_sz);
 
-	size_t byte_size = send(current_pkg->getRecipient()->getSocket(), buffer, buffer_sz, 0);
+	ssize_t	byte_size;
+	if (sock.hasTLS() && sock.getSSL())
+		byte_size = SSL_write(current_pkg->getRecipient()->getSSL(), buffer, buffer_sz);
+	else
+		byte_size = send(current_pkg->getRecipient()->getSocket(), buffer, buffer_sz, 0);
 	if (byte_size < 0)
 	{
-		Logger::error("send() error on " + sock.getIP() + ntos(" : ") + strerror(errno));
+		Logger::error("AServer: send() error on " + sock.getIP() + ntos(" : ") + strerror(errno));
 		return (POLL_ERR);
 	}
 	current_pkg->nflush(byte_size);
@@ -235,20 +252,27 @@ t_pollevent					AServer::_onPollEvent(int socket, int event)
 
 
 
-bool						AServer::listenOn( ushort port, IProtocol &protocol )
+bool						AServer::listenOn( ushort port, IProtocol &protocol , const bool useTLS)
 {
-	SockStream *new_sock = new SockStream(this->_host, port, protocol);
+	SockStream *new_sock = new SockStream(this->_host, port, protocol, useTLS);
 	new_sock->setType(SERVER);
 	if (bind(new_sock->getSocket(), reinterpret_cast<const sockaddr *>(&new_sock->getAddress()), sizeof(new_sock->getAddress())) != 0)
 	{
 		Logger::error(ntos("Can't bind on ") + new_sock->getIP() + " : " + ntos(strerror(errno)));
 		return (false);
-	}	
+	}
 	this->_sockets.insert(std::make_pair(new_sock->getSocket(), new_sock));
 	if (this->_running && listen(new_sock->getSocket(), this->_maxConnections) != 0)
 	{
 		Logger::error(ntos("Can't listen on ")  + new_sock->getIP() + " : " + ntos(strerror(errno)));
 		return (false);
+	}
+	if (useTLS)
+	{
+		new_sock->initTLS(this->_ssl_ctx);
+		SSL_set_connect_state (new_sock->getSSL());
+		//SSL_set_accept_state (new_sock->getSSL());
+		SSL_set_fd(new_sock->getSSL(), new_sock->getSocket());
 	}
 	return (true);
 }

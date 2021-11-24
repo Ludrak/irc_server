@@ -1,6 +1,7 @@
 # include "ANode.hpp"
 
-ANode::ANode(const std::string & host) : ASockManager(), AServer(host), AClient()
+ANode::ANode(const std::string & host, const std::string &ssl_cert_path, const std::string &ssl_key_path) 
+: ASockManager(ssl_cert_path, ssl_key_path), AServer(host), AClient()
 {
 	Logger::debug("ANode constructor");
 }

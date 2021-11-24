@@ -55,16 +55,16 @@ class AServer : public virtual ASockManager
 			public:
 				virtual const char	*what() const throw()
 				{
-					return ("fail to read incoming data: ");
+					return ("failed to read incoming data: ");
 				}
 		};
 		
-		AServer( const std::string &host = "127.0.0.1" );
+		AServer( const std::string &host="127.0.0.1", const std::string &ssl_cert_path="", const std::string &ssl_key_path="" );
 		virtual ~AServer();
 
 		void						loadConfigFile(std::string pathConfigFile);
 
-		bool						listenOn( ushort port, IProtocol &protocol );
+		bool						listenOn( ushort port, IProtocol &protocol, const bool useTLS=false );
 		void						run();
 
 		void						disconnect( SockStream &client );
@@ -86,7 +86,8 @@ class AServer : public virtual ASockManager
 	private:
 		uint						_maxConnections;
 
-		AServer( AServer const & src );
+		// AServer( const std::string &host, const std::string &ssl_pem_path="" );
+
 		AServer&					operator=( AServer const & rhs );
 
 		t_pollevent					_pollFromServer(int socket, int event);

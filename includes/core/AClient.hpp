@@ -24,10 +24,10 @@ class AClient : public virtual ASockManager
     };
 
     public:
-        AClient(void);
+        AClient(const std::string &ssl_cert_path="", const std::string & ss_key_path="");
         virtual ~AClient();
 
-        bool        	   		connectOn(const std::string host, const ushort port, IProtocol &protocol);
+        bool        	   		connectOn(const std::string host, const ushort port, IProtocol &protocol, const bool useTLS=false);
         void					sendServerPackage( Package *package, SockStream &server_recipient);
     
     protected:

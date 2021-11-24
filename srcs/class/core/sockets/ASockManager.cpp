@@ -1,9 +1,28 @@
 
 #include "ASockManager.hpp"
 
-ASockManager::ASockManager() : ASockHandler()
-{
-	Logger::debug("ASockManager constructor");
+ASockManager::ASockManager(const std::string &ssl_cert_path, const std::string &ssl_key_path) : ASockHandler()
+{	
+    if (!ssl_cert_path.empty() && !ssl_key_path.empty())
+	{
+        SSL_load_error_strings();
+        SSL_library_init();
+        OpenSSL_add_all_algorithms();
+        OpenSSL_add_all_ciphers();
+
+        const SSL_METHOD  *method = TLS_server_method();
+		this->_ssl_ctx = SSL_CTX_new(method);
+	    SSL_CTX_set_min_proto_version(this->_ssl_ctx, TLS1_3_VERSION);
+		//SSL_CTX_set_options(this->_ssl_ctx, SSL_OP_ALL);
+		SSL_CTX_use_certificate_file(this->_ssl_ctx, ssl_cert_path.c_str(), SSL_FILETYPE_PEM);
+		SSL_CTX_use_PrivateKey_file(this->_ssl_ctx, ssl_key_path.c_str(), SSL_FILETYPE_PEM);
+		Logger::debug("Constructor ASockManager on TLS");
+	}
+	else
+	{
+        Logger::info("SSL disabled: not all cert/key paths filled.");
+		Logger::debug("Constructor ASockManager");
+	}
 }
 
 void            ASockManager::delSocket(const SockStream &sock)

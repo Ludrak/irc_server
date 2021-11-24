@@ -14,6 +14,7 @@ CommandSquit::CommandSquit(CommandHandler & handler) : ACommand(handler)
 
 CommandSquit::~CommandSquit()
 {
+
 }
 
 

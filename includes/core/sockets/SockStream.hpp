@@ -4,6 +4,11 @@
 class AServer;
 class SockStream;
 
+# include <openssl/ssl.h>
+# include <openssl/bio.h>
+# include <openssl/err.h>
+# include <openssl/crypto.h>
+
 # include <iostream>
 # include <string>
 # include <sys/socket.h>
@@ -97,13 +102,21 @@ class SockStream
 			}
 	};
 	
+	class SSLException : public std::exception
+	{
+		public:
+			virtual const char	*what() const throw()
+			{
+				return ("failed to instantiate SSL.");
+			}
+	};
 	
 	public:
 		/* server socket constructors */
-		SockStream(IProtocol &protocol) throw (InvalidHostException);
-		SockStream(const std::string &host, uint16_t port, IProtocol &protocol) throw (InvalidHostException);
+		SockStream(IProtocol &protocol, const bool useTLS=false) throw (InvalidHostException, SSLException);
+		SockStream(const std::string &host, uint16_t port, IProtocol &protocol, const bool useTLS=false) throw (InvalidHostException, SSLException);
 		/* client socket contructor */
-		SockStream(ushort socket, const sockaddr_in &address, IProtocol &protocol);
+		SockStream(ushort socket, const sockaddr_in &address, IProtocol &protocol, const bool useTLS=false, SSL_CTX * const ctx=NULL) throw(SSLException);
 		
 		~SockStream();
 
@@ -118,30 +131,38 @@ class SockStream
 		Package						&getReceivedData(void);
 		std::list<Package*>			&getPendingData(void);
 
-#ifdef	POLL
+# ifdef	POLL
 		int							getPollEvents(void) const;
 		void						setPollEvent(int event);
 		void						delPollEvent(int event);
-#elif	defined(EPOLL)
+# elif	defined(EPOLL)
 		int							getEPollEvents(void) const;
 		void						setEPollEvent(int event);
 		void						delEPollEvent(int event);
-#elif	defined(SELECT)
-# define SELECT_IO_WRITE	(1<<1)
-# define SELECT_IO_READ		(1<<2)
+# elif	defined(SELECT)
+#  define SELECT_IO_WRITE	(1<<1)
+#  define SELECT_IO_READ		(1<<2)
 		int							getSelectedIOs(void) const;
 		void						selectIO(int event);
 		void						deselectIO(int event);
-#elif	defined(KQUEUE)
+# elif	defined(KQUEUE)
 		void						setkQueueEvents(int kq, std::vector<struct kevent> ev_list, struct kevent &ev, int event);
 		void						delkQueueEvents(int kq, std::vector<struct kevent> ev_list, struct kevent &ev, int event);
-#endif
+# endif
 
 		t_sock_type					getType(void) const;
 		void						setType( const t_sock_type type );
 
 		const std::string			&getIP(void) const;		
 		const std::string			&getHost(void) const;
+
+		void						useTLS(const bool use);
+		bool						hasTLS(void) const;
+		void						initTLS(SSL_CTX *ctx) throw (SockStream::SSLException);
+		
+		SSL							*getSSL() const;
+		void						acceptSSL();
+		void						connectSSL();
 
 	protected:
 		ushort						_socket;
@@ -159,6 +180,8 @@ class SockStream
 		std::string					_ip;
 		std::string					_host;
 		IProtocol					*_protocol;
+		bool						_useTLS;
+		SSL							*_cSSL;
 
 	private:
 		Package				 		_received_data;
@@ -169,7 +192,7 @@ class SockStream
 		void						_resolveIP(const std::string &host);
 		void						_createSocket(const std::string &host, uint16_t port,
 										sa_family_t familly = AF_INET, int sock_type = SOCK_STREAM)
-										throw(SockStream::InvalidHostException);
+										throw(SockStream::InvalidHostException, SockStream::SSLException);
 };
 
 #endif /* ***************************************************** SockStream_H */
