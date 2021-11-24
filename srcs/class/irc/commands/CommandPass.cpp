@@ -26,12 +26,11 @@ CommandPass::~CommandPass()
    Parameters: <password> <version> <flags> [<options>]
 */
 
-//TODO see ERR_461
 uint					CommandPass::operator()(NetworkEntity & executor, std::string params)
 {
 	if (this->getServer()._entities.count(executor.getUID()) != 0)
 	{
-		Logger::warning("Alredy registered");
+		Logger::debug("Alredy registered");
 		this->getServer()._sendMessage(executor, ERR_ALREADYREGISTRED(executor.getUID()));
 		return SUCCESS;
 	}
@@ -40,7 +39,7 @@ uint					CommandPass::operator()(NetworkEntity & executor, std::string params)
 	switch (Parser::nbParam(params))
 	{
 		case 0:
-			Logger::warning("need more params");
+			Logger::debug("need more params");
 			this->getServer()._sendMessage(ue, ERR_NEEDMOREPARAMS(executor.getUID(), std::string("PASS")));
 			break ;
 		case 3:
@@ -48,10 +47,9 @@ uint					CommandPass::operator()(NetworkEntity & executor, std::string params)
 			ue.setFlags(Parser::getParam(params, 2));
 		case 1:
 			ue.setPassword(Parser::getParam(params, 0));
-			Logger::warning("password set");
 			break ;
 		default:
-			Logger::error("Pass: Bad number of arguments");
+			Logger::debug("Pass: Bad number of arguments");
 			break ;
 	}
 	return SUCCESS;

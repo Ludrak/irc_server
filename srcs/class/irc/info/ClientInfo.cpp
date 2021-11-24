@@ -124,5 +124,3 @@ void						ClientInfo::setServerOP( const bool op )
 {
 	this->_serverOp = op;
 }
-
-

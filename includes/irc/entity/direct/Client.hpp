@@ -25,6 +25,8 @@ class Client : public NetworkEntity, public ClientInfo
 		const std::list<Channel*>	&getChannels() const;
 		int							joinChannel(Channel &channel);
 		void                        leaveAllChannels(void);
+		const std::string			getIdent( void ) const;
+		const std::string			getPrefix( void ) const;
 
 		~Client();
 	

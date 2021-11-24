@@ -43,3 +43,13 @@ void                        Client::leaveAllChannels(void)
 {
     this->_channels = std::list<Channel*>();
 }
+
+const std::string			Client::getIdent( void ) const
+{
+	return (this->_uid + "!" + this->_name + "@" + this->_host);
+}
+
+const std::string			Client::getPrefix( void ) const
+{
+	return ":" + this->getIdent() + " ";
+}
