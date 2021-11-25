@@ -17,3 +17,12 @@ RelayedClient::RelayedClient(
     this->_name = name;
     this->_family = CLIENT_ENTITY_FAMILY;
 }
+const std::string			RelayedClient::getIdent( void ) const
+{
+	return (this->_uid + "!" + this->_name + "@" + this->_host);
+}
+
+const std::string			RelayedClient::getPrefix( void ) const
+{
+	return ":" + this->getIdent() + " ";
+}

@@ -44,7 +44,7 @@ uint					CommandMode::operator()(NetworkEntity & executor, std::string params)
 		this->modeForChannel(nbParam, executor, params);
 	}
 	else
-		this->getServer()._sendMessage(executor, ERR_NOSUCHNICK(uid));
+		this->getServer()._sendMessage(executor, ERR_NOSUCHNICK(executor.getUID(), uid));
 	return SUCCESS;
 }
 
@@ -97,7 +97,7 @@ void				CommandMode::modeForChannel(uint nbParam, NetworkEntity & executor, std:
 	std::string uid = Parser::getParam(params, 0);
 	if (this->getServer()._channels.count(uid) == 0)
 	{
-		this->getServer()._sendMessage(executor, ERR_NOSUCHCHANNEL(uid));
+		this->getServer()._sendMessage(executor, ERR_NOSUCHCHANNEL(executor.getUID(), uid));
 		return ;
 	}
 	std::string mode = Parser::getParam(params, 2);

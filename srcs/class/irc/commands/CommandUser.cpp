@@ -77,7 +77,7 @@ uint				CommandUser::_commandUSERunknown(UnRegisteredConnection & executor, std:
 		std::stringstream reply_msg;
 		reply_msg << "NICK " << new_client->getUID() << " 1 " << new_client->getName() <<
 			" " << new_client->getHostname() << " " << new_client->getServerToken() <<
-			" " << new_client->getModeString() << " " << new_client->getRealname();
+			" " << new_client->getModeString() << " :" << new_client->getRealname();
 		this->getServer()._sendAllServers(reply_msg.str());
 	} catch (const std::invalid_argument & e)
 	{

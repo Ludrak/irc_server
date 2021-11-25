@@ -32,33 +32,50 @@ uint					CommandPrivmsg::operator()(NetworkEntity & executor, std::string params
 			this->getServer()._sendMessage(executor, ERR_NOTEXTTOSEND());
 			break ;
 		case 2:
-			//* right numbers of params */
+			/* right numbers of params */
 			std::string targetName = Parser::getParam(params, 0);
 			Logger::debug("Privmsg target: " + targetName); 
 			if (this->getServer()._entities.count(targetName) == 0)
 			{
-				Logger::debug("Privmsg: Target not found"); 
-				this->getServer()._sendMessage(executor, ERR_NOSUCHNICK(targetName));
+				/* target doesn't exist */
+				Logger::debug("Privmsg: Target not found");
+					this->getServer()._sendMessage(executor, ERR_NOSUCHNICK(executor.getUID(), targetName));
 				return SUCCESS;
 			}
 			AEntity *target = this->getServer()._entities[targetName];
 			if (target->getType() & Channel::value_type)
 			{
+				/* additional tests when target is a channel */
 				Logger::debug("Privmsg: target is a channel");
 				if (reinterpret_cast<Channel *>(target)->isRegistered(static_cast<Client&>(executor)) == false)
 				{
 					Logger::debug("Privmsg: not in channel");
-					this->getServer()._sendMessage(executor.getStream(), ERR_CANNOTSENDTOCHAN(target->getUID()));
+					this->getServer()._sendMessage(executor.getStream(), ERR_CANNOTSENDTOCHAN(executor.getUID(), target->getUID()));
 					return SUCCESS;
 				}
 			}
-			Logger::info(executor.getUID() + " send message to " + target->getUID());
 			std::string msg = Parser::getParam(params, 1);
 			// msg = this->getServer().makePrefix(&executor, &this->getServer()) + "PRIVMSG " + target->getUID() + " :" + msg;
-			if (this->getClient() != NULL)
-				msg = this->getServer().makePrefix(this->getClient(), &this->getServer()) + "PRIVMSG " + target->getUID() + " :" + msg;
+			const AEntity *emitter = this->getClient();
+			if (emitter == NULL)
+			{
+				/* No prefix => message from a local client */
+				emitter = &executor;
+				Logger::info(executor.getUID() + " send message to " + target->getUID());
+			}
+			else {
+				Logger::info(executor.getUID() + " relay a message from " + emitter->getUID() + " to " + target->getUID());
+			}
+			//add prefixes
+			if (emitter->getType() & Client::value_type)
+				msg = reinterpret_cast<const Client*>(emitter)->getPrefix() + " PRIVMSG " + target->getUID() + " :" + msg;
+			else if (emitter->getFamily() == SERVER_ENTITY_FAMILY)
+				msg = ":" + emitter->getUID() + " PRIVMSG " + target->getUID() + " :" + msg;
 			else
-				msg = this->getServer().makePrefix(&executor, &this->getServer()) + "PRIVMSG " + target->getUID() + " :" + msg;
+			{
+				Logger::critical("Privmsg: unhandled emitter type.");
+				return ERROR;
+			}
 			Logger::debug(std::string("MSG = ") + msg);
 			this->getServer()._sendMessage(*target, msg);
 			break ;

@@ -21,6 +21,10 @@ class RelayedClient : public RelayedEntity, public ClientInfo
 			const std::string &server_token,
 			const std::string &server_host
 		);
+
+		const std::string		getIdent( void ) const;
+		const std::string		getPrefix( void ) const;
+
 };
 
 #endif // RELAYED_CLIENT_HPP

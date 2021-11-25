@@ -6,18 +6,18 @@
 /* Used to indicate the nickname parameter supplied to a
 command is currently unused.
 */
-# define ERR_NOSUCHNICK(A) "401 :" + A + " No such nick/channel"
+# define ERR_NOSUCHNICK(exec, A) "401 " + exec + " " + A + " :No such nick/channel"
 
 
 /* Used to indicate the server name given currently
 doesn't exist.
 */
-# define ERR_NOSUCHSERVER(A, B) "402 " + A + " " + B + " :No such server"
+# define ERR_NOSUCHSERVER(exec, A) "402 " + exec + " " + A + " :No such server"
 
 
 /* Used to indicate the given channel name is invalid.
 */
-# define ERR_NOSUCHCHANNEL(A) "403 :" + A + " No such channel"
+# define ERR_NOSUCHCHANNEL(exec, A) "403 " + exec + " " + A + " :No such channel"
 
 
 /* Sent to a user who is either (a) not on a channel
@@ -25,7 +25,7 @@ which is mode +n or (b) not a chanop (or mode +v) on
 a channel which has mode +m set and is trying to send
 a PRIVMSG message to that channel.
 */
-# define ERR_CANNOTSENDTOCHAN(A) "404 " + A + " :Cannot send to channel"
+# define ERR_CANNOTSENDTOCHAN(exec, A) "404 " + exec + " " + A + " :Cannot send to channel"
 
 
 /* Sent to a user when they have joined the maximum

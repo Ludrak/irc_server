@@ -107,13 +107,13 @@ uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 				if (it->second->getType() & Client::value_type)
 				{
 					Client *client = reinterpret_cast<Client*>(it->second);
-					reply_msg << "NICK " << client->getUID() << " 1 " << client->getName() << " " << client->getHostname() << " " << client->getServerToken() << " " << client->getModeString() << " " << client->getRealname();
+					reply_msg << "NICK " << client->getUID() << " 1 " << client->getName() << " " << client->getHostname() << " " << client->getServerToken() << " " << client->getModeString() << " :" << client->getRealname();
 					// reply_msg << "NICK " << client->getUID() << " 1 " << client->getUID() << " :" << client->getInfo();
 				}
 				else if (it->second->getType() & RelayedClient::value_type)
 				{
 					RelayedClient *client = reinterpret_cast<RelayedClient*>(it->second);
-					reply_msg << "NICK " << client->getUID() << " " << client->getHopCount() + 1 << " " << client->getName() << " " << client->getHostname() << " " << client->getServerToken() << " " << client->getModeString() << " " << client->getRealname();
+					reply_msg << "NICK " << client->getUID() << " " << client->getHopCount() + 1 << " " << client->getName() << " " << client->getHostname() << " " << client->getServerToken() << " " << client->getModeString() << " :" << client->getRealname();
 				}
 				else 
 					continue;

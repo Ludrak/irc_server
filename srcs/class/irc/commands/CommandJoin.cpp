@@ -59,7 +59,7 @@ uint					CommandJoin::operator()(NetworkEntity & executor, std::string params)
 			if ( Parser::validChannelName(*itc) == false)
 			{
 				Logger::debug("Join: invalid channel name |" + *itc + "|");
-				this->getServer()._sendMessage(executor, ERR_NOSUCHCHANNEL(*itc));
+				this->getServer()._sendMessage(executor, ERR_NOSUCHCHANNEL(executor.getUID(), *itc));
 				continue ;
 			}
 			Logger::info("Creating a new channel: " + *itc);
@@ -91,7 +91,7 @@ uint					CommandJoin::operator()(NetworkEntity & executor, std::string params)
 		}
 		AEntity* aChannel = this->getServer()._channels[*itc];
 		if ((aChannel->getType() & Channel::value_type) == false)
-			this->getServer()._sendMessage(executor, ERR_NOSUCHCHANNEL(*itc));
+			this->getServer()._sendMessage(executor, ERR_NOSUCHCHANNEL(executor.getUID(), *itc));
 		else
 		{
 			//Channel Exist
