@@ -26,6 +26,11 @@ uint					CommandNick::operator()(NetworkEntity & executor, std::string params)
 	if (this->getServer()._password != "" && executor.getPassword() != this->getServer()._password)
 	{
 		Logger::error("Nick: invalid password/" + executor.getPassword() + "/" + this->getServer()._password);
+		if (executor.getPassword().empty() && executor.getType() & UnRegisteredConnection::value_type)
+		{
+			Logger::error(std::string("Connection without password: kicking ") + ntos(executor.getStream().getSocket()) + "@" + executor.getStream().getHost() + " (" + executor.getStream().getIP() + ") ");
+			this->getServer().disconnect( executor.getStream());
+		}
 		return SUCCESS;
 	}
 	else if (executor.getFamily() == SERVER_ENTITY_FAMILY)
@@ -122,7 +127,7 @@ uint				CommandNick::_nickFromServer(Server & executor, std::string & params)
 	std::string realname = Parser::getParam(params, 6);
 	RelayedClient *rClient = new RelayedClient(executor, hopcount, nick, username, realname, 0, serverToken, host );
 	this->getServer()._addClient(*rClient, NULL);
-	Logger::info("New relayed client added: hop +" + ntos(hopcount));
+	Logger::info("New relayed client added: " + nick + " hop +" + ntos(hopcount));
 	//Forward and backward this info
 	std::stringstream reply_msg;
 	reply_msg << "NICK " << rClient->getUID() << " " << rClient->getHopCount() + 1 << " " << rClient->getName() << " " << rClient->getHostname() << " " << rClient->getServerToken() << " " << rClient->getModeString() << " :" << rClient->getRealname();

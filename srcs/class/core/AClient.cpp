@@ -37,7 +37,7 @@ bool			AClient::connectOn(const std::string host, const ushort port, IProtocol &
 
 t_pollevent		AClient::_pollInClients(SockStream & sock)
 {
-	char	buffer[RECV_BUFFER_SZ] = { 0 };
+	char	buffer[RECV_BUFFER_SZ + 1] = { 0 };
 	ssize_t	byte_size;
 	if (sock.hasTLS() && sock.getSSL())
 	{
@@ -67,6 +67,7 @@ t_pollevent		AClient::_pollInClients(SockStream & sock)
 		this->delSocket(sock);
 		return (POLL_DELETE);
 	}
+	buffer[byte_size] = '\0';
 	sock.getReceivedData().addData(buffer);			
 	while (!sock.getReceivedData().isInvalid()){
 		this->_onRecv(sock, sock.getReceivedData());
