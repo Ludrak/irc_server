@@ -518,7 +518,8 @@ void				IRCServer::_onQuit( SockStream &server)
 	/* get corresponding entity*/
 	if ((nEntity->getType() & Server::value_type_forward) == false)
 	{
-		Logger::critical("ClientQuit: Corresponding entity isn't a forward server.");
+		//TODO Do something here for this message. I don't know what, it is 7A.M ^^
+		Logger::critical("ClientQuit: Corresponding entity is not a forward server.");
 		return ;
 	}
 	Server	*srv = reinterpret_cast<Server*>(nEntity);
@@ -649,6 +650,7 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandOper>("OPER");
 	this->_handler.addCommand<CommandMotd>("MOTD");
 	this->_handler.addCommand<CommandConnect>("CONNECT");
+	this->_handler.addCommand<CommandDie>("DIE");
 }
 
 

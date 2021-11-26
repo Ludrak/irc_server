@@ -23,13 +23,14 @@ class ASockManager : public ASockHandler
 # endif
 
 		virtual t_pollevent _onPollEvent(int socket, int event) = 0;
+		void				shutdown( void );
 	
 	protected:
 		SSL_CTX			*_ssl_ctx;
 		// Tell if using tls when the manager create a new socket
-		bool			_useTLS;
 		//TODO put setter for _useTLS and call it in CommandConnect.cpp:67
-
+		bool			_useTLS;
+		bool			_running;
 };
 
 

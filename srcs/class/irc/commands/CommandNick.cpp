@@ -136,7 +136,6 @@ uint				CommandNick::_nickFromServer(Server & executor, std::string & params)
 
 bool				CommandNick::hasPermissions(AEntity & executor)
 {
-	//TODO implement right for NICK
 	( void) executor;
 	return true;
 }

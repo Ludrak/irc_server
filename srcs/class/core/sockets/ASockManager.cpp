@@ -1,7 +1,7 @@
 
 #include "ASockManager.hpp"
 
-ASockManager::ASockManager(const std::string &ssl_cert_path, const std::string &ssl_key_path) : ASockHandler()
+ASockManager::ASockManager(const std::string &ssl_cert_path, const std::string &ssl_key_path) : ASockHandler(), _running(true)
 {	
     if (!ssl_cert_path.empty() && !ssl_key_path.empty())
 	{
@@ -25,6 +25,13 @@ ASockManager::ASockManager(const std::string &ssl_cert_path, const std::string &
 		Logger::debug("Constructor ASockManager");
         this->_useTLS = false;
 	}
+}
+
+//REVIEW Do we need a special implementation for select/kqueue/poll or just one methos is enough?
+void				ASockManager::shutdown( void )
+{
+    this->_running = false;
+    Logger::debug("Manager: shutdown is programmed");
 }
 
 void            ASockManager::delSocket(const SockStream &sock)
@@ -60,7 +67,7 @@ void            ASockManager::run( void )
 {
     struct pollfd pfd;
 	Logger::info("Manager running using poll()");
-    while (true)
+    while (this->_running)
     {
         //std::vector<struct pollfd>  poll_fds;
         this->_poll_fds = std::vector<struct pollfd>();
@@ -127,7 +134,7 @@ void            ASockManager::run( void )
     int     big_fd = 0;
 
     Logger::info("Manager running using select()");
-    for (;;)
+    while (this->_running)
     {
         /* clearing fd sets */
         FD_ZERO(&read_efds);
@@ -216,7 +223,7 @@ void            ASockManager::run( void )
     }
 
 	Logger::info("Manager running using kqueue()");
-    for (;;)
+    while (this->_running)
     {
         struct kevent events_triggered[this->_k_events.size()];
         int nev = kevent(this->_kq, this->_k_events.data(), this->_k_events.size(), events_triggered, 2, NULL);
