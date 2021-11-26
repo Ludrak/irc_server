@@ -140,8 +140,8 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 
 		AEntity				*_registerClient(AEntity & client, int type);
 		void				_registerServer(AEntity & server, int type);
-		void				_sendMessage(AEntity & target, const std::stringstream &message, const AEntity *except=NULL);
-		void				_sendMessage(AEntity & target, const std::string &message, const AEntity *except=NULL);
+		void				_sendMessage(AEntity & target, const std::stringstream &message, AEntity *except=NULL);
+		void				_sendMessage(AEntity & target, const std::string &message, AEntity *except=NULL);
 		void				_sendMessage(SockStream & target, const std::stringstream &message);
 		void				_sendMessage(SockStream & target, const std::string &message);
 		
