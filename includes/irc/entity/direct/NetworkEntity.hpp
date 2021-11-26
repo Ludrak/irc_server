@@ -2,8 +2,8 @@
 #ifndef NETWORK_ENTITY
 # define NETWORK_ENTITY
 
-#include "AEntity.hpp"
-#include "SockStream.hpp"
+# include "AEntity.hpp"
+# include "SockStream.hpp"
 
 class NetworkEntity : public AEntity
 {

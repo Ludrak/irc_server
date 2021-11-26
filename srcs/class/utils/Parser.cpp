@@ -187,4 +187,11 @@ bool					Parser::_isSpecial(char c)
 	return false;
 }
 
+bool 					Parser::isRegularFile(const char *path)
+{
+    struct stat path_stat;
+    stat(path, &path_stat);
+    return S_ISREG(path_stat.st_mode);
+}
+
 /* ************************************************************************** */

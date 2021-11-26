@@ -66,16 +66,8 @@ uint					CommandPrivmsg::operator()(NetworkEntity & executor, std::string params
 			else {
 				Logger::info(executor.getUID() + " relay a message from " + emitter->getUID() + " to " + target->getUID());
 			}
-			//add prefixes
-			if (emitter->getType() & Client::value_type)
-				msg = reinterpret_cast<const Client*>(emitter)->getPrefix() + " PRIVMSG " + target->getUID() + " :" + msg;
-			else if (emitter->getFamily() == SERVER_ENTITY_FAMILY)
-				msg = ":" + emitter->getUID() + " PRIVMSG " + target->getUID() + " :" + msg;
-			else
-			{
-				Logger::critical("Privmsg: unhandled emitter type.");
-				return ERROR;
-			}
+			//add prefix
+			msg = emitter->getPrefix() + " PRIVMSG " + target->getUID() + " :" + msg;
 			Logger::debug(std::string("MSG = ") + msg);
 			this->getServer()._sendMessage(*target, msg);
 			break ;

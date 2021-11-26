@@ -69,8 +69,7 @@ uint					CommandNick::operator()(NetworkEntity & executor, std::string params)
 
 uint				CommandNick::_nickFromUnregistered(UnRegisteredConnection & executor, std::string & nick)
 {
-	Logger::warning("NickFromUnregistered");
-
+	Logger::debug("set nick " + nick + " to " + executor.getUID() + "(" + executor.getStream().getHost() + ")");
 	executor.setUID(nick);
 	return SUCCESS;
 }

@@ -30,6 +30,7 @@ class Parser
 		static bool						validChannelName(std::string channelName);
 		static bool						validVersionName(std::string version);
 		static bool						validPASSflags(std::string flags);
+		static bool 					isRegularFile(const char *path);
 
 		static bool						_isSpecial(char c);
 	private:

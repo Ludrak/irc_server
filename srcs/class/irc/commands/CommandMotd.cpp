@@ -52,7 +52,7 @@ uint					CommandMotd::operator()(NetworkEntity & executor, std::string params)
 		std::string path = this->getServer().getMotdsPath() + filename;
 		std::ifstream	mFile(path);
 		Logger::debug("Use motd file: " + path);
-		if (!mFile.is_open() || !this->isRegularFile(path.c_str()))
+		if (!mFile.is_open() || !Parser::isRegularFile(path.c_str()))
 		{
 			Logger::warning("MOTD: file not found: " + path);
 			this->getServer()._sendMessage(*emitter,
@@ -113,18 +113,5 @@ bool				CommandMotd::hasPermissions(AEntity & executor)
 		return false;
 	return true;
 }
-
-//REVIEW put this method (and ntos) in utils
-int 				CommandMotd::isRegularFile(const char *path)
-{
-    struct stat path_stat;
-    stat(path, &path_stat);
-    return S_ISREG(path_stat.st_mode);
-}
-
-/*
-** --------------------------------- ACCESSOR ---------------------------------
-*/
-
 
 /* ************************************************************************** */
