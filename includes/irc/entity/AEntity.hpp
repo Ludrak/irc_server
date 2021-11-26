@@ -33,7 +33,8 @@ class	AEntity : public CommonInfo
 		virtual ~AEntity();
 		uint				getType() const;
 		uint				getFamily() const;
-	
+
+		virtual const std::string		getPrefix( void ) const;
 	protected:
 		AEntity( const int type, const std::string &uid );
 

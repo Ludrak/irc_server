@@ -20,6 +20,7 @@ class CommandServer : public ACommand
 		bool				hasPermissions(AEntity & executor);
 
 	private:
+		uint				_sendDataToServer(Server & new_serv);
 
 };
 

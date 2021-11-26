@@ -300,6 +300,8 @@ int		main(int ac, char **av)
 	server.setMaxConnection(server_max_connections);
 	if (has_network_connection)
 		server.connectToNetwork(network_host, network_port, network_pass);
+	else
+		Logger::warning("No forward connection set: running server as root");
 	server.run();
 	return (EXIT_SUCCESS);
 }

@@ -78,6 +78,7 @@ COMMANDS_SRCS		=	CommandHandler.cpp \
 						CommandSquit.cpp \
 						CommandOper.cpp \
 						CommandMotd.cpp \
+						CommandConnect.cpp \
 						CommandError.cpp
 					
 COMMANDS_HEADERS	=	CommandHandler.hpp \
@@ -92,6 +93,7 @@ COMMANDS_HEADERS	=	CommandHandler.hpp \
 						CommandSquit.hpp \
 						CommandOper.hpp \
 						CommandMotd.hpp \
+						CommandConnect.hpp \
 						CommandError.hpp
 # CommandNjoin.hpp
 

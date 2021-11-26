@@ -26,3 +26,8 @@ uint				AEntity::getFamily( void ) const
 {
 	return (this->_family);
 }
+
+const std::string	AEntity::getPrefix( void ) const
+{
+	return ":" + this->_uid + " ";
+}

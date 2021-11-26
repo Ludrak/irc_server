@@ -16,12 +16,14 @@ ASockManager::ASockManager(const std::string &ssl_cert_path, const std::string &
 		//SSL_CTX_set_options(this->_ssl_ctx, SSL_OP_ALL);
 		SSL_CTX_use_certificate_file(this->_ssl_ctx, ssl_cert_path.c_str(), SSL_FILETYPE_PEM);
 		SSL_CTX_use_PrivateKey_file(this->_ssl_ctx, ssl_key_path.c_str(), SSL_FILETYPE_PEM);
+        this->_useTLS = true;
 		Logger::debug("Constructor ASockManager on TLS");
 	}
 	else
 	{
         Logger::info("SSL disabled: not all cert/key paths filled.");
 		Logger::debug("Constructor ASockManager");
+        this->_useTLS = false;
 	}
 }
 

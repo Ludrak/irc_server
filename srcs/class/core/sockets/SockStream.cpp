@@ -5,7 +5,7 @@
 */
 
 //TODO CHeck return values
-SockStream::SockStream(IProtocol & protocol, const bool useTLS)
+SockStream::SockStream(const IProtocol & protocol, const bool useTLS)
 throw (InvalidHostException, SSLException)
 :	_type(UNKNOWN),
 #ifdef	POLL
@@ -26,7 +26,7 @@ throw (InvalidHostException, SSLException)
 	this->_createSocket("127.0.0.1", 8080);
 }
 
-SockStream::SockStream(const std::string &host, uint16_t port, IProtocol & protocol, const bool useTLS)
+SockStream::SockStream(const std::string &host, uint16_t port, const IProtocol & protocol, const bool useTLS)
 throw (InvalidHostException, SSLException)
 :	_type(UNKNOWN),
 #ifdef	POLL
@@ -45,7 +45,7 @@ throw (InvalidHostException, SSLException)
 	this->_createSocket(host, port);
 }
 
-SockStream::SockStream(ushort socket, const sockaddr_in &address, IProtocol & protocol, const bool useTLS, SSL_CTX * const ctx)
+SockStream::SockStream(ushort socket, const sockaddr_in &address, const IProtocol & protocol, const bool useTLS, SSL_CTX * const ctx)
 throw (SSLException)
 :	_socket(socket),
 	_type(UNKNOWN),
@@ -191,7 +191,7 @@ const struct sockaddr_in&		SockStream::getAddress( void ) const
 	return this->_addr;
 }
 
-IProtocol						*SockStream::getProtocol( void ) const
+const IProtocol						*SockStream::getProtocol( void ) const
 {
 	return this->_protocol;
 }

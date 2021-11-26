@@ -413,7 +413,7 @@ void							IRCServer::_onClientQuit(SockStream &s)
 		Logger::critical("ClientQuit: No entity corresponding was found.");
 		return ;
 	}
-	if (nEntity->getType() & Server::value_type)
+	if (nEntity->getType() & (Server::value_type | Server::value_type_forward))
 	{
 		Server	*srv = reinterpret_cast<Server*>(nEntity);
 		Logger::warning("lost connection from server (" + srv->getUID() + "!" + srv->getName() + "@" + srv->getHostname() + ")");
@@ -493,7 +493,10 @@ void				IRCServer::_onConnect ( SockStream &server)
 	UnRegisteredConnection *forward = this->_unregistered_connections.insert(std::make_pair(&server, new UnRegisteredConnection(server))).first->second;
 	forward->setPassword(this->_password);
 	std::stringstream ss;
-	ss << "PASS " << this->_forwardPassword << " " << this->getVersion() << " " << this->getFlags();
+	if (this->_forwardPassword.empty())
+		ss << "PASS " << this->_password << " " << this->getVersion() << " " << this->getFlags();
+	else
+		ss << "PASS " << this->_forwardPassword << " " << this->getVersion() << " " << this->getFlags();
 	this->_sendMessage(server, ss);
 	ss.str("");
 	ss << "SERVER " << this->_name << " 0 " << this->getUID() << " :" << this->_info; 
@@ -645,6 +648,7 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandSquit>("SQUIT");
 	this->_handler.addCommand<CommandOper>("OPER");
 	this->_handler.addCommand<CommandMotd>("MOTD");
+	this->_handler.addCommand<CommandConnect>("CONNECT");
 }
 
 

@@ -113,10 +113,10 @@ class SockStream
 	
 	public:
 		/* server socket constructors */
-		SockStream(IProtocol &protocol, const bool useTLS=false) throw (InvalidHostException, SSLException);
-		SockStream(const std::string &host, uint16_t port, IProtocol &protocol, const bool useTLS=false) throw (InvalidHostException, SSLException);
+		SockStream(const IProtocol &protocol, const bool useTLS=false) throw (InvalidHostException, SSLException);
+		SockStream(const std::string &host, uint16_t port, const IProtocol &protocol, const bool useTLS=false) throw (InvalidHostException, SSLException);
 		/* client socket contructor */
-		SockStream(ushort socket, const sockaddr_in &address, IProtocol &protocol, const bool useTLS=false, SSL_CTX * const ctx=NULL) throw(SSLException);
+		SockStream(ushort socket, const sockaddr_in &address, const IProtocol &protocol, const bool useTLS=false, SSL_CTX * const ctx=NULL) throw(SSLException);
 		
 		~SockStream();
 
@@ -127,7 +127,7 @@ class SockStream
 
 		ushort						getSocket(void) const;
 		const struct sockaddr_in&	getAddress(void) const;
-		IProtocol					*getProtocol(void) const;
+		const IProtocol				*getProtocol(void) const;
 		Package						&getReceivedData(void);
 		std::list<Package*>			&getPendingData(void);
 
@@ -179,7 +179,7 @@ class SockStream
 		struct sockaddr_in			_addr;
 		std::string					_ip;
 		std::string					_host;
-		IProtocol					*_protocol;
+		const IProtocol				*_protocol;
 		bool						_useTLS;
 		SSL							*_cSSL;
 

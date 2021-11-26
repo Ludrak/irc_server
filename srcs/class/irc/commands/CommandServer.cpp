@@ -29,13 +29,23 @@ CommandServer::~CommandServer()
 # include <iomanip>
 uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 {
+	if (!this->getServer()._password.empty() && executor.getPassword() != this->getServer()._password)
+	{
+		Logger::error("Server: invalid password/" + executor.getPassword() + "/" + this->getServer()._password);
+		if (executor.getPassword().empty() && executor.getType() & UnRegisteredConnection::value_type)
+		{
+			Logger::warning(std::string("Connection without password: kicking ") + ntos(static_cast<UnRegisteredConnection&>(executor).getStream().getSocket()) + "@" + static_cast<UnRegisteredConnection&>(executor).getStream().getHost() + " (" + static_cast<UnRegisteredConnection&>(executor).getStream().getIP() + ") ");
+			this->getServer().disconnect( static_cast<UnRegisteredConnection&>(executor).getStream());
+		}
+		return SUCCESS;
+	}
 	uint nParams = Parser::nbParam(params);
 	if (nParams != 3 && nParams != 4)
 		return SUCCESS;
 
-	std::string servname = Parser::getParam(params, 0);
-	int			hopcount;
 	int			token;
+	int			hopcount;
+	std::string servname = Parser::getParam(params, 0);
 	std::string info = Parser::getParam(params, 3);
 	try 
 	{ hopcount = std::stoi(Parser::getParam(params, 1)); }
@@ -71,59 +81,17 @@ uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 		this->getServer()._sendAllServers(ss.str(), new_serv);
 		std::stringstream reply_msg;
 		reply_msg << "SERVER " << this->getServer().getName() << " 0 " << this->getServer().getUID() << " :" << this->getServer().getInfo();
-		if (type & Server::value_type)
+		if (type & Server::value_type_forward)
+			Logger::info("Connection to forward success");
+		else
 		{
 			Logger::debug("Resend (server infos): " + reply_msg.str());
 			this->getServer()._sendMessage(*new_serv, reply_msg);
-			/* send All servers */
-			for (std::map<std::string, AEntity*>::iterator it = this->getServer()._servers.begin();
-			it != this->getServer()._servers.end();
-			++it)
-			{
-				if (it->second->getUID() == new_serv->getUID()
-				|| it->second->getUID() == this->getServer().getUID())
-					continue ;
-				reply_msg.str("");
-				if (it->second->getType() & (Server::value_type | Server::value_type_forward))
-				{
-					Server *server = reinterpret_cast<Server*>(it->second);
-					reply_msg << "SERVER " << server->getName() << " 1 " << server->getUID() << " :" << server->getInfo();
-				}
-				else if (it->second->getType() & RelayedServer::value_type)
-				{
-					RelayedServer *server = reinterpret_cast<RelayedServer*>(it->second);
-					reply_msg << "SERVER " << server->getName() << " " << server->getHopCount() + 1 << " " << server->getUID() << " :" << server->getInfo();
-				}
-				else 
-					continue;
-				this->getServer()._sendMessage(*new_serv, reply_msg);
-			}
-			/* send All clients */
-			for (std::map<std::string, AEntity*>::iterator it = this->getServer()._clients.begin();
-			it != this->getServer()._clients.end();
-			++it)
-			{
-				reply_msg.str("");
-				if (it->second->getType() & Client::value_type)
-				{
-					Client *client = reinterpret_cast<Client*>(it->second);
-					reply_msg << "NICK " << client->getUID() << " 1 " << client->getName() << " " << client->getHostname() << " " << client->getServerToken() << " " << client->getModeString() << " :" << client->getRealname();
-					// reply_msg << "NICK " << client->getUID() << " 1 " << client->getUID() << " :" << client->getInfo();
-				}
-				else if (it->second->getType() & RelayedClient::value_type)
-				{
-					RelayedClient *client = reinterpret_cast<RelayedClient*>(it->second);
-					reply_msg << "NICK " << client->getUID() << " " << client->getHopCount() + 1 << " " << client->getName() << " " << client->getHostname() << " " << client->getServerToken() << " " << client->getModeString() << " :" << client->getRealname();
-				}
-				else 
-					continue;
-				this->getServer()._sendMessage(*new_serv, reply_msg);
-			}
 		}
-		else
-			Logger::info("Connection to forward success");
+		Logger::info("Sending local data to the new server");
+		/* Send our data to the new server */
+		this->_sendDataToServer(*new_serv);
 		this->getServer()._addServer(*new_serv, reinterpret_cast<UnRegisteredConnection*>(&executor));
-		// TODO send all users w/ NICK (extended)
 		// TODO send all channels w/ NJOIN
 		Logger::info ("new server joined the network (" + new_serv->getUID() + "@" + new_serv->getStream().getHost() + ")");
 	}
@@ -164,17 +132,60 @@ uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 ** --------------------------------- METHODS ----------------------------------
 */
 
+uint				CommandServer::_sendDataToServer(Server & new_serv)
+{
+	std::stringstream reply_msg;
+	/* send All servers */
+	for (std::map<std::string, AEntity*>::iterator it = this->getServer()._servers.begin();
+	it != this->getServer()._servers.end();
+	++it)
+	{
+		if (it->second->getUID() == new_serv.getUID()
+		|| it->second->getUID() == this->getServer().getUID())
+			continue ;
+		reply_msg.str("");
+		if (it->second->getType() & (Server::value_type | Server::value_type_forward))
+		{
+			Server *server = reinterpret_cast<Server*>(it->second);
+			reply_msg << "SERVER " << server->getName() << " 1 " << server->getUID() << " :" << server->getInfo();
+		}
+		else if (it->second->getType() & RelayedServer::value_type)
+		{
+			RelayedServer *server = reinterpret_cast<RelayedServer*>(it->second);
+			reply_msg << "SERVER " << server->getName() << " " << server->getHopCount() + 1 << " " << server->getUID() << " :" << server->getInfo();
+		}
+		else 
+			continue;
+		this->getServer()._sendMessage(new_serv, reply_msg);
+	}
+	/* send All clients */
+	for (std::map<std::string, AEntity*>::iterator it = this->getServer()._clients.begin();
+	it != this->getServer()._clients.end();
+	++it)
+	{
+		reply_msg.str("");
+		if (it->second->getType() & Client::value_type)
+		{
+			Client *client = reinterpret_cast<Client*>(it->second);
+			reply_msg << "NICK " << client->getUID() << " 1 " << client->getName() << " " << client->getHostname() << " " << client->getServerToken() << " " << client->getModeString() << " :" << client->getRealname();
+			// reply_msg << "NICK " << client->getUID() << " 1 " << client->getUID() << " :" << client->getInfo();
+		}
+		else if (it->second->getType() & RelayedClient::value_type)
+		{
+			RelayedClient *client = reinterpret_cast<RelayedClient*>(it->second);
+			reply_msg << "NICK " << client->getUID() << " " << client->getHopCount() + 1 << " " << client->getName() << " " << client->getHostname() << " " << client->getServerToken() << " " << client->getModeString() << " :" << client->getRealname();
+		}
+		else 
+			continue;
+		this->getServer()._sendMessage(new_serv, reply_msg);
+	}
+	return SUCCESS;
+}
+
 bool				CommandServer::hasPermissions(AEntity & executor)
 {
-	if (!this->getServer()._password.empty() && executor.getPassword() != this->getServer()._password)
-	{
-		Logger::error("Server: invalid password/" + executor.getPassword() + "/" + this->getServer()._password);
-		return false;
-	}
-	
 	if (executor.getType() & (UnRegisteredConnection::value_type | Server::value_type | Server::value_type_forward))
 		return (true);
-	//TODO make a test for |
 	return (false);
 }
 /*

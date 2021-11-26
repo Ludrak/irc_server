@@ -96,9 +96,8 @@ uint				CommandSquit::_quitServer(const AEntity & emitter, std::string & serverT
 	}
 	else
 	{
-		// a client request to drop link with a local server link, drop it and send an update to all others
+		// a client request to drop link with a local server link, drop it and send an update to all others (done in onClientQuit())
 		Logger::warning("Drop local server link with: " + serverToken + " with cause of: " + comment);
-		Logger::critical("Handle a netsplit here");
 		this->getServer().disconnect(reinterpret_cast<Server*>(server)->getStream());
 	}
 	return SUCCESS;

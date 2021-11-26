@@ -12,20 +12,23 @@ typedef int t_pollevent;
 
 class ASockManager : public ASockHandler
 {
-    public:
-        ASockManager(const std::string &ssl_cert_path="", const std::string &ssl_key_path="");
+	public:
+		ASockManager(const std::string &ssl_cert_path="", const std::string &ssl_key_path="");
 
-        virtual void        run(void);
-        void                delSocket( const SockStream &sock);
-    protected:
+		virtual void        run(void);
+		void                delSocket( const SockStream &sock);
+	protected:
 # ifdef POLL
-        std::vector<pollfd>           _poll_fds;
+		std::vector<pollfd>           _poll_fds;
 # endif
 
-        virtual t_pollevent _onPollEvent(int socket, int event) = 0;
-    
-    protected:
-        SSL_CTX                       *_ssl_ctx;
+		virtual t_pollevent _onPollEvent(int socket, int event) = 0;
+	
+	protected:
+		SSL_CTX			*_ssl_ctx;
+		// Tell if using tls when the manager create a new socket
+		bool			_useTLS;
+		//TODO put setter for _useTLS and call it in CommandConnect.cpp:67
 
 };
 

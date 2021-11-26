@@ -35,6 +35,7 @@ class CommandHandler;
 # include "CommandSquit.hpp"
 # include "CommandOper.hpp"
 # include "CommandMotd.hpp"
+# include "CommandConnect.hpp"
 
 # define SUCCESS				0
 
@@ -173,6 +174,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		friend class CommandSquit;
 		friend class CommandOper;
 		friend class CommandMotd;
+		friend class CommandConnect;
 };
 
 #endif /* ******************************************************* IRCSERVER_H */

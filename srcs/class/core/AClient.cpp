@@ -11,7 +11,7 @@ AClient::~AClient(void)
 }
 
 
-bool			AClient::connectOn(const std::string host, const ushort port, IProtocol &protocol, const bool useTLS)
+bool			AClient::connectOn(const std::string host, const ushort port, const IProtocol &protocol, const bool useTLS)
 {
 	SockStream  *s = new SockStream(host, port, protocol, useTLS);
 	if (connect(s->getSocket(), reinterpret_cast<const sockaddr*>(&s->getAddress()), sizeof(s->getAddress())) != 0)
