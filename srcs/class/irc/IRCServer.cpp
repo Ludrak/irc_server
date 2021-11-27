@@ -653,6 +653,7 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandConnect>("CONNECT");
 	this->_handler.addCommand<CommandDie>("DIE");
 	this->_handler.addCommand<CommandPong>("PONG");
+	this->_handler.addCommand<CommandPart>("PART");
 }
 
 

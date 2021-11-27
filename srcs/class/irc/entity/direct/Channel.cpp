@@ -91,13 +91,13 @@ void            		Channel::delSocket(const SockStream &sock)
 
 void						Channel::broadcastPackage(Package & pkg, const SockStream * except)
 {
-	for (std::map<ushort, SockStream*>::iterator it = this->_sockets.begin(); it != this->_sockets.end(); ++it)
+	for (std::list<Client*>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
 	{
-		if (it->second != except)
+		if (&(*it)->getStream() != except)
 		{
 			Package* new_pkg = new Package(pkg);
-			new_pkg->setRecipient(it->second);
-			this->sendPackage(new_pkg, *it->second);
+			new_pkg->setRecipient(&(*it)->getStream());
+			this->sendPackage(new_pkg, (*it)->getStream());
 		}
 	}
 }
