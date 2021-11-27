@@ -454,6 +454,10 @@ void							IRCServer::_onClientQuit(SockStream &s)
 			else ++it;
 		}
 	}
+	else if (nEntity->getType() & Client::value_type)
+	{
+		reinterpret_cast<Client*>(nEntity)->leaveAllChannels();
+	}
 	this->_entities.erase(nEntity->getUID());
 	this->_clients.erase(nEntity->getUID());
 	this->_servers.erase(nEntity->getUID());

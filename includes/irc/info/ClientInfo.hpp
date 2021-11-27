@@ -1,6 +1,7 @@
 #ifndef CLIENTINFO_HPP
 # define CLIENTINFO_HPP
 
+# include <vector>
 # include "CommonInfo.hpp"
 # include "UnRegisteredConnectionInfo.hpp"
 # include "Logger.hpp"
@@ -44,16 +45,16 @@ class ClientInfo
 		void				setHostname( const std::string &host );
 
 		bool				isServerOP( void ) const;
-		void				setServerOP( const bool op ); //TODO isServerOP check for int greater than 0 but setServerOP allow only a boolean
+		void				setServerOP( const bool op );
 
 	protected:
-		uint			_mode;
-		std::string		_realname;
-		std::string		_serverToken;
-		std::string		_host;
-		uint			_serverOp;
-		uint			_concurrentChannels;
-		uint			_concurrentChannelsMax;
+		uint						_mode;
+		std::string					_realname;
+		std::string					_serverToken;
+		std::string					_host;
+		uint						_serverOp;
+		uint						_concurrentChannels;
+		uint						_concurrentChannelsMax;
 	
 	private:
 		ClientInfo();

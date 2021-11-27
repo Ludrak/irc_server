@@ -41,7 +41,23 @@ int 						Client::joinChannel(Channel &channel)
 
 void                        Client::leaveAllChannels(void)
 {
+    for (std::list<Channel*>::iterator it = this->_channels.begin(); it != this->_channels.end(); )
+    {
+        this->leaveChannel(**(it++));
+    }
+    this->_concurrentChannels = 0;
     this->_channels = std::list<Channel*>();
+}
+
+void                        Client::leaveChannel(Channel &channel)
+{
+    if (!this->decrementJoinedChannels())
+    {
+        Logger::critical("Client leaving unjoined channel");
+        return;
+    }
+    channel.removeClient(*this);
+    this->_channels.remove(&channel);
 }
 
 const std::string			Client::getIdent( void ) const
