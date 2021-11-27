@@ -1,6 +1,7 @@
 #ifndef CLIENTINFO_HPP
 # define CLIENTINFO_HPP
 
+class IRCServer;
 # include <vector>
 # include "CommonInfo.hpp"
 # include "UnRegisteredConnectionInfo.hpp"
@@ -14,6 +15,7 @@ class ClientInfo
 		/* relayed client info (when USER is received with hopcount > 0) */
 		/* created by command which contains all info about the new client */
 		ClientInfo(
+			IRCServer			&server_reference,
 			const std::string	&real_name,
 			const uint			mode,
 			const std::string	&server_token,
@@ -47,7 +49,10 @@ class ClientInfo
 		bool				isServerOP( void ) const;
 		void				setServerOP( const bool op );
 
+		IRCServer			&getServerReference(void);
+
 	protected:
+		IRCServer					&_serverReference;
 		uint						_mode;
 		std::string					_realname;
 		std::string					_serverToken;

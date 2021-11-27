@@ -1,12 +1,14 @@
 # include "ClientInfo.hpp"
 
 ClientInfo::ClientInfo(
+	IRCServer	&server_reference,
 	const std::string &real_name,
 	const uint mode,
 	const std::string &server_token,
 	const std::string &server_host
 )
-:	_mode(mode),
+:	_serverReference(server_reference),
+	_mode(mode),
 	_realname(real_name),
 	_serverToken(server_token),
 	_host(server_host),
@@ -124,3 +126,9 @@ void						ClientInfo::setServerOP( const bool op )
 {
 	this->_serverOp = op;
 }
+
+IRCServer					&ClientInfo::getServerReference(void)
+{
+	return (this->_serverReference);
+}
+

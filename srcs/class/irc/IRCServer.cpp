@@ -456,7 +456,7 @@ void							IRCServer::_onClientQuit(SockStream &s)
 	}
 	else if (nEntity->getType() & Client::value_type)
 	{
-		reinterpret_cast<Client*>(nEntity)->leaveAllChannels();
+		reinterpret_cast<Client*>(nEntity)->leaveAllChannels("disconnected");
 	}
 	this->_entities.erase(nEntity->getUID());
 	this->_clients.erase(nEntity->getUID());

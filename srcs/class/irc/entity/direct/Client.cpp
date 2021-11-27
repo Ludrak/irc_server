@@ -2,13 +2,13 @@
 
 //REVIEW see for handling 'username' see also in UserCommand
 Client::Client(
-    const IRCServer                 &server_reference,
+    IRCServer                       &server_reference,
     const UnRegisteredConnection    &client,
     const uint                      mode,
     const std::string               &real_name
 )
 :   NetworkEntity(client.getStream(), client.getUID(), Client::value_type),
-    ClientInfo(real_name, mode, server_reference.getUID(), server_reference.getHostname())
+    ClientInfo(server_reference, real_name, mode, server_reference.getUID(), server_reference.getHostname())
 {
     this->_name = client.getName();
     this->_password = client.getPassword();
@@ -39,17 +39,17 @@ int 						Client::joinChannel(Channel &channel)
 	return SUCCESS;
 }
 
-void                        Client::leaveAllChannels(void)
+void                        Client::leaveAllChannels(const std::string &info)
 {
     for (std::list<Channel*>::iterator it = this->_channels.begin(); it != this->_channels.end(); )
     {
-        this->leaveChannel(**(it++));
+        this->leaveChannel(**(it++), info);
     }
     this->_concurrentChannels = 0;
     this->_channels = std::list<Channel*>();
 }
 
-void                        Client::leaveChannel(Channel &channel)
+void                        Client::leaveChannel(Channel &channel, const std::string &info)
 {
     if (!this->decrementJoinedChannels())
     {
@@ -58,6 +58,9 @@ void                        Client::leaveChannel(Channel &channel)
     }
     channel.removeClient(*this);
     this->_channels.remove(&channel);
+
+    std::string message = this->getPrefix() + " PART " + channel.getUID() + " :" + info;
+    this->getServerReference()._sendMessage(channel, message, this);
 }
 
 const std::string			Client::getIdent( void ) const

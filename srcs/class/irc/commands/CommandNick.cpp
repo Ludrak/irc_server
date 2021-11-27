@@ -124,7 +124,7 @@ uint				CommandNick::_nickFromServer(Server & executor, std::string & params)
 	(void) umode;
 	//TODO do method that transform umode in form "+iw" to uint
 	std::string realname = Parser::getParam(params, 6);
-	RelayedClient *rClient = new RelayedClient(executor, hopcount, nick, username, realname, 0, serverToken, host );
+	RelayedClient *rClient = new RelayedClient(this->getServer(), executor, hopcount, nick, username, realname, 0, serverToken, host );
 	this->getServer()._addClient(*rClient, NULL);
 	Logger::info("New relayed client added: " + nick + " hop +" + ntos(hopcount));
 	//Forward and backward this info

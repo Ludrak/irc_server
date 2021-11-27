@@ -181,6 +181,9 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		friend class CommandDie;
 		friend class CommandPong;
 		friend class CommandPart;
+
+		/* so that clients have a reference to the server they're on */
+		friend class Client;
 };
 
 #endif /* ******************************************************* IRCSERVER_H */

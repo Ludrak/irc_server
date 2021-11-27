@@ -48,13 +48,10 @@ uint					CommandPart::operator()(NetworkEntity & executor, std::string params)
 				this->getServer()._sendMessage(executor, ERR_NOTONCHANNEL(executor.getUID(), *it));
 				continue;
 			}
-			static_cast<Client &>(executor).leaveChannel(*this->getServer()._channels[*it]);
-
-			std::string info = "";
-			if (nParam == 2)
-				info = Parser::getParam(params, 1);
-			std::string message = executor.getPrefix() + " PART " + this->getServer()._channels[*it]->getUID() + " :" + info;
-			this->getServer()._sendMessage(*this->getServer()._channels[*it], message);
+			if (nParam == 1)
+				static_cast<Client &>(executor).leaveChannel(*this->getServer()._channels[*it]);
+			else
+				static_cast<Client &>(executor).leaveChannel(*this->getServer()._channels[*it], Parser::getParam(params, 1));
 		}
 	}
 	return SUCCESS;
