@@ -40,8 +40,10 @@ bool	isValidServerToken(const std::string &tok)
 
 bool	isValidServerMaxConnections(const std::string &param)
 {
-
-	if (param.find_first_not_of("0123456789") != std::string::npos || static_cast<u_long>(std::stoi(param)) > UINT16_MAX)
+	std::istringstream is(param);
+	u_long max = 0;
+	is >> max;
+	if (param.find_first_not_of("0123456789") != std::string::npos || max > UINT16_MAX)
 		return (EXIT_FAILURE);
 	return (true);
 }
@@ -107,7 +109,10 @@ bool	getForward(std::string arg, std::string *const host, ushort *const port, st
 
 	// getting port
 	try 
-	{ *port = std::stoi(arg.substr(0, arg.find(":"))); }
+	{
+		std::istringstream is(arg.substr(0, arg.find(":")));
+		is >> *port;
+	}
 	catch(std::invalid_argument e)
 	{ return (false); }
 	tmp = arg.substr(arg.find(":") + 1, arg.size() - (arg.find(":") + 1));
@@ -179,7 +184,8 @@ int		main(int ac, char **av)
 		arg_code = getArg("--token", argn, ac, av, isValidServerToken);
 		if (arg_code == ARG_OK)
 		{
-			server_token = std::stoi(av[argn + 1]);
+			std::istringstream is(av[argn + 1]);
+			is >> server_token;
 			argn += 2;
 			continue;
 		}
@@ -198,10 +204,13 @@ int		main(int ac, char **av)
 			return (EXIT_FAILURE);
 
 		/* max connections */
+		//TODO exception not protected here and in validator
 		arg_code = getArg("--max-connections", argn, ac, av, isValidServerMaxConnections);
 		if (arg_code == ARG_OK)
 		{
-			server_max_connections = std::stoi(av[argn + 1]);
+			std::istringstream is(av[argn + 1]);
+
+			is >> server_max_connections;
 			argn += 2;
 			continue;
 		}
@@ -232,7 +241,8 @@ int		main(int ac, char **av)
 		arg_code = getArg("--tls-port", argn, ac, av, isValidPort);
 		if (arg_code == ARG_OK)
 		{
-			tls_port = std::stoi(av[argn + 1]);
+			std::istringstream is(av[argn + 1]);
+			is >> tls_port;
 			argn += 2;
 			continue;
 		}
@@ -247,7 +257,10 @@ int		main(int ac, char **av)
 		}
 		/* port */
 		else if (isNumber(av[argn]) && server_port == 0)
-			server_port = std::stoi(av[argn++]);
+		{
+			std::istringstream is(av[argn++]);
+			is >> server_port;
+		}
 		/* password */
 		else if (server_pass.empty())
 			server_pass = std::string(av[argn++]);

@@ -1,8 +1,9 @@
-
-#include <string>
-
 #ifndef IPROTOCOL_HPP
 # define IPROTOCOL_HPP
+
+# include <string>
+
+typedef unsigned int uint;
 
 class IProtocol
 {

@@ -2,10 +2,15 @@
 #ifndef ASOCKHANDLER_HPP
 # define ASOCKHANDLER_HPP
 
+# ifdef __linux__
+#  include <sys/time.h>
+#  include <event.h>
+# else
+# include <sys/event.h>
+# endif
 # include <iostream>
 # include <map>
 # include <poll.h>
-# include <sys/event.h>
 # include "Logger.hpp"
 # include "ntos.hpp"
 # include "SockStream.hpp"

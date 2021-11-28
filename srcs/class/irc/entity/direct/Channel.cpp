@@ -75,9 +75,9 @@ uint					Channel::removeClient(Client & client)
 	if (this->isRegistered(client) == false)
 		return 1;//ERR_NOTONCHANNEL;
 	//if (this->decRegistration() == false)
-		Logger::critical("Presence in channel should already be tested here");
+	//Logger::critical("Presence in channel should already be tested here");
 	//if (client.decRegistration())
-		Logger::critical("client registration should already be tested here");
+	//Logger::critical("client registration should already be tested here");
 	this->_clients.remove(&client);
 	this->delSocket(client.getStream());
 	if (this->_creator == &client)

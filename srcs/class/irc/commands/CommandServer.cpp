@@ -48,12 +48,19 @@ uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 	std::string servname = Parser::getParam(params, 0);
 	std::string info = Parser::getParam(params, 3);
 	try 
-	{ hopcount = std::stoi(Parser::getParam(params, 1)); }
+	{
+		//TODO fusion the two exceptions statements
+		std::istringstream is(Parser::getParam(params, 1));
+		is >> hopcount;
+	}
 	catch (std::invalid_argument e)
 	{ Logger::warning("Server registered with an invalid hopcount: " + Parser::getParam(params, 1)); }
 
 	try 
-	{ token = std::stoi(Parser::getParam(params, 2)); }
+	{	
+		std::istringstream is(Parser::getParam(params, 2));
+		is >> token;
+	}
 	catch (std::invalid_argument e)
 	{ Logger::warning("Server registered with an invalid token: " + Parser::getParam(params, 2)); }
 	

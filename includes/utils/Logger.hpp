@@ -18,6 +18,8 @@
 # define ERROR      1
 # define CRITICAL	0
 
+typedef unsigned int uint;
+
 class Logger
 {
     public:

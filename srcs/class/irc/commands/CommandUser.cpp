@@ -21,6 +21,7 @@ CommandUser::~CommandUser()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
+//TODO add User command header
 uint					CommandUser::operator()(NetworkEntity & executor, std::string params)
 {
 	if (this->getServer()._entities.count(executor.getUID()) != 0)
@@ -64,9 +65,12 @@ uint				CommandUser::_commandUSERunknown(UnRegisteredConnection & executor, std:
 	if (Parser::validUser(username) == false)
 		return SUCCESS;
 	try {
+		std::istringstream is(Parser::getParam(params, 1));
+		uint mode = 0;
+		is >> mode;
 		Client *new_client = new Client(this->getServer(),
 									executor,
-									std::stoi(Parser::getParam(params, 1)),
+									mode,
 									Parser::getParam(params, 3));
 		new_client->setName(username);
 		this->getServer()._addClient(*new_client, &executor);
@@ -79,6 +83,7 @@ uint				CommandUser::_commandUSERunknown(UnRegisteredConnection & executor, std:
 			" " << new_client->getHostname() << " " << new_client->getServerToken() <<
 			" " << new_client->getModeString() << " :" << new_client->getRealname();
 		this->getServer()._sendAllServers(reply_msg.str());
+		//TODO replace all invalid_argument exceptions by failure exceptions
 	} catch (const std::invalid_argument & e)
 	{
 		Logger::debug("Invalid mode argument (not a number)");

@@ -4,6 +4,7 @@
 #include "ASockHandler.hpp"
 
 typedef int t_pollevent;
+# define POLL_ERROR	   -1
 # define POLL_SUCCESS   0
 # define POLL_NOTFOUND  1
 # define POLL_DELETE    2

@@ -50,7 +50,7 @@ uint					CommandMotd::operator()(NetworkEntity & executor, std::string params)
 		else
 			filename = "/ircd.motd";
 		std::string path = this->getServer().getMotdsPath() + filename;
-		std::ifstream	mFile(path);
+		std::ifstream	mFile(path.c_str());
 		Logger::debug("Use motd file: " + path);
 		if (!mFile.is_open() || !Parser::isRegularFile(path.c_str()))
 		{

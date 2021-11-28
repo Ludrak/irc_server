@@ -109,7 +109,7 @@ OPENSSL_PATH= $(shell brew --prefix openssl)
 
 CLANG		=	clang++
 CPP_FLAGS	=	-Wextra -Wall -Werror -std=c++98 -g3 -fsanitize=address
-CPP_IFLAGS	=	-I $(OPENSSL_PATH)/include 
+CPP_IFLAGS	=	-I $(OPENSSL_PATH)/include -I/usr/include/
 
 CPP_LFLAGS	= -lssl -lcrypto \
 				-L  $(OPENSSL_PATH)/lib/ 

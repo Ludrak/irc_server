@@ -74,13 +74,17 @@ uint			CommandHandler::handle(NetworkEntity & executor, std::string data)
 	}
 	std::string command = data.substr(0, data.find(" "));
 	try {
-		int err = std::stoi(command);
+		std::istringstream is (command);
+		int err = 0;
+		is >> err;
 		//TODO see prefix and redirect message if not for us
 		if (err >= 400)
-			Logger::error("ERR: " + data);
+			Logger::error("ERR--" + ntos(err) + "--: " + data);
+		else if (err != 0)
+			Logger::info("RPL--" + ntos(err) + "--: " + data);
 		else
-			Logger::info("RPL: " + data);
-
+			throw std::invalid_argument("not a number");
+	//REVIEW change organisation here: exceptions are part of normal behavior of program
 	} catch(std::invalid_argument &e)
 	{
 		if (this->_commands.count(command) == 1)

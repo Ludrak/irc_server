@@ -49,7 +49,8 @@ uint					CommandConnect::operator()(NetworkEntity & executor, std::string params
 	std::string port_string = Parser::getParam(params, 1);
 	ushort port = 0;
 	try {
-		port = std::stoi(port_string);
+		std::istringstream is(port_string);
+		is >> port;
 	}
 	catch (const std::invalid_argument & e)
 	{	
