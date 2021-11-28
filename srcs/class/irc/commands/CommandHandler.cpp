@@ -73,45 +73,43 @@ uint			CommandHandler::handle(NetworkEntity & executor, std::string data)
 		}
 	}
 	std::string command = data.substr(0, data.find(" "));
-	try {
-		std::istringstream is (command);
-		int err = 0;
-		is >> err;
-		//TODO see prefix and redirect message if not for us
-		if (err >= 400)
-			Logger::error("ERR--" + ntos(err) + "--: " + data);
-		else if (err != 0)
-			Logger::info("RPL--" + ntos(err) + "--: " + data);
-		else
-			throw std::invalid_argument("not a number");
-	//REVIEW change organisation here: exceptions are part of normal behavior of program
-	} catch(std::invalid_argument &e)
+	std::istringstream is (command);
+	int err = -1;
+	is >> err;
+	//TODO see prefix and redirect message if not for us
+	if (err != -1)
 	{
-		if (this->_commands.count(command) == 1)
+		if (err >= 400) {
+			Logger::error("ERR--" + ntos(err) + "--: " + data);
+		}
+		else
+			Logger::info("RPL--" + ntos(err) + "--: " + data);
+		return SUCCESS;
+	}
+	if (this->_commands.count(command) == 1)
+	{
+		ACommand & cmd = *(this->_commands[command]);
+		if ( cmd.hasPermissions(executor))
 		{
-			ACommand & cmd = *(this->_commands[command]);
-			if ( cmd.hasPermissions(executor))
-			{
-				// cmd.setSender(sender);
-				cmd.setClient(emitter); //TODO rename setClient and  getClient to setEmitter et getEmitter
-				cmd.setClientHost(clientHost);
-				Logger::debug("command " + command + " (" + executor.getStream().getHost() + ")");
-				Logger::debug("data =" + data + "-");
-				if (command.size() + 1 > data.size())
-					return cmd(executor, data.substr(command.size(), data.size() - command.size()));
-				else
-					return cmd(executor, data.substr(command.size() + 1, data.size() - (command.size() + 1)));
-			}
+			// cmd.setSender(sender);
+			cmd.setClient(emitter); //TODO rename setClient and  getClient to setEmitter et getEmitter
+			cmd.setClientHost(clientHost);
+			Logger::debug("command " + command + " (" + executor.getStream().getHost() + ")");
+			Logger::debug("data =" + data + "-");
+			if (command.size() + 1 > data.size())
+				return cmd(executor, data.substr(command.size(), data.size() - command.size()));
 			else
-			{
-				Logger::warning("Not enought privilegies (" + command + ")");
-				this->_server._sendMessage(executor, ERR_UNKNOWNCOMMAND(executor.getUID(), command));
-			}
+				return cmd(executor, data.substr(command.size() + 1, data.size() - (command.size() + 1)));
 		}
-		else {
+		else
+		{
+			Logger::warning("Not enought privilegies (" + command + ")");
 			this->_server._sendMessage(executor, ERR_UNKNOWNCOMMAND(executor.getUID(), command));
-			Logger::warning("Unknown command (" + command + ")");
 		}
+	}
+	else {
+		this->_server._sendMessage(executor, ERR_UNKNOWNCOMMAND(executor.getUID(), command));
+		Logger::warning("Unknown command (" + command + ")");
 	}
 	return SUCCESS;
 }
