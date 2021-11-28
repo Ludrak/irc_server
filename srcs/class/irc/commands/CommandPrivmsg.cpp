@@ -21,6 +21,10 @@ CommandPrivmsg::~CommandPrivmsg()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
+/*
+	Command: PRIVMSG
+	Parameters: <msgtarget> <text to be sent>
+*/
 uint					CommandPrivmsg::operator()(NetworkEntity & executor, std::string params)
 {
 	switch (Parser::nbParam(params))

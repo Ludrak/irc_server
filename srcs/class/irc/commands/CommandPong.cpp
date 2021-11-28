@@ -23,8 +23,9 @@ CommandPong::~CommandPong()
 //TODO sendPackage is not _sendPackage
 
 /*
-	Command: DIE
-	Parameters: None
+	Command: PONG
+	parameters: <server> [ <server2> ]
+   NOT IMPLEMENTED
 */
 uint					CommandPong::operator()(NetworkEntity & executor, std::string params)
 {

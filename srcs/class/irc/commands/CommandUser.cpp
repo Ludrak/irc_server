@@ -21,7 +21,10 @@ CommandUser::~CommandUser()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
-//TODO add User command header
+/*
+	Command: USER
+	Parameters: <user> <mode> <unused> <realname>
+*/
 uint					CommandUser::operator()(NetworkEntity & executor, std::string params)
 {
 	if (this->getServer()._entities.count(executor.getUID()) != 0)

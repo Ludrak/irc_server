@@ -21,6 +21,10 @@ CommandOper::~CommandOper()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
+/*
+	Command: OPER
+	Parameters: <name> <password>
+*/
 uint					CommandOper::operator()(NetworkEntity & executor, std::string params)
 {
 	//TODO add list of operName

@@ -21,6 +21,15 @@ CommandMode::~CommandMode()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
+/*
+User:
+	Command: MODE
+	Parameters: <nickname>
+				*( ( "+" / "-" ) *( "i" / "w" / "o" / "O" / "r" ) )
+Channel:
+	Command: MODE
+	Parameters: <channel> *( ( "-" / "+" ) *<modes> *<modeparams> )
+*/
 uint					CommandMode::operator()(NetworkEntity & executor, std::string params)
 {
 	uint nbParam = Parser::nbParam(params);

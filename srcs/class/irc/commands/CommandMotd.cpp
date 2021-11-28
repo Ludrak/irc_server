@@ -21,6 +21,10 @@ CommandMotd::~CommandMotd()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
+/*
+	Command: MOTD
+	Parameters: [ <target> ]
+*/
 uint					CommandMotd::operator()(NetworkEntity & executor, std::string params)
 {
 	AEntity *emitter;

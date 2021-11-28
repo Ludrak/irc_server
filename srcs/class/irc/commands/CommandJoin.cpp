@@ -21,6 +21,11 @@ CommandJoin::~CommandJoin()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
+/*
+	Command: JOIN
+	Parameters: ( <channel> *( "," <channel> ) [ <key> *( "," <key> ) ] )
+				/ "0"
+*/
 uint					CommandJoin::operator()(NetworkEntity & executor, std::string params)
 {
     size_t nbParam = Parser::nbParam(params);

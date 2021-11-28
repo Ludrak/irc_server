@@ -21,6 +21,10 @@ CommandQuit::~CommandQuit()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
+/*
+	Command: QUIT
+	Parameters: [ <Quit Message> ]
+*/
 uint					CommandQuit::operator()(NetworkEntity & executor, std::string params)
 {
 	std::string quitMessage = Parser::getParam(params, 0);

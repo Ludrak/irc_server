@@ -21,6 +21,15 @@ CommandNick::~CommandNick()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
+/*
+User:
+	Command: NICK
+	Parameters: <nickname>
+Server:
+	Command: NICK
+	Parameters: <nickname> <hopcount> <username> <host> <servertoken>
+				<umode> <realname>
+*/
 uint					CommandNick::operator()(NetworkEntity & executor, std::string params)
 {
 	if (this->getServer()._password != "" && executor.getPassword() != this->getServer()._password)

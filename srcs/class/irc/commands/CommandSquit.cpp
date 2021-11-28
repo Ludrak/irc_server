@@ -22,6 +22,10 @@ CommandSquit::~CommandSquit()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
+/*
+	Command: SQUIT
+	Parameters: <server> <comment>
+*/
 uint					CommandSquit::operator()(NetworkEntity & executor, std::string params)
 {
 	if (Parser::nbParam(params) < 2)
