@@ -241,7 +241,7 @@ void							IRCServer::_deleteServer(const std::string &nick)
 
 
 
-void							IRCServer::_sendMessage(AEntity & target, const std::string &message, const AEntity *except)
+void							IRCServer::_sendMessage(AEntity & target, const std::string &message, AEntity *except)
 {
 	int type = target.getType() & ~AEntity::value_type & ~NetworkEntity::value_type & ~RelayedEntity::value_type;// TODO ~ error
 	switch (type)
@@ -250,10 +250,7 @@ void							IRCServer::_sendMessage(AEntity & target, const std::string &message,
 		{
 			Logger::debug("Sending channel message");
 			Package package(this->_protocol, this->_protocol.format(message));
-			// &reinterpret_cast<const Client*>(except)->getStream();
-			(void)except;
-			//TODO add except when sending a Channel message (don't send to request initiator)
-			reinterpret_cast<Channel*>(&target)->broadcastPackage(package);
+			reinterpret_cast<Channel*>(&target)->broadcastPackage(package, except ? &reinterpret_cast<NetworkEntity*>(except)->getStream() : NULL);
 			break;
 		}
 		case Client::value_type :
@@ -305,7 +302,7 @@ void							IRCServer::_sendMessage(AEntity & target, const std::string &message,
 
 
 
-void							IRCServer::_sendMessage(AEntity & target, const std::stringstream &message, const AEntity *except)
+void							IRCServer::_sendMessage(AEntity & target, const std::stringstream &message, AEntity *except)
 {
 	this->_sendMessage(target, message.str(), except);
 }
@@ -456,6 +453,10 @@ void							IRCServer::_onClientQuit(SockStream &s)
 			}
 			else ++it;
 		}
+	}
+	else if (nEntity->getType() & Client::value_type)
+	{
+		reinterpret_cast<Client*>(nEntity)->leaveAllChannels("disconnected");
 	}
 	this->_entities.erase(nEntity->getUID());
 	this->_clients.erase(nEntity->getUID());
@@ -652,6 +653,7 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandConnect>("CONNECT");
 	this->_handler.addCommand<CommandDie>("DIE");
 	this->_handler.addCommand<CommandPong>("PONG");
+	this->_handler.addCommand<CommandPart>("PART");
 }
 
 

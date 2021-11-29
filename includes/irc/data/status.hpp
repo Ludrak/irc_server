@@ -130,7 +130,7 @@ user of the command is not on the given channel.
 perform a channel effecting command for which the
 client isn't a member.
 */
-# define ERR_NOTONCHANNEL(A) "442 :" + A + " You're not on that channel"
+# define ERR_NOTONCHANNEL(exec, A) "442 " + exec + " " + A + " :You're not on that channel"
 
 
 /* Returned when a client tries to invite a user to a

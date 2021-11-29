@@ -49,7 +49,7 @@ uint					CommandPrivmsg::operator()(NetworkEntity & executor, std::string params
 				Logger::debug("Privmsg: target is a channel");
 				if (reinterpret_cast<Channel *>(target)->isRegistered(static_cast<Client&>(executor)) == false)
 				{
-					Logger::debug("Privmsg: not in channel");
+					Logger::debug("Privmsg: sender have not joined channel");
 					this->getServer()._sendMessage(executor.getStream(), ERR_CANNOTSENDTOCHAN(executor.getUID(), target->getUID()));
 					return SUCCESS;
 				}
@@ -69,7 +69,7 @@ uint					CommandPrivmsg::operator()(NetworkEntity & executor, std::string params
 			//add prefix
 			msg = emitter->getPrefix() + " PRIVMSG " + target->getUID() + " :" + msg;
 			Logger::debug(std::string("MSG = ") + msg);
-			this->getServer()._sendMessage(*target, msg);
+			this->getServer()._sendMessage(*target, msg, &executor);
 			break ;
 	}
 	return SUCCESS;
