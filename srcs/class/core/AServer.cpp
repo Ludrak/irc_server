@@ -258,13 +258,13 @@ bool						AServer::listenOn( ushort port, IProtocol &protocol , const bool useTL
 	new_sock->setType(SERVER);
 	if (bind(new_sock->getSocket(), reinterpret_cast<const sockaddr *>(&new_sock->getAddress()), sizeof(new_sock->getAddress())) != 0)
 	{
-		Logger::error(ntos("Can't bind on ") + new_sock->getIP() + " : " + ntos(strerror(errno)));
+		Logger::error(ntos("Can't bind on ") + new_sock->getIP() + ": " + ntos(strerror(errno)));
 		return (false);
 	}
 	this->_sockets.insert(std::make_pair(new_sock->getSocket(), new_sock));
 	if (this->_running && listen(new_sock->getSocket(), this->_maxConnections) != 0)
 	{
-		Logger::error(ntos("Can't listen on ")  + new_sock->getIP() + " : " + ntos(strerror(errno)));
+		Logger::error(ntos("Can't listen on ")  + new_sock->getIP() + ": " + ntos(strerror(errno)));
 		return (false);
 	}
 	if (useTLS)
@@ -280,7 +280,8 @@ bool						AServer::listenOn( ushort port, IProtocol &protocol , const bool useTL
 
 void		    			AServer::disconnect( SockStream &client )
 {
-	Logger::info("disconnecting: " + client.getHost());
+	Logger::debug("disconnecting socket: " + ntos(client.getSocket()));
+
 #ifdef KQUEUE
 	for (std::vector<struct kevent>::iterator it = this->_k_events.begin(); it != this->_k_events.end(); ++it)
 	{

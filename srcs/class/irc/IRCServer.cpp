@@ -413,6 +413,7 @@ void							IRCServer::_onClientQuit(SockStream &s)
 		Logger::critical("ClientQuit: No entity corresponding was found.");
 		return ;
 	}
+	Logger::info("disconnecting: " + nEntity->getUID() + "@" + nEntity->getStream().getHost());
 	if (nEntity->getType() & (Server::value_type | Server::value_type_forward))
 	{
 		Server	*srv = reinterpret_cast<Server*>(nEntity);
