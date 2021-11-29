@@ -151,9 +151,9 @@ void            ASockManager::run( void )
                 FD_SET(it->second->getSocket(), &write_efds);
         }
 
-        Logger::debug("select()");
+        Logger::debug("nsock engine call: select()");
         /* selecting which fds are available for IO operations */
-        int n_changes = select(big_fd + 1, &read_efds, &write_efds, NULL, NULL);
+        int n_changes = select(big_fd + 1, &read_efds, &write_efds, NULL, reinterpret_cast<timeval *>(NULL));
         if (n_changes == -1)
         {
             Logger::critical("select() failed: " + ntos(strerror(errno)));

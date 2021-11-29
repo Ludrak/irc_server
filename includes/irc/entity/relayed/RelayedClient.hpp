@@ -2,6 +2,7 @@
 #ifndef RELAYED_CLIENT_HPP
 # define RELAYED_CLIENT_HPP
 
+class IRCServer;
 #include "RelayedEntity.hpp"
 #include "ClientInfo.hpp"
 
@@ -12,6 +13,7 @@ class RelayedClient : public RelayedEntity, public ClientInfo
     
     public:
 		RelayedClient(
+			IRCServer		  &server_reference,
 			Server            &relay,
 			const int         hopcount, //TODO pass it uint
 			const std::string &nick,

@@ -16,7 +16,7 @@ class Client : public NetworkEntity, public ClientInfo
 	
 	public:
 		Client(
-			const IRCServer                 &server_reference,
+			IRCServer                 		&server_reference,
 			const UnRegisteredConnection    &client,
 			const uint                      mode,
 			const std::string               &real_name
@@ -24,7 +24,8 @@ class Client : public NetworkEntity, public ClientInfo
 
 		const std::list<Channel*>	&getChannels() const;
 		int							joinChannel(Channel &channel);
-		void                        leaveAllChannels(void);
+		void						leaveChannel(Channel &channel, const std::string &info="");
+		void                        leaveAllChannels(const std::string &info="");
 		const std::string			getIdent( void ) const;
 		const std::string			getPrefix( void ) const;
 

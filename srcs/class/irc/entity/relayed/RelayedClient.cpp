@@ -2,6 +2,7 @@
 #include "RelayedClient.hpp"
 
 RelayedClient::RelayedClient(
+    IRCServer         &server_reference,
     Server            &relay,
     const int         hopcount,
     const std::string &nick,
@@ -12,7 +13,7 @@ RelayedClient::RelayedClient(
     const std::string &server_host
 )
 :   RelayedEntity(relay, hopcount, nick, RelayedClient::value_type),
-    ClientInfo(real_name, mode, server_token, server_host)
+    ClientInfo(server_reference, real_name, mode, server_token, server_host)
 {
     this->_name = name;
     this->_family = CLIENT_ENTITY_FAMILY;

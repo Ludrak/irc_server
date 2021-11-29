@@ -108,8 +108,8 @@ uint					CommandJoin::operator()(NetworkEntity & executor, std::string params)
 					    this->getServer()._sendMessage(executor, ERR_CHANNELISFULL(chan->getUID()));
                         return SUCCESS;
 				}
-				Package pkg(this->getServer().getProtocol(), this->getServer().getProtocol().format(":" + executor.getUID() + " test@sender-server JOIN :" + aChannel->getUID()));
-				chan->broadcastPackage(pkg);
+				std::string message = executor.getPrefix() + " JOIN " + this->getServer()._channels[*itc]->getUID();
+				this->getServer()._sendMessage(*this->getServer()._channels[*itc], message, &executor);
 			}
 		}
 	}

@@ -74,10 +74,7 @@ uint					Channel::removeClient(Client & client)
 	//TODO send reply & dec / inc registration
 	if (this->isRegistered(client) == false)
 		return 1;//ERR_NOTONCHANNEL;
-	//if (this->decRegistration() == false)
-		Logger::critical("Presence in channel should already be tested here");
-	//if (client.decRegistration())
-		Logger::critical("client registration should already be tested here");
+	this->decrementJoinedClients();
 	this->_clients.remove(&client);
 	this->delSocket(client.getStream());
 	if (this->_creator == &client)
@@ -94,13 +91,13 @@ void            		Channel::delSocket(const SockStream &sock)
 
 void						Channel::broadcastPackage(Package & pkg, const SockStream * except)
 {
-	for (std::map<ushort, SockStream*>::iterator it = this->_sockets.begin(); it != this->_sockets.end(); ++it)
+	for (std::list<Client*>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
 	{
-		if (it->second != except)
+		if (&(*it)->getStream() != except)
 		{
 			Package* new_pkg = new Package(pkg);
-			new_pkg->setRecipient(it->second);
-			this->sendPackage(new_pkg, *it->second);
+			new_pkg->setRecipient(&(*it)->getStream());
+			this->sendPackage(new_pkg, (*it)->getStream());
 		}
 	}
 }
@@ -137,7 +134,7 @@ std::list<Client *>::iterator		Channel::clientBegin( void )
 
 std::list<Client *>::const_iterator	Channel::clientBegin( void ) const
 {
-	return this->_clients.begin();
+	return this->_clients.cbegin();
 }
 
 std::list<Client *>::iterator		Channel::clientEnd( void )
@@ -147,7 +144,7 @@ std::list<Client *>::iterator		Channel::clientEnd( void )
 
 std::list<Client *>::const_iterator	Channel::clientEnd( void ) const
 {
-	return this->_clients.end();
+	return this->_clients.cend();
 }
 
 std::list<Client *>::iterator		Channel::operatorBegin( void )
@@ -157,7 +154,7 @@ std::list<Client *>::iterator		Channel::operatorBegin( void )
 
 std::list<Client *>::const_iterator	Channel::operatorBegin( void ) const
 {
-	return this->_operators.begin();
+	return this->_operators.cbegin();
 }
 
 std::list<Client *>::iterator		Channel::operatorEnd( void )
@@ -167,7 +164,7 @@ std::list<Client *>::iterator		Channel::operatorEnd( void )
 
 std::list<Client *>::const_iterator	Channel::operatorEnd( void ) const
 {
-	return this->_operators.end();
+	return this->_operators.cend();
 }
 
 /* ************************************************************************** */
