@@ -20,8 +20,10 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 	_creationTime(std::time(NULL)),
 	_operName("becomeOper"),
 	_operPassword("becomeOper"),
-	_shortMotdEnabled(true)
+	_shortMotdEnabled(true),
+	_debugLevel(DEBUG)
 {
+	Logger::setLogLevel(INFO);
 	this->_initCommands();
 	Logger::debug("IRCServer constructor");
 	Logger::info("IRC Server:");
@@ -628,6 +630,18 @@ std::string					IRCServer::getMotdsPath( void ) const
 }
 
 
+void						IRCServer::setDebugLevel( uint level)
+{
+	Logger::setLogLevel(level);
+	this->_debugLevel = level;
+}
+
+
+uint						IRCServer::getDebugLevel( void ) const
+{
+	return this->_debugLevel;
+}
+
 /*
 ** --------------------------------- COMMANDS ---------------------------------
 */
@@ -652,6 +666,7 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandConnect>("CONNECT");
 	this->_handler.addCommand<CommandDie>("DIE");
 	this->_handler.addCommand<CommandPong>("PONG");
+	this->_handler.addCommand<CommandVersion>("VERSION");
 }
 
 

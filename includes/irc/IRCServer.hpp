@@ -38,6 +38,7 @@ class CommandHandler;
 # include "CommandConnect.hpp"
 # include "CommandDie.hpp"
 # include "CommandPong.hpp"
+# include "CommandVersion.hpp"
 
 # define SUCCESS				0
 
@@ -67,6 +68,8 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		UnRegisteredConnection*		getUnRegisteredConnectionByUID(const std::string UID);
 		std::string					getMotdsPath( void ) const;
 
+		void						setDebugLevel( uint level);
+		uint						getDebugLevel( void ) const;
 		bool						alreadyInUseUID(std::string & uid) const; 
 
 		/* prefix parser */
@@ -110,14 +113,17 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 */
 
 		/* protocol for data transmission */
-		IRCProtocol								_protocol;
+		IRCProtocol					_protocol;
 
-		//TODO change position 
-		std::string								_forwardPassword;
-		time_t									_creationTime;
-		std::string								_operName;
-		std::string								_operPassword;
-		bool									_shortMotdEnabled;
+/*
+** ------------------------------- STATE -------------------------------
+*/
+		std::string					_forwardPassword;
+		time_t						_creationTime;
+		std::string					_operName;
+		std::string					_operPassword;
+		bool						_shortMotdEnabled;
+		uint						_debugLevel;
 /*
 ** --------------------------------- EVENTS ---------------------------------
 */
@@ -179,6 +185,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		friend class CommandConnect;
 		friend class CommandDie;
 		friend class CommandPong;
+		friend class CommandVersion;
 };
 
 #endif /* ******************************************************* IRCSERVER_H */

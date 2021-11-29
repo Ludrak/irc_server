@@ -381,7 +381,7 @@ running in "debug mode".
 The "comments" field may contain any comments about
 the version or further version details.
 */
-# define RPL_VERSION(A, B, C, D) "351 " + A + "." + B + " " + C + " :" + D
+# define RPL_VERSION(exec, A, B, C, D) "351 " + exec + A + "." + B + " " + C + " :" + D
 
 
 /* The RPL_WHOREPLY and RPL_ENDOFWHO pair are used
