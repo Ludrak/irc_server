@@ -698,10 +698,13 @@ std::string							IRCServer::makePrefix(const AEntity *user, const AEntity *host
 
 // prefix format -> Server-Server: <server_uid>SPACE
 // prefix format -> Server-Client: <nickname>[!<username>@<host_uid>]SPACE
-bool								IRCServer::parsePrefix(const std::string &prefix,  RelayedServer **const host_server, AEntity **const emitter, std::string *username)
+bool								IRCServer::parsePrefix(NetworkEntity & executor, const std::string &prefix,  RelayedServer **const host_server, AEntity **const emitter, std::string *username)
 {
 	if (prefix.find(":") != 0 || !host_server)
+	{
+		*emitter = &executor;
 		return (false);
+	}
 	/* extended prefix */
 	if (prefix.find("@") != std::string::npos && emitter && host_server) //REVIEW no host_server here (can have @ witout !)
 	{
@@ -733,6 +736,7 @@ bool								IRCServer::parsePrefix(const std::string &prefix,  RelayedServer **c
 		if (this->_clients.count(firstName) != 1 )
 		{
 			Logger::critical("Unknown user in prefix: " + firstName);
+			*emitter = &executor;
 			return (false);
 		}
 		// else if (this->_clients[firstName]->getType() & RelayedClient::value_type) == false)
@@ -765,6 +769,7 @@ bool								IRCServer::parsePrefix(const std::string &prefix,  RelayedServer **c
 			if (this->_clients.count(uid) == 0)
 			{
 				Logger::critical("Unknown server/client in prefix: " + uid);
+				*emitter = &executor;
 				return (false);
 			}
 			else if (this->_clients[uid]->getType() & RelayedClient::value_type)

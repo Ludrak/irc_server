@@ -46,6 +46,8 @@ class ClientInfo
 		bool				isServerOP( void ) const;
 		void				setServerOP( const bool op ); //TODO isServerOP check for int greater than 0 but setServerOP allow only a boolean
 
+		virtual const std::string	getPrefix( void ) const = 0;
+
 	protected:
 		uint			_mode;
 		std::string		_realname;

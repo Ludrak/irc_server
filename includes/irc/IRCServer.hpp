@@ -72,7 +72,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		/* prefix parser */
 		std::string					makePrefix(const AEntity *user=NULL, const AEntity *host_server=NULL);
 		// bool						parsePrefix(const std::string &prefix, Server **const sender_server, RelayedClient **const user, RelayedServer **const host_server);
-		bool						parsePrefix(const std::string &prefix,  RelayedServer **const host_server, AEntity **const user, std::string *username);
+		bool						parsePrefix(NetworkEntity & excutor, const std::string &prefix,  RelayedServer **const host_server, AEntity **const user, std::string *username);
 
 	private:
 

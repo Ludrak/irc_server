@@ -98,24 +98,12 @@ uint				CommandConnect::_forwardRequest(NetworkEntity & executor, std::string & 
 		return SUCCESS;
 	}
 
-	std::string prefix;
-	const AEntity *emitter = this->getClient();
-	if (emitter == NULL)
-		emitter = &executor;
-	prefix = emitter->getPrefix();
-	AEntity *remoteServer = this->getServer()._servers[forward];
+	AEntity&	emitter = this->getEmitter();
+	AEntity*	remoteServer = this->getServer()._servers[forward];
 	if (remoteServer->getType() & RelayedServer::value_type)
-	{
-		/* remote is a RelayedServer */
-		/* send it with remoterServer param */
-		this->getServer()._sendMessage(*remoteServer, emitter->getPrefix() + " CONNECT " + target + " " + port + " " + forward);
-	}
+		this->getServer()._sendMessage(*remoteServer, emitter.getPrefix() + " CONNECT " + target + " " + port + " " + forward);
 	else
-	{
-		/* remote is a local connection */
-		/* send it without remoterServer param */
-		this->getServer()._sendMessage(*remoteServer, emitter->getPrefix() + " CONNECT " + target + " " + port);
-	}
+		this->getServer()._sendMessage(*remoteServer, emitter.getPrefix() + " CONNECT " + target + " " + port);
 	return SUCCESS;
 }
 
@@ -127,10 +115,5 @@ bool				CommandConnect::hasPermissions(AEntity & executor)
 		return false;
 	return true;
 }
-
-/*
-** --------------------------------- ACCESSOR ---------------------------------
-*/
-
 
 /* ************************************************************************** */

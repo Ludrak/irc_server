@@ -58,21 +58,10 @@ uint					CommandPrivmsg::operator()(NetworkEntity & executor, std::string params
 					return SUCCESS;
 				}
 			}
-			std::string msg = Parser::getParam(params, 1);
-			// msg = this->getServer().makePrefix(&executor, &this->getServer()) + "PRIVMSG " + target->getUID() + " :" + msg;
-			const AEntity *emitter = this->getClient();
-			if (emitter == NULL)
-			{
-				/* No prefix => message from a local client */
-				emitter = &executor;
-				Logger::info(executor.getUID() + " send message to " + target->getUID());
-			}
-			else {
-				Logger::info(executor.getUID() + " relay a message from " + emitter->getUID() + " to " + target->getUID());
-			}
-			//add prefix
-			msg = emitter->getPrefix() + " PRIVMSG " + target->getUID() + " :" + msg;
-			Logger::debug(std::string("MSG = ") + msg);
+			AEntity& emitter = this->getEmitter();
+			Logger::info(executor.getUID() + " relay a message from " + emitter.getUID() + " to " + target->getUID());
+			std::string msg = emitter.getPrefix() + " PRIVMSG " + target->getUID() + " :" + Parser::getParam(params, 1);
+			Logger::debug("MSG = " + msg);
 			this->getServer()._sendMessage(*target, msg);
 			break ;
 	}

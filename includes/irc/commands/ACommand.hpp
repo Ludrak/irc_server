@@ -26,8 +26,8 @@ class ACommand
 		const Server*		getSender( void ) const;
 		void				setSender(Server * sender);
 
-		const AEntity*		getClient( void ) const;
-		void				setClient(AEntity * client);
+		AEntity&			getEmitter( void ) const;
+		void				setEmitter(AEntity & client);
 
 		const AEntity*		getClientHost( void ) const;
 		void				setClientHost(AEntity * host);

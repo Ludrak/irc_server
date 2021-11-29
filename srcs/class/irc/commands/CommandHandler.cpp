@@ -63,13 +63,19 @@ uint			CommandHandler::handle(NetworkEntity & executor, std::string data)
 	Logger::debug("Raw message: " + data);
 	if (data[0] == ':')
 	{
-		this->_server.parsePrefix(data.substr(0, data.find(" ")), &clientHost, &emitter, &uname);
+		/* know emitter is always filled with valid data */
+		this->_server.parsePrefix(executor, data.substr(0, data.find(" ")), &clientHost, &emitter, &uname);
 		data = data.substr(data.find(" ") + 1, data.size() - data.find(" ") - 1);
 		data = data.substr(data.find_first_not_of(" "), data.size() - data.find_first_not_of(" "));
 		if (clientHost == NULL)
 		{
 			//REVIEW In the end remove this debug
 			Logger::debug("handler: clientHost is NULL");
+		}
+		if (emitter == NULL)
+		{
+			Logger::critical("Handler: Emitter is NULL");
+			return ERROR;
 		}
 	}
 	std::string command = data.substr(0, data.find(" "));
@@ -92,7 +98,7 @@ uint			CommandHandler::handle(NetworkEntity & executor, std::string data)
 		if ( cmd.hasPermissions(executor))
 		{
 			// cmd.setSender(sender);
-			cmd.setClient(emitter); //TODO rename setClient and  getClient to setEmitter et getEmitter
+			cmd.setEmitter(*emitter);
 			cmd.setClientHost(clientHost);
 			Logger::debug("command " + command + " (" + executor.getStream().getHost() + ")");
 			Logger::debug("data =" + data + "-");

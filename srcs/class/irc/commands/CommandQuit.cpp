@@ -34,20 +34,15 @@ uint					CommandQuit::operator()(NetworkEntity & executor, std::string params)
 	{
 		//Quit from SERVER
 		Logger::debug("Quit relayed connection");
-		const AEntity* origin = this->getClient();
-		if (origin == NULL)
-		{
-			Logger::critical("No client references given");
-			return SUCCESS;
-		}
+		AEntity& emitter = this->getEmitter();
 		if (quitMessage.empty())
-			quitMessage = origin->getUID();
-		prefix = this->getServer().makePrefix(origin, &this->getServer());
+			quitMessage = emitter.getUID();
+		prefix = this->getServer().makePrefix(&emitter, &this->getServer());
 		except = &executor;
-		this->getServer()._entities.erase(origin->getUID());
-		this->getServer()._clients.erase(origin->getUID());
-		Logger::info(origin->getUID() + " is quitting");
-		delete origin;
+		this->getServer()._entities.erase(emitter.getUID());
+		this->getServer()._clients.erase(emitter.getUID());
+		Logger::info(emitter.getUID() + " is quitting");
+		delete &emitter;
 	}
 	else
 	{
@@ -62,16 +57,13 @@ uint					CommandQuit::operator()(NetworkEntity & executor, std::string params)
 	}
 
 	//Forward this information
-	std::stringstream ss;
-	ss << prefix << " QUIT " << quitMessage;
-	this->getServer()._sendAllServers(ss.str(), except);
+	this->getServer()._sendAllServers(prefix + " QUIT " + quitMessage, except);
 	return SUCCESS;
 }
 
 
 bool				CommandQuit::hasPermissions(AEntity & executor)
 {
-	//TODO implement right for QUIT
 	( void) executor;
 	return true;
 }

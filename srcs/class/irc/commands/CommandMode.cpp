@@ -112,12 +112,6 @@ void				CommandMode::modeForChannel(uint nbParam, NetworkEntity & executor, std:
 	std::string mode = Parser::getParam(params, 2);
 	Channel *chan = this->getServer()._channels[uid];
 	if (mode.find("O") != std::string::npos && nbParam >= 3)
-	{
-		if (this->getClient() == NULL)
-			chan->setCreator(executor);
-		else
-			chan->setCreator(*this->getClient());
-
-	}
+		chan->setCreator(this->getEmitter());
 	return ;
 }
