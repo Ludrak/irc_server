@@ -308,7 +308,7 @@ int		main(int ac, char **av)
 	server.setName(server_name);
 	server.setUID(ss.str());
 	server.setInfo(server_info);
-	server.setDebugLevel(INFO);
+	server.setDebugLevel(DEBUG);
 	server.setMaxConnection(server_max_connections);
 	if (has_network_connection)
 		server.connectToNetwork(network_host, network_port, network_pass);

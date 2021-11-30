@@ -63,7 +63,7 @@ uint			CommandHandler::handle(NetworkEntity & executor, std::string data)
 	Logger::debug("Raw message: " + data);
 	if (data[0] == ':')
 	{
-		/* know emitter is always filled with valid data */
+		/* now, emitter is always filled with valid data */
 		this->_server.parsePrefix(executor, data.substr(0, data.find(" ")), &clientHost, &emitter, &uname);
 		data = data.substr(data.find(" ") + 1, data.size() - data.find(" ") - 1);
 		data = data.substr(data.find_first_not_of(" "), data.size() - data.find_first_not_of(" "));
@@ -78,21 +78,27 @@ uint			CommandHandler::handle(NetworkEntity & executor, std::string data)
 			return ERROR;
 		}
 	}
+	else
+	{
+		//TODO change many thing to allow executing parsePrefix in all cases (even when no prefix are given)
+		if (emitter == NULL)
+			emitter = &executor;
+	}
 	std::string command = data.substr(0, data.find(" "));
 	std::istringstream is (command);
+	Logger::debug("command: '" + command + "'" + ntos(is.fail()));
 	int err = -1;
 	is >> err;
-	//TODO see prefix and redirect message if not for us
-	if (err != -1)
+	if (err > 0)
 	{
+		//TODO here handle prefix and error message + redirect if not for us
 		if (err >= 400) {
 			Logger::error("ERR--" + ntos(err) + "--: " + data);
 		}
 		else
 			Logger::info("RPL--" + ntos(err) + "--: " + data);
-		return SUCCESS;
 	}
-	if (this->_commands.count(command) == 1)
+	else if (this->_commands.count(command) == 1)
 	{
 		ACommand & cmd = *(this->_commands[command]);
 		if ( cmd.hasPermissions(executor))

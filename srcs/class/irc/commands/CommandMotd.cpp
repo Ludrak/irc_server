@@ -34,8 +34,12 @@ uint					CommandMotd::operator()(NetworkEntity & executor, std::string params)
 		Logger::error("MOTD: Command requested by a server");
 		return SUCCESS;
 	}
+	else if ((emitter.getType() & (Client::value_type | RelayedClient::value_type)) == false)
+	{
+		Logger::critical("MOTD: unsupported type given: " + ntos(emitter.getType()));
+		return ERROR;
+	}
 	uint		nbParam = Parser::nbParam(params);
-	ClientInfo&	emitterInfo = *(reinterpret_cast<ClientInfo*>(&emitter));
 	if (nbParam > 0)
 	{
 		/* Forward the request to concerned server */
@@ -58,33 +62,38 @@ uint					CommandMotd::operator()(NetworkEntity & executor, std::string params)
 	/* Send motd to emitter of the request */
 	char		buffer[81];
 	std::string	path;
-	if (emitterInfo.isServerOP())
-		this->getServer().getMotdsPath() + "/oper.motd";
-	else if (this->_shortEnabled && this->getServer()._shortMotdEnabled)
-		this->getServer().getMotdsPath() + "/ircd.smotd";
+	bool		isServerOP = false;
+	if (emitter.getType() & RelayedClient::value_type)
+		isServerOP = static_cast<RelayedClient&>(emitter).isServerOP();
 	else
-		this->getServer().getMotdsPath() + "/ircd.motd";
+		isServerOP = static_cast<Client&>(emitter).isServerOP();
+	if (isServerOP)
+		path = this->getServer().getMotdsPath() + "/oper.motd";
+	else if (this->_shortEnabled && this->getServer()._shortMotdEnabled)
+		path = this->getServer().getMotdsPath() + "/ircd.smotd";
+	else
+		path = this->getServer().getMotdsPath() + "/ircd.motd";
 	Logger::debug("MOTD: Use file: " + path);
 	std::ifstream	mFile(path.c_str());
 	if (!mFile.is_open() || !Parser::isRegularFile(path.c_str()))
 	{
 		Logger::warning("MOTD: file not found: " + path);
 		this->getServer()._sendMessage(emitter,
-			emitterInfo.getPrefix() + ERR_NOMOTD(emitter.getUID()));
+			this->getServer().getPrefix() + ERR_NOMOTD(emitter.getUID()));
 		return SUCCESS;
 	}
 	this->getServer()._sendMessage(emitter,
-		emitterInfo.getPrefix() +
+		this->getServer().getPrefix() +
 		RPL_MOTDSTART(emitter.getUID(), this->getServer().getUID()));
 	while (!mFile.eof())
 	{
 		mFile.getline(buffer, 80);
 		buffer[mFile.gcount()] = '\0';
 		this->getServer()._sendMessage(emitter,
-			emitterInfo.getPrefix() + RPL_MOTD(emitter.getUID(), buffer));
+			this->getServer().getPrefix() + RPL_MOTD(emitter.getUID(), buffer));
 	}
 	this->getServer()._sendMessage(emitter,
-		emitterInfo.getPrefix() + RPL_ENDOFMOTD(emitter.getUID()));
+		this->getServer().getPrefix() + RPL_ENDOFMOTD(emitter.getUID()));
 
 	return SUCCESS;
 }

@@ -47,10 +47,8 @@ uint					CommandUser::operator()(NetworkEntity & executor, std::string params)
 
 bool				CommandUser::hasPermissions(AEntity & executor)
 {
-	//TODO implement right for USER
-	// Do we steel receive from SERVER?
-	// isn't it only by Client or unregistered client?
-	( void) executor;
+	if (executor.getFamily() == SERVER_ENTITY_FAMILY)
+		return false;
 	return true;
 }
 
@@ -99,12 +97,14 @@ void		CommandUser::_sendWelcomeInfos(Client & new_client)
 	std::string pref = new_client.getUID() + "!" + new_client.getName() + "@" + this->getServer().getUID();
 	Logger::debug("pref = " + pref);
 	//TODO make a IRCServer._reply for adding prefix
-	this->getServer()._sendMessage(new_client, ":" + this->getServer().getUID() + " " + RPL_WELCOME(new_client.getUID(), pref));
-	this->getServer()._sendMessage(new_client, ":" + this->getServer().getUID() + " " + RPL_YOURHOST(new_client.getUID(), this->getServer().getUID(), this->getServer().getVersion()));
-	this->getServer()._sendMessage(new_client, ":" + this->getServer().getUID() + " " + RPL_CREATED(new_client.getUID(), this->getServer().getCreationDate()));
+	this->getServer()._sendMessage(new_client, this->getServer().getPrefix() + RPL_WELCOME(new_client.getUID(), pref));
+	this->getServer()._sendMessage(new_client, this->getServer().getPrefix() + RPL_YOURHOST(new_client.getUID(), this->getServer().getUID(), this->getServer().getVersion()));
+	this->getServer()._sendMessage(new_client, this->getServer().getPrefix() + RPL_CREATED(new_client.getUID(), this->getServer().getCreationDate()));
 	// this->getServer()._sendMessage(executor, RPL_MYINFO());
 	std::string cmd("MOTD");
-	(*reinterpret_cast<CommandMotd*>(this->getHandler().getCommand(cmd)))(new_client, "", true);
+	CommandMotd* cmdMOTD = reinterpret_cast<CommandMotd*>(this->getHandler().getCommand(cmd));
+	cmdMOTD->setEmitter(new_client);
+	(*cmdMOTD)(new_client, "", true);
 }
 
 /*
