@@ -53,7 +53,7 @@ std::ostream &			operator<<( std::ostream & o, CommandHandler const & i )
 ** --------------------------------- METHODS ----------------------------------
 */
 
-uint			CommandHandler::handle(NetworkEntity & executor, std::string data)
+uint			CommandHandler::handle(NetworkEntity & executor, std::string & data)
 {
 	// Server			*sender = NULL;
 	AEntity			*emitter = NULL;
@@ -80,51 +80,69 @@ uint			CommandHandler::handle(NetworkEntity & executor, std::string data)
 	}
 	else
 	{
-		//TODO change many thing to allow executing parsePrefix in all cases (even when no prefix are given)
+		//TODO change all needed things to allow executing parsePrefix in all cases (even when no prefix are given)
 		if (emitter == NULL)
 			emitter = &executor;
 	}
-	std::string command = data.substr(0, data.find(" "));
+	size_t cmdEnd = data.find(" ");
+	std::string command = data.substr(0, cmdEnd);
+	if (cmdEnd == std::string::npos)
+		cmdEnd = data.size();
+	else
+		cmdEnd += 1;
 	std::istringstream is (command);
-	Logger::debug("command: '" + command + "'" + ntos(is.fail()));
 	int err = -1;
 	is >> err;
 	if (err > 0)
-	{
-		//TODO here handle prefix and error message + redirect if not for us
-		if (err >= 400) {
-			Logger::error("ERR--" + ntos(err) + "--: " + data);
-		}
-		else
-			Logger::info("RPL--" + ntos(err) + "--: " + data);
-	}
+		return this->numericReplyReceived(err, *emitter, data);
 	else if (this->_commands.count(command) == 1)
 	{
 		ACommand & cmd = *(this->_commands[command]);
 		if ( cmd.hasPermissions(executor))
 		{
+			/* Permission allowed */
 			// cmd.setSender(sender);
 			cmd.setEmitter(*emitter);
 			cmd.setClientHost(clientHost);
-			Logger::debug("command " + command + " (" + executor.getStream().getHost() + ")");
-			Logger::debug("data =" + data + "-");
-			if (command.size() + 1 > data.size())
-				return cmd(executor, data.substr(command.size(), data.size() - command.size()));
-			else
-				return cmd(executor, data.substr(command.size() + 1, data.size() - (command.size() + 1)));
+			Logger::debug("command " + command + " (" + executor.getUID() + "@" + executor.getStream().getHost() + ")");
+			std::string params = data.substr(cmdEnd, data.size() - command.size());
+			Logger::debug("params: |" + params + "|");
+			return cmd(executor, params);
 		}
 		else
-		{
 			Logger::warning("Not enought privilegies (" + command + ")");
-			this->_server._sendMessage(executor, ERR_UNKNOWNCOMMAND(executor.getUID(), command));
-		}
 	}
-	else {
-		this->_server._sendMessage(executor, ERR_UNKNOWNCOMMAND(executor.getUID(), command));
+	else
 		Logger::warning("Unknown command (" + command + ")");
-	}
+	this->_server._sendMessage(executor, ERR_UNKNOWNCOMMAND(executor.getUID(), command));
 	return SUCCESS;
 }
+
+
+
+uint		CommandHandler::numericReplyReceived(int error, AEntity & emitter, std::string & data)
+{
+	if (error >= 400)
+		Logger::debug("ERR (" + ntos(error) + "): " + data);
+	else
+		Logger::debug("RPL (" + ntos(error) + "): " + data);
+	std::string targetName = Parser::getParam(data, 1);
+	if (targetName == this->_server.getUID())
+	{
+		Logger::error("Receiving an unhandled numeric reply: " + data);
+		return SUCCESS;
+	}
+	if (this->_server._entities.count(targetName) == 0)
+	{
+		Logger::warning("Handler: Invalid target: " + targetName);
+		return SUCCESS;
+	}
+	Logger::info("Transmiting numeric response to: " + targetName);
+	AEntity *target = this->_server._entities[targetName];
+	this->_server._sendMessage(*target, emitter.getPrefix() + data);
+	return SUCCESS;
+}
+
 
 /*
 ** --------------------------------- ACCESSOR ---------------------------------

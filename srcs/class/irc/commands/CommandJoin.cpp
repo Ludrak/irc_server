@@ -91,7 +91,7 @@ uint					CommandJoin::operator()(NetworkEntity & executor, std::string params)
 			std::stringstream ss;
 			ss <<  ":" << executor.getUID() << " test@sender-server JOIN :" << new_chan->getUID();
 			this->getServer()._sendMessage(executor, ss);
-			this->getHandler().handle(executor, "MODE " + new_chan->getUID() +  " O " + executor.getUID());
+			// this->getHandler().handle(executor, "MODE " + new_chan->getUID() +  " O " + executor.getUID());
 			continue ;
 		}
 		AEntity* aChannel = this->getServer()._channels[*itc];

@@ -60,9 +60,9 @@ the message wasn't delivered for some reason.
 ERR_NOTOPLEVEL and ERR_WILDTOPLEVEL are errors that
 are returned when an invalid use of "PRIVMSG $<server>" or "PRIVMSG #<host>" is attempted.
 */
-# define ERR_NORECIPIENT(A) "411 :No recipient given (" + A + ")"
+# define ERR_NORECIPIENT(exec, A) "411 " + exec + " :No recipient given (" + A + ")"
 
-# define ERR_NOTEXTTOSEND() "412 :No text to send"
+# define ERR_NOTEXTTOSEND(exec) "412 " + exec + " :No text to send"
 
 # define ERR_NOTOPLEVEL(A) "413 :" + A + " No toplevel domain specified"
 

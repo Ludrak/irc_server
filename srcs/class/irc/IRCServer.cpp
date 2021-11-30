@@ -397,7 +397,8 @@ void							IRCServer::_onClientRecv(SockStream & s, Package & pkg)
 	NetworkEntity *entity = getEntityByStream(s);
 	if (!entity || pkg.getData().empty())
 		return ;
-	uint ret = this->_handler.handle(*entity, pkg.getData());
+	std::string payload = pkg.getData();
+	uint ret = this->_handler.handle(*entity, payload);
 	if (ret)
 		Logger::error("onClientRecv: Something bad happened in handler");
 }
@@ -473,14 +474,13 @@ void							IRCServer::_onClientQuit(SockStream &s)
 
 
 
-
-// TODO REFRACTOR AND HANDLE FORWARD
 void						IRCServer::_onRecv(SockStream &server, Package &pkg)
 {
 	NetworkEntity *entity = getEntityByStream(server);
 	if (!entity || pkg.getData().empty())
 		return ;
-	uint ret = this->_handler.handle(*entity, pkg.getData());
+	std::string payload = pkg.getData();
+	uint ret = this->_handler.handle(*entity, payload);
 	if (ret)
 		Logger::error("onRecv: Something bad happened in handler");
 }

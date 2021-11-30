@@ -48,12 +48,13 @@ uint					CommandOper::operator()(NetworkEntity & executor, std::string params)
 			this->getServer()._sendMessage(executor, this->getServer().makePrefix(NULL, NULL) + ERR_PASSWDMISMATCH(executor.getUID()));
 			return SUCCESS;
 		}
-		//Here all is right: becoming a IRC operator
+		/* Successfully becoming an IRC operator */
 		static_cast<Client&>(executor).setServerOP(true);
 		Logger::info(executor.getUID() + " become a server operator.");
 		this->getServer()._sendMessage(executor, this->getServer().makePrefix(NULL, NULL) + RPL_YOUREOPER(executor.getUID()));
 		//TODO send mode +o message to other servers
-		this->getHandler().handle(executor, executor.getPrefix() + " MOTD");
+		std::string motdRequest(executor.getPrefix() + " MOTD");
+		this->getHandler().handle(executor, motdRequest);
 	}
 	else
 	{

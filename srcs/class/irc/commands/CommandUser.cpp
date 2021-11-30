@@ -101,8 +101,14 @@ void		CommandUser::_sendWelcomeInfos(Client & new_client)
 	this->getServer()._sendMessage(new_client, this->getServer().getPrefix() + RPL_YOURHOST(new_client.getUID(), this->getServer().getUID(), this->getServer().getVersion()));
 	this->getServer()._sendMessage(new_client, this->getServer().getPrefix() + RPL_CREATED(new_client.getUID(), this->getServer().getCreationDate()));
 	// this->getServer()._sendMessage(executor, RPL_MYINFO());
-	std::string cmd("MOTD");
-	CommandMotd* cmdMOTD = reinterpret_cast<CommandMotd*>(this->getHandler().getCommand(cmd));
+	//TODO do RPL_MYINFO
+	std::string cmdName("MOTD");
+	CommandMotd* cmdMOTD = reinterpret_cast<CommandMotd*>(this->getHandler().getCommand(cmdName));
+	if (!cmdMOTD)
+	{
+		Logger::error("User: Unkown command Motd.");
+		return ;
+	}
 	cmdMOTD->setEmitter(new_client);
 	(*cmdMOTD)(new_client, "", true);
 }

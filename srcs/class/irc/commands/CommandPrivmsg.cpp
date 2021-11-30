@@ -30,10 +30,10 @@ uint					CommandPrivmsg::operator()(NetworkEntity & executor, std::string params
 	switch (Parser::nbParam(params))
 	{
 		case 0:
-			this->getServer()._sendMessage(executor, ERR_NORECIPIENT(params));
+			this->getServer()._sendMessage(this->getEmitter(), this->getServer().getPrefix() + ERR_NORECIPIENT(this->getEmitter().getUID(), "PRIVMSG"));
 			break ;
 		case 1:
-			this->getServer()._sendMessage(executor, ERR_NOTEXTTOSEND());
+			this->getServer()._sendMessage(this->getEmitter(), this->getServer().getPrefix() + ERR_NOTEXTTOSEND(this->getEmitter().getUID()));
 			break ;
 		case 2:
 			/* right numbers of params */
@@ -42,7 +42,7 @@ uint					CommandPrivmsg::operator()(NetworkEntity & executor, std::string params
 			if (this->getServer()._entities.count(targetName) == 0)
 			{
 				/* target doesn't exist */
-				Logger::debug("Privmsg: Target not found");
+				Logger::debug("Privmsg: Target not found !");
 					this->getServer()._sendMessage(executor, ERR_NOSUCHNICK(executor.getUID(), targetName));
 				return SUCCESS;
 			}
@@ -53,7 +53,7 @@ uint					CommandPrivmsg::operator()(NetworkEntity & executor, std::string params
 				Logger::debug("Privmsg: target is a channel");
 				if (reinterpret_cast<Channel *>(target)->isRegistered(static_cast<Client&>(executor)) == false)
 				{
-					Logger::debug("Privmsg: not in channel");
+					Logger::debug("Privmsg: not in channel !");
 					this->getServer()._sendMessage(executor.getStream(), ERR_CANNOTSENDTOCHAN(executor.getUID(), target->getUID()));
 					return SUCCESS;
 				}

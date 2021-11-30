@@ -55,7 +55,7 @@ uint					CommandVersion::operator()(NetworkEntity & executor, std::string params
 
 uint				CommandVersion::_sendVersion(IRCServer &master, AEntity & emitter)
 {
-	this->getServer()._sendMessage(emitter,
+	this->getServer()._sendMessage(emitter, master.getPrefix() + 
 		RPL_VERSION(
 			emitter.getUID(),
 			master.getVersion(),
