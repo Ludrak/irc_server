@@ -1,4 +1,4 @@
-.PHONY: clean fclean re all check_sources check_headers
+.PHONY: clean fclean re all os check_sources check_headers
 
 # Name of target executable
 NAME		= ft_irc
@@ -165,23 +165,23 @@ ifeq ($(OSDETECT),WIN32)
 	@exit 0
 endif
 ifeq ($(OSDETECT), OSX)
-	@echo "$(PREFIX_PROJECT)$(PREFIX_INFO) Compiling for OSX"
+	@echo "$(PREFIX_PROJECT)$(PREFIX_INFO) Compilation target: OSX"
 endif
 ifeq ($(OSDETECT), LINUX)
-	@echo "$(PREFIX_PROJECT)$(PREFIX_INFO) Compiling for Linux"
+	@echo "$(PREFIX_PROJECT)$(PREFIX_INFO) Compilation target: Linux"
 endif
 
 select: CPP_FLAGS += -DSELECT
-select: os $(NAME)
+select: check_headers check_sources os $(NAME)
 # select: clean os $(NAME)
 
 kqueue: CPP_FLAGS += -DKQUEUE
 kqueue: clean os $(NAME)
-# kqueue: os $(NAME)
+# kqueue: check_headers check_sources os $(NAME)
 
 poll: CPP_FLAGS += -DPOLL
 poll: clean os $(NAME)
-# poll: os $(NAME)
+# poll: check_headers check_sources os $(NAME)
 
 #	check_sources :
 #	simple bash script to check duplicates sources files 
@@ -220,7 +220,7 @@ check_headers:
 	fi
 
 #	Linking rule
-$(NAME): check_headers check_sources $(BIN_DIR) $(OBJS)
+$(NAME): $(BIN_DIR) $(OBJS) 
 	@$(CLANG) $(OBJS) -o $(NAME) $(CPP_FLAGS) $(CPP_LFLAGS)
 	@echo "$(PREFIX_PROJECT)$(PREFIX_LINK) Linking done for: $(NAME)"
 

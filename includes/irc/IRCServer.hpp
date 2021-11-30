@@ -46,6 +46,7 @@ class CommandHandler;
 # define IRC_DEFAULT_PORT		6667
 # define IRC_DEFAULT_TLS_PORT	6697
 # define IRC_DEFAULT_PASS		""
+# define IRC_CURRENT_VERSION	"021O"
 
 class IRCServer : public ANode, public AEntity, public ServerInfo
 {
@@ -68,7 +69,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		UnRegisteredConnection*		getUnRegisteredConnectionByUID(const std::string UID);
 		std::string					getMotdsPath( void ) const;
 
-		void						setDebugLevel( uint level);
+		void						setDebugLevel( bool debug);
 		uint						getDebugLevel( void ) const;
 		bool						alreadyInUseUID(std::string & uid) const; 
 

@@ -29,18 +29,22 @@ uint					CommandVersion::operator()(NetworkEntity & executor, std::string params
 {
 	IRCServer&	master = this->getServer();
 	AEntity&	emitter = this->getEmitter();
+
 	if (Parser::nbParam(params) == 0)
 		return this->_sendVersion(master, emitter);
 	
-	/* Redirect to corresponding server */
+	/* Target server given */
 	std::string serverId = Parser::getParam(params, 0);
+	/* Check if target is current server */
 	if (master.getUID() == serverId)
 		return this->_sendVersion(master, emitter);
 	else if (master._servers.count(serverId) == 0)
 	{
+		/* Check if target exist */
 		master._sendMessage(executor, emitter.getPrefix() + ERR_NOSUCHSERVER(emitter.getUID(), serverId));
 		return SUCCESS;
 	}
+	/* Redirect to corresponding server */
 	AEntity *forward = master._servers[serverId];
 	if (forward->getType() & NetworkEntity::value_type)
 		master._sendMessage(*forward, emitter.getPrefix() + "VERSION");

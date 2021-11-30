@@ -13,7 +13,7 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 :	ASockManager(ssl_cert_path, ssl_key_path),
 	ANode(host),
 	AEntity(IRCServer::value_type, "token"),
-	ServerInfo("name", "info", "default hostname", "IRC|amazircd"),
+	ServerInfo("name", ntos(IRC_CURRENT_VERSION), "default hostname", "IRC|amazircd"),
 	_handler(*this),
 	_protocol(),
 	_forwardPassword(""),
@@ -21,9 +21,8 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 	_operName("becomeOper"),
 	_operPassword("becomeOper"),
 	_shortMotdEnabled(true),
-	_debugLevel(DEBUG)
+	_debugLevel(0)
 {
-	Logger::setLogLevel(INFO);
 	this->_initCommands();
 	Logger::debug("IRCServer constructor");
 	Logger::info("IRC Server:");
@@ -630,10 +629,9 @@ std::string					IRCServer::getMotdsPath( void ) const
 }
 
 
-void						IRCServer::setDebugLevel( uint level)
+void						IRCServer::setDebugLevel( bool debug )
 {
-	Logger::setLogLevel(level);
-	this->_debugLevel = level;
+	this->_debugLevel = debug;
 }
 
 
