@@ -3,7 +3,7 @@
 AClient::AClient(const std::string &ssl_cert_path, const std::string &ssl_key_path)
 : ASockManager(ssl_cert_path, ssl_key_path)
 {
-	Logger::debug("Constructor AClient");
+	Logger::core("Constructor AClient");
 }
 
 AClient::~AClient(void)

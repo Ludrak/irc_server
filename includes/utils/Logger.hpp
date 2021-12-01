@@ -5,6 +5,7 @@
 # include <iostream>
 
 # define RESET_ANSI		"\033[0m"		
+# define BOLD_ANSI		"\033[1m"		
 # define RED_ANSI		"\033[91m"		
 # define YELLOW_ANSI	"\033[93m"		
 # define BLUE_ANSI		"\033[96m"		
@@ -12,6 +13,7 @@
 # define GREEN_ANSI		"\033[92m"		
 # define DBLUE_ANSI		"\033[94m"		
 
+# define CORE		5
 # define DEBUG      4
 # define INFO       3
 # define WARNING    2
@@ -27,6 +29,7 @@ class Logger
         static void		setLogLevel(uint level);
 		
 		static void 	log (int level, const std::string &message);
+        static void		core( const std::string &message );
         static void		debug( const std::string &message );
         static void		info( const std::string &message );
         static void		warning( const std::string &message );

@@ -18,8 +18,11 @@ void    Logger::log( int level, const std::string &message )
         case INFO:
             Logger::info(message);
             break;
-        default:
+		case DEBUG:
             Logger::debug(message);
+            break;
+        default:
+            Logger::core(message);
             break;
     }
 }
@@ -32,6 +35,12 @@ uint	Logger::getLogLevel( void )
 void	Logger::setLogLevel(uint level)
 {
 	Logger::logLevel = level;
+}
+
+void    Logger::core( const std::string &message )
+{
+	if (Logger::logLevel >= CORE )
+	    std::cout << "[" << DBLUE_ANSI << "CORE" << RESET_ANSI << "]   | " << message << std::endl;
 }
 
 void    Logger::debug( const std::string &message )

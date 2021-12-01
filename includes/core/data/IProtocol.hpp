@@ -2,6 +2,7 @@
 # define IPROTOCOL_HPP
 
 # include <string>
+# include "Logger.hpp"
 
 typedef unsigned int uint;
 

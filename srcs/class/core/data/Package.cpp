@@ -74,8 +74,7 @@ std::string		Package::getRawData( void ) const
     size_t pk_sz = this->_protocol->checkFormat(this->_data);
     if (pk_sz == 0 && !this->_data.empty())
     {
-		//TODO Logger
-        std::cerr << "FATAL: invalid protocol" << std::endl;
+		Logger::error("FATAL: invalid protocol");
         return ("error");
     }
     if (pk_sz == 0)

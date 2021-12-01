@@ -10,7 +10,7 @@ uint					AServer::_defaultMaxConnections = 30;
 AServer::AServer( const std::string &host, const std::string &ssl_cert_path, const std::string &ssl_key_path ) 
 : ASockManager(ssl_cert_path, ssl_key_path), _host(host), _running(false), _maxConnections(AServer::_defaultMaxConnections)
 {
-	Logger::debug("Constructor AServer: " + this->_host);
+	Logger::core("Constructor AServer: " + this->_host);
 }
 
 /*
@@ -147,7 +147,7 @@ t_pollevent					AServer::_pollInClients(SockStream & sock)
 	sock.getReceivedData().addData(buffer);			
 	while (!sock.getReceivedData().isInvalid()){
 		int socket = sock.getSocket();
-		Logger::debug("received package from " + sock.getIP());
+		Logger::core("received package from " + sock.getIP());
 		this->_onClientRecv(sock, sock.getReceivedData());
 		if (this->_sockets.count(socket) == 0)
 			return (POLL_DELETE);
@@ -196,10 +196,10 @@ t_pollevent					AServer::_pollOutClients(SockStream & sock)
 
 	if (current_pkg->isInvalid() || current_pkg->getRawData().empty())
 	{
-		Logger::debug("sent & deleted package " + ntos(current_pkg) + ntos(" of ") + sock.getIP() + " explosive: " + ntos(current_pkg->isExplosive()));
+		Logger::core("sent & deleted package " + ntos(current_pkg) + ntos(" of ") + sock.getIP() + " explosive: " + ntos(current_pkg->isExplosive()));
 		if (current_pkg->isExplosive())
 		{		
-			Logger::debug("activated explosive package " + ntos(current_pkg) + ntos(" of ") + sock.getIP());
+			Logger::core("activated explosive package " + ntos(current_pkg) + ntos(" of ") + sock.getIP());
 			delete current_pkg;
 			this->disconnect(sock);
 			return (POLL_DELETE);
@@ -280,7 +280,7 @@ bool						AServer::listenOn( ushort port, IProtocol &protocol , const bool useTL
 
 void		    			AServer::disconnect( SockStream &client )
 {
-	Logger::debug("AServer: disconnecting: " + client.getHost());
+	Logger::core("AServer: disconnecting: " + client.getHost());
 #ifdef KQUEUE
 	for (std::vector<struct kevent>::iterator it = this->_k_events.begin(); it != this->_k_events.end(); ++it)
 	{
