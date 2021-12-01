@@ -1,7 +1,5 @@
 #include "IRCServer.hpp"
 
-//REVIEW is it a good idea?
-// const uint				IRCServer::value_type = Server::value_type | Client::value_type;
 const uint				IRCServer::value_type = Server::value_type;
 
 /*
@@ -113,11 +111,45 @@ void			IRCServer::_printServerState( void )
 		}
 		else
 		{
+			
 			Logger::error("Invalid server list member type");
 		}
 
 
 	}
+	Logger::debug("--- clients ---");
+	for (std::map<std::string, AEntity *>::const_iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
+	{
+		if (it->second->getType() & Client::value_type)
+		{
+			ClientInfo &client = static_cast<ClientInfo&>(*reinterpret_cast<Client *>(it->second));
+			Logger::debug("-- " + it->second->getUID() + 
+				"\n\t - name     : " + it->second->getName() +
+				"\n\t - realname : " + client.getRealname() +
+				"\n\t - host     : " + client.getHostname() +
+				"\n\t - server   : " + client.getServerToken() +
+				"\n\t - isOP     : " + ntos(client.isServerOP()) +
+				"\n\t - nbChan   : " + ntos(client.getConcurrentChannels()) +
+				"\n\t - nbChanMax: " + ntos(client.getConcurrentChannelsMax())
+			);
+		}
+		else
+		{
+			ClientInfo &client = static_cast<ClientInfo&>(*reinterpret_cast<RelayedClient *>(it->second));
+			Logger::debug("-- " + it->second->getUID() + 
+				"\n\t - name     : " + it->second->getName() +
+				"\n\t - realname : " + client.getRealname() +
+				"\n\t - hop      : " + ntos(reinterpret_cast<RelayedClient*>(it->second)->getHopCount()) +
+				"\n\t - host     : " + client.getHostname() +
+				"\n\t - server   : " + client.getServerToken() +
+				"\n\t - isOP     : " + ntos(client.isServerOP()) +
+				"\n\t - nbChan   : " + ntos(client.getConcurrentChannels()) +
+				"\n\t - nbChanMax: " + ntos(client.getConcurrentChannelsMax())
+			);
+		}
+	}
+	Logger::debug("--- unregistered ---");
+	Logger::debug("nb unregistered connection: " + ntos(this->_unregistered_connections.size()));
 }
 
 
@@ -386,7 +418,11 @@ void						IRCServer::_onClientJoin(SockStream & s)
 	this->_unregistered_connections.insert(std::make_pair(&s, connection));
 	this->_connections.insert(std::make_pair(&s, connection));
 	Logger::info("new incomming connection from " + s.getHost());
-	this->_printServerState();
+	if (this->getDebugLevel())
+	{
+		Logger::debug("after onClientJoin: ");
+		this->_printServerState();
+	}
 }
 
 
@@ -465,6 +501,11 @@ void							IRCServer::_onClientQuit(SockStream &s)
 	this->_connections.erase(&nEntity->getStream());
 	this->_unregistered_connections.erase(&nEntity->getStream());
 	delete nEntity;
+	if (this->getDebugLevel())
+	{
+		Logger::debug("after onClientQuit: ");
+		this->_printServerState();
+	}
 }
 
 
@@ -502,6 +543,11 @@ void				IRCServer::_onConnect ( SockStream &server)
 	ss.str("");
 	ss << "SERVER " << this->_name << " 0 " << this->getUID() << " :" << this->_info; 
 	this->_sendMessage(server, ss);
+	if (this->getDebugLevel())
+	{
+		Logger::debug("after onConnect");
+		this->_printServerState();
+	}
 }
 
 
@@ -571,7 +617,11 @@ void				IRCServer::_onQuit( SockStream &server)
 	this->_connections.erase(&nEntity->getStream());
 	this->_unregistered_connections.erase(&nEntity->getStream());
 	delete nEntity;
-
+	if (this->getDebugLevel())
+	{
+		Logger::debug("after onQuit: ");
+		this->_printServerState();
+	}
 }
 
 
@@ -752,23 +802,9 @@ bool								IRCServer::parsePrefix(NetworkEntity & executor, const std::string &
 			*emitter = &executor;
 			return (false);
 		}
-		// else if (this->_clients[firstName]->getType() & RelayedClient::value_type) == false)
-		// {
-		// 	Logger::critical("Prefix original sender is not a relayed client");
-		// 	return false;
-		// }
 		*emitter = this->_clients[firstName];
 		*username = uname;
-		// if (firstName != this->getUID()) //REVIEW is always needed?
-		// {
-		// 	if (this->_servers.count(secondName) == 0)
-		// 	{
-		// 		//TODO try with getting IP  from hostname (can receive z4r7p4.42lyon.fr and it's valid)
-		// 		Logger::critical("Unknown host in prefix: " + secondName);
-		// 		return (false);
-		// 	}
-		// 	*host_server = reinterpret_cast<RelayedServer*>(this->_servers[secondName]);
-		// }
+		// 		//TODO try with getting IP  from hostname (can receive z4r7p4.42lyon.fr and it's valid) (we should be able to do that)
 	}
 	/* simple prefix */
 	else
@@ -777,7 +813,13 @@ bool								IRCServer::parsePrefix(NetworkEntity & executor, const std::string &
 		*emitter = NULL;
 		std::string uid = prefix.substr(1, prefix.size() - 1);
 		Logger::debug("Prefix uid: " + uid);
-		if (this->_servers.count(uid) == 0) 
+		if (uid == this->getUID())
+		{
+			Logger::warning("Self executed request");
+			*emitter = this;
+			return true;
+		}
+		else if (this->_servers.count(uid) == 0) 
 		{
 			if (this->_clients.count(uid) == 0)
 			{
@@ -804,7 +846,7 @@ bool								IRCServer::parsePrefix(NetworkEntity & executor, const std::string &
 		else
 		{
 			Logger::debug("Server in prefix is a local" + uid);
-			*emitter =this->_servers[uid];
+			*emitter = this->_servers[uid];
 		}
 	}
 	return (true);
