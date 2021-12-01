@@ -20,7 +20,7 @@ class CommandNick : public ACommand
 
 	private:
 		uint				_nickFromUnregistered(UnRegisteredConnection & executor, std::string & nick);
-		uint				_nickFromClient(Client & executor, std::string & nick);
+		uint				_renameClient(NetworkEntity & executor, AEntity & emitter, std::string & nick);
 		uint				_nickFromServer(Server & executor, std::string & params);
 
 };

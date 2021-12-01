@@ -51,6 +51,8 @@ class ClientInfo
 
 		IRCServer			&getServerReference(void);
 
+		virtual const std::string	getPrefix( void ) const = 0;
+
 	protected:
 		IRCServer					&_serverReference;
 		uint						_mode;

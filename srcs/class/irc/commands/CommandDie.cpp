@@ -20,7 +20,7 @@ CommandDie::~CommandDie()
 /*
 ** --------------------------------- OVERLOAD ---------------------------------
 */
-//TODO sendPackage is not _sendPackage
+//TODO sendPackage is not _sendPackage => add _
 
 /*
 	Command: DIE

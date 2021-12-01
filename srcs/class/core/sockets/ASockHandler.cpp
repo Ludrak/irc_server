@@ -3,7 +3,7 @@
 
 ASockHandler::ASockHandler()
 {
-	Logger::debug("ASockHandler constructor");
+	Logger::core("ASockHandler constructor");
 }
 
 /** @param sock : allocated SockStream* */
@@ -26,7 +26,7 @@ SockStream      *ASockHandler::getSocket(const ushort socket)
 
 void		    ASockHandler::sendPackage(Package *pkg, SockStream &recipient)
 {
-	Logger::debug("added package " + ntos(pkg) + " to pending list of " + recipient.getIP());
+	Logger::core("added package " + ntos(pkg) + " to pending list of " + recipient.getIP());
 #ifdef	POLL
 	recipient.setPollEvent(POLLOUT);
 #elif	defined(EPOLL)

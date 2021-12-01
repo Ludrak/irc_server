@@ -21,15 +21,19 @@ CommandPrivmsg::~CommandPrivmsg()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
+/*
+	Command: PRIVMSG
+	Parameters: <msgtarget> <text to be sent>
+*/
 uint					CommandPrivmsg::operator()(NetworkEntity & executor, std::string params)
 {
 	switch (Parser::nbParam(params))
 	{
 		case 0:
-			this->getServer()._sendMessage(executor, ERR_NORECIPIENT(params));
+			this->getServer()._sendMessage(this->getEmitter(), this->getServer().getPrefix() + ERR_NORECIPIENT(this->getEmitter().getUID(), "PRIVMSG"));
 			break ;
 		case 1:
-			this->getServer()._sendMessage(executor, ERR_NOTEXTTOSEND());
+			this->getServer()._sendMessage(this->getEmitter(), this->getServer().getPrefix() + ERR_NOTEXTTOSEND(this->getEmitter().getUID()));
 			break ;
 		case 2:
 			/* right numbers of params */
@@ -38,7 +42,7 @@ uint					CommandPrivmsg::operator()(NetworkEntity & executor, std::string params
 			if (this->getServer()._entities.count(targetName) == 0)
 			{
 				/* target doesn't exist */
-				Logger::debug("Privmsg: Target not found");
+				Logger::debug("Privmsg: Target not found !");
 					this->getServer()._sendMessage(executor, ERR_NOSUCHNICK(executor.getUID(), targetName));
 				return SUCCESS;
 			}
@@ -49,27 +53,16 @@ uint					CommandPrivmsg::operator()(NetworkEntity & executor, std::string params
 				Logger::debug("Privmsg: target is a channel");
 				if (reinterpret_cast<Channel *>(target)->isRegistered(static_cast<Client&>(executor)) == false)
 				{
-					Logger::debug("Privmsg: sender have not joined channel");
+					Logger::debug("Privmsg: not in channel !");
 					this->getServer()._sendMessage(executor.getStream(), ERR_CANNOTSENDTOCHAN(executor.getUID(), target->getUID()));
 					return SUCCESS;
 				}
 			}
-			std::string msg = Parser::getParam(params, 1);
-			// msg = this->getServer().makePrefix(&executor, &this->getServer()) + "PRIVMSG " + target->getUID() + " :" + msg;
-			const AEntity *emitter = this->getClient();
-			if (emitter == NULL)
-			{
-				/* No prefix => message from a local client */
-				emitter = &executor;
-				Logger::info(executor.getUID() + " send message to " + target->getUID());
-			}
-			else {
-				Logger::info(executor.getUID() + " relay a message from " + emitter->getUID() + " to " + target->getUID());
-			}
-			//add prefix
-			msg = emitter->getPrefix() + " PRIVMSG " + target->getUID() + " :" + msg;
-			Logger::debug(std::string("MSG = ") + msg);
-			this->getServer()._sendMessage(*target, msg, &executor);
+			AEntity& emitter = this->getEmitter();
+			Logger::info(executor.getUID() + " relay a message from " + emitter.getUID() + " to " + target->getUID());
+			std::string msg = emitter.getPrefix() + "PRIVMSG " + target->getUID() + " :" + Parser::getParam(params, 1);
+			Logger::debug("MSG = " + msg);
+			this->getServer()._sendMessage(*target, msg);
 			break ;
 	}
 	return SUCCESS;

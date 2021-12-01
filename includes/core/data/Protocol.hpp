@@ -2,7 +2,6 @@
 #ifndef PROTOCOL_HPP
 # define PROTOCOL_HPP
 
-#include <string>
 #include <iostream>
 #include "IProtocol.hpp"
 

@@ -39,6 +39,8 @@ class CommandHandler;
 # include "CommandDie.hpp"
 # include "CommandPong.hpp"
 # include "CommandPart.hpp"
+# include "CommandVersion.hpp"
+# include "CommandKill.hpp"
 
 # define SUCCESS				0
 
@@ -46,6 +48,7 @@ class CommandHandler;
 # define IRC_DEFAULT_PORT		6667
 # define IRC_DEFAULT_TLS_PORT	6697
 # define IRC_DEFAULT_PASS		""
+# define IRC_CURRENT_VERSION	"021O"
 
 class IRCServer : public ANode, public AEntity, public ServerInfo
 {
@@ -68,12 +71,14 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		UnRegisteredConnection*		getUnRegisteredConnectionByUID(const std::string UID);
 		std::string					getMotdsPath( void ) const;
 
+		void						setDebugLevel( bool debug);
+		uint						getDebugLevel( void ) const;
 		bool						alreadyInUseUID(std::string & uid) const; 
 
 		/* prefix parser */
 		std::string					makePrefix(const AEntity *user=NULL, const AEntity *host_server=NULL);
 		// bool						parsePrefix(const std::string &prefix, Server **const sender_server, RelayedClient **const user, RelayedServer **const host_server);
-		bool						parsePrefix(const std::string &prefix,  RelayedServer **const host_server, AEntity **const user, std::string *username);
+		bool						parsePrefix(NetworkEntity & excutor, const std::string &prefix,  RelayedServer **const host_server, AEntity **const user, std::string *username);
 
 	private:
 
@@ -111,14 +116,17 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 */
 
 		/* protocol for data transmission */
-		IRCProtocol								_protocol;
+		IRCProtocol					_protocol;
 
-		//TODO change position 
-		std::string								_forwardPassword;
-		time_t									_creationTime;
-		std::string								_operName;
-		std::string								_operPassword;
-		bool									_shortMotdEnabled;
+/*
+** ------------------------------- STATE -------------------------------
+*/
+		std::string					_forwardPassword;
+		time_t						_creationTime;
+		std::string					_operName;
+		std::string					_operPassword;
+		bool						_shortMotdEnabled;
+		uint						_debugLevel;
 /*
 ** --------------------------------- EVENTS ---------------------------------
 */
@@ -181,6 +189,8 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		friend class CommandDie;
 		friend class CommandPong;
 		friend class CommandPart;
+		friend class CommandVersion;
+		friend class CommandKill;
 
 		/* so that clients have a reference to the server they're on */
 		friend class Client;

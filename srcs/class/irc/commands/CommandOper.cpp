@@ -21,6 +21,10 @@ CommandOper::~CommandOper()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
+/*
+	Command: OPER
+	Parameters: <name> <password>
+*/
 uint					CommandOper::operator()(NetworkEntity & executor, std::string params)
 {
 	//TODO add list of operName
@@ -44,15 +48,17 @@ uint					CommandOper::operator()(NetworkEntity & executor, std::string params)
 			this->getServer()._sendMessage(executor, this->getServer().makePrefix(NULL, NULL) + ERR_PASSWDMISMATCH(executor.getUID()));
 			return SUCCESS;
 		}
-		//Here all is right: becoming a IRC operator
+		/* Successfully becoming an IRC operator */
 		static_cast<Client&>(executor).setServerOP(true);
-		Logger::info(executor.getUID() + " become a server operator.");
+		Logger::info(executor.getUID() + " became an IRC operator.");
 		this->getServer()._sendMessage(executor, this->getServer().makePrefix(NULL, NULL) + RPL_YOUREOPER(executor.getUID()));
 		//TODO send mode +o message to other servers
-		this->getHandler().handle(executor, ":" + executor.getUID() + "@" + static_cast<Client&>(executor).getServerToken() + " MOTD");
+		std::string motdRequest(executor.getPrefix() + " MOTD");
+		this->getHandler().handle(executor, motdRequest);
 	}
 	else
 	{
+		//REVIEW with getEmitter: should not receive this from a Server (Not relayed either (Except maybe if we implement some other OPER levels))
 		Logger::critical("Oper: unhandled OPER command from Server");
 	}
 	return SUCCESS;
