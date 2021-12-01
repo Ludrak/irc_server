@@ -72,7 +72,7 @@ are returned when an invalid use of "PRIVMSG $<server>" or "PRIVMSG #<host>" is 
 /* Returned to a registered client to indicate that the
 command sent is unknown by the server.
 */
-# define ERR_UNKNOWNCOMMAND(A, B) "421 " + A + " " + B + " :Unknown command"
+# define ERR_UNKNOWNCOMMAND(exec, A) "421 " + exec + " " + A + " :Unknown command"
 
 
 /* Server's MOTD file could not be opened by the server.
@@ -96,21 +96,21 @@ operation during the processing of a message.
 /* Returned when a nickname parameter expected for a
 command and isn't found.
 */
-# define ERR_NONICKNAMEGIVEN() "431 :No nickname given"
+# define ERR_NONICKNAMEGIVEN(exec) "431 :No nickname given"
 
 
 /* Returned after receiving a NICK message which contains
 characters which do not fall in the defined set.  See
 section x.x.x for details on valid nicknames.
 */
-# define ERR_ERRONEUSNICKNAME(A, B) "432 " + A + " " + B + " :Erroneus nickname"
+# define ERR_ERRONEUSNICKNAME(exec, A) "432 " + exec + " " + A + " :Erroneus nickname"
 
 
 /* Returned when a NICK message is processed that results
 in an attempt to change to a currently existing
 nickname.
 */
-# define ERR_NICKNAMEINUSE(A) "433 :" + A + " Nickname is already in use"
+# define ERR_NICKNAMEINUSE(exec, A) "433 " + exec + " " + A + " :Nickname is already in use"
 
 
 /* Returned by a server to a client when it detects a

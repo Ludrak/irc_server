@@ -114,7 +114,7 @@ uint			CommandHandler::handle(NetworkEntity & executor, std::string & data)
 	}
 	else
 		Logger::warning("Unknown command (" + command + ")");
-	this->_server._sendMessage(executor, ERR_UNKNOWNCOMMAND(executor.getUID(), command));
+	this->_server._sendMessage(*emitter, ERR_UNKNOWNCOMMAND(emitter->getUID(), command));
 	return SUCCESS;
 }
 
