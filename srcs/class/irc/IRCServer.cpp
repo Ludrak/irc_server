@@ -13,14 +13,15 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 :	ASockManager(ssl_cert_path, ssl_key_path),
 	ANode(host),
 	AEntity(IRCServer::value_type, "token"),
-	ServerInfo("name", "info", "default hostname", "IRC|amazircd"),
+	ServerInfo("name", ntos(IRC_CURRENT_VERSION), "default hostname", "IRC|amazircd"),
 	_handler(*this),
 	_protocol(),
 	_forwardPassword(""),
 	_creationTime(std::time(NULL)),
 	_operName("becomeOper"),
 	_operPassword("becomeOper"),
-	_shortMotdEnabled(true)
+	_shortMotdEnabled(true),
+	_debugLevel(0)
 {
 	this->_initCommands();
 	Logger::debug("IRCServer constructor");
@@ -393,7 +394,8 @@ void							IRCServer::_onClientRecv(SockStream & s, Package & pkg)
 	NetworkEntity *entity = getEntityByStream(s);
 	if (!entity || pkg.getData().empty())
 		return ;
-	uint ret = this->_handler.handle(*entity, pkg.getData());
+	std::string payload = pkg.getData();
+	uint ret = this->_handler.handle(*entity, payload);
 	if (ret)
 		Logger::error("onClientRecv: Something bad happened in handler");
 }
@@ -473,14 +475,13 @@ void							IRCServer::_onClientQuit(SockStream &s)
 
 
 
-
-// TODO REFRACTOR AND HANDLE FORWARD
 void						IRCServer::_onRecv(SockStream &server, Package &pkg)
 {
 	NetworkEntity *entity = getEntityByStream(server);
 	if (!entity || pkg.getData().empty())
 		return ;
-	uint ret = this->_handler.handle(*entity, pkg.getData());
+	std::string payload = pkg.getData();
+	uint ret = this->_handler.handle(*entity, payload);
 	if (ret)
 		Logger::error("onRecv: Something bad happened in handler");
 }
@@ -629,6 +630,17 @@ std::string					IRCServer::getMotdsPath( void ) const
 }
 
 
+void						IRCServer::setDebugLevel( bool debug )
+{
+	this->_debugLevel = debug;
+}
+
+
+uint						IRCServer::getDebugLevel( void ) const
+{
+	return this->_debugLevel;
+}
+
 /*
 ** --------------------------------- COMMANDS ---------------------------------
 */
@@ -654,6 +666,7 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandDie>("DIE");
 	this->_handler.addCommand<CommandPong>("PONG");
 	this->_handler.addCommand<CommandPart>("PART");
+	this->_handler.addCommand<CommandVersion>("VERSION");
 }
 
 
@@ -700,10 +713,13 @@ std::string							IRCServer::makePrefix(const AEntity *user, const AEntity *host
 
 // prefix format -> Server-Server: <server_uid>SPACE
 // prefix format -> Server-Client: <nickname>[!<username>@<host_uid>]SPACE
-bool								IRCServer::parsePrefix(const std::string &prefix,  RelayedServer **const host_server, AEntity **const emitter, std::string *username)
+bool								IRCServer::parsePrefix(NetworkEntity & executor, const std::string &prefix,  RelayedServer **const host_server, AEntity **const emitter, std::string *username)
 {
 	if (prefix.find(":") != 0 || !host_server)
+	{
+		*emitter = &executor;
 		return (false);
+	}
 	/* extended prefix */
 	if (prefix.find("@") != std::string::npos && emitter && host_server) //REVIEW no host_server here (can have @ witout !)
 	{
@@ -735,6 +751,7 @@ bool								IRCServer::parsePrefix(const std::string &prefix,  RelayedServer **c
 		if (this->_clients.count(firstName) != 1 )
 		{
 			Logger::critical("Unknown user in prefix: " + firstName);
+			*emitter = &executor;
 			return (false);
 		}
 		// else if (this->_clients[firstName]->getType() & RelayedClient::value_type) == false)
@@ -767,6 +784,7 @@ bool								IRCServer::parsePrefix(const std::string &prefix,  RelayedServer **c
 			if (this->_clients.count(uid) == 0)
 			{
 				Logger::critical("Unknown server/client in prefix: " + uid);
+				*emitter = &executor;
 				return (false);
 			}
 			else if (this->_clients[uid]->getType() & RelayedClient::value_type)

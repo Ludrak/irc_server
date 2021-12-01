@@ -21,81 +21,80 @@ CommandMotd::~CommandMotd()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
+/*
+	Command: MOTD
+	Parameters: [ <target> ]
+*/
 uint					CommandMotd::operator()(NetworkEntity & executor, std::string params)
 {
-	AEntity *emitter;
-	if (executor.getFamily() == SERVER_ENTITY_FAMILY)
+	(void) executor;
+	AEntity &emitter = this->getEmitter();
+	if (emitter.getFamily() == SERVER_ENTITY_FAMILY)
 	{
-		emitter = const_cast<AEntity*>(this->getClient());
-		if (emitter == NULL)
+		Logger::error("MOTD: Command requested by a server");
+		return SUCCESS;
+	}
+	else if ((emitter.getType() & (Client::value_type | RelayedClient::value_type)) == false)
+	{
+		Logger::critical("MOTD: unsupported type given: " + ntos(emitter.getType()));
+		return ERROR;
+	}
+	uint		nbParam = Parser::nbParam(params);
+	if (nbParam > 0)
+	{
+		/* Forward the request to concerned server */
+		std::string serverId = Parser::getParam(params, 0);
+		if (this->getServer()._servers.count(serverId) == 0)
 		{
-			Logger::error("MOTD: Receive an invalid prefix");
+			Logger::debug("MOTD: Invalid target given");
+			this->getServer()._sendMessage(emitter, ERR_NOSUCHSERVER(emitter.getUID(), serverId));
 			return SUCCESS;
 		}
+		AEntity *fwdServ = this->getServer()._servers[serverId];
+		if (fwdServ == NULL)
+		{
+			Logger::critical("MOTD: fwdServ should never be NULL");
+			return ERROR;
+		}
+		this->getServer()._sendMessage(*fwdServ, emitter.getPrefix() + " MOTD " + serverId);
+		return SUCCESS;
 	}
+	/* Send motd to emitter of the request */
+	char		buffer[81];
+	std::string	path;
+	bool		isServerOP = false;
+	if (emitter.getType() & RelayedClient::value_type)
+		isServerOP = static_cast<RelayedClient&>(emitter).isServerOP();
 	else
-		emitter = &executor;
-	uint nbParam = Parser::nbParam(params);
-	if (nbParam == 0)
+		isServerOP = static_cast<Client&>(emitter).isServerOP();
+	if (isServerOP)
+		path = this->getServer().getMotdsPath() + "/oper.motd";
+	else if (this->_shortEnabled && this->getServer()._shortMotdEnabled)
+		path = this->getServer().getMotdsPath() + "/ircd.smotd";
+	else
+		path = this->getServer().getMotdsPath() + "/ircd.motd";
+	Logger::debug("MOTD: Use file: " + path);
+	std::ifstream	mFile(path.c_str());
+	if (!mFile.is_open() || !Parser::isRegularFile(path.c_str()))
 	{
-		//TODO check and handle emitter == a server
-		//TODO check and handle emitter == a relayedClient (cast error)
-		//TODO add clean prefixs
-		char buffer[81];
-		std::string filename;
-		if (reinterpret_cast<Client*>(emitter)->isServerOP())
-			filename = "/oper.motd";
-		else if (this->_shortEnabled && this->getServer()._shortMotdEnabled)
-			filename = "/ircd.smotd";
-		else
-			filename = "/ircd.motd";
-		std::string path = this->getServer().getMotdsPath() + filename;
-		std::ifstream	mFile(path);
-		Logger::debug("Use motd file: " + path);
-		if (!mFile.is_open() || !Parser::isRegularFile(path.c_str()))
-		{
-			Logger::warning("MOTD: file not found: " + path);
-			this->getServer()._sendMessage(*emitter,
-				reinterpret_cast<Client *>(emitter)->getPrefix() + ERR_NOMOTD(emitter->getUID()));
-			return SUCCESS;
-		}
-		this->getServer()._sendMessage(*emitter,
-			reinterpret_cast<Client *>(emitter)->getPrefix() +
-			RPL_MOTDSTART(emitter->getUID(), this->getServer().getUID()));
-		std::string line;
-		while (!mFile.eof())
-		{
-			mFile.getline(buffer, 80);
-			buffer[mFile.gcount()] = '\0';
-			line = buffer;
-			this->getServer()._sendMessage(*emitter,
-				reinterpret_cast<Client *>(emitter)->getPrefix() + RPL_MOTD(emitter->getUID(), line));
-		}
-		this->getServer()._sendMessage(*emitter,
-			reinterpret_cast<Client *>(emitter)->getPrefix() +
-			RPL_ENDOFMOTD(emitter->getUID()));
+		Logger::warning("MOTD: file not found: " + path);
+		this->getServer()._sendMessage(emitter,
+			this->getServer().getPrefix() + ERR_NOMOTD(emitter.getUID()));
+		return SUCCESS;
 	}
-	else if (nbParam == 1)
+	this->getServer()._sendMessage(emitter,
+		this->getServer().getPrefix() +
+		RPL_MOTDSTART(emitter.getUID(), this->getServer().getUID()));
+	while (!mFile.eof())
 	{
-		std::string targetName = Parser::getParam(params, 0);
-		if (this->getServer()._servers.count(targetName) == 0)
-		{
-			Logger::debug("Invalid target given");
-			return SUCCESS;
-		}
-		AEntity *target = this->getServer()._servers[targetName];
-		if (!(target->getType() & RelayedServer::value_type))
-			targetName = "";
-		//TODO put prefix
-		if (emitter->getType() & Client::value_type)
-			this->getServer()._sendMessage(*target,reinterpret_cast<Client *>(emitter)->getPrefix() + " MOTD " + targetName);
-		else if (emitter->getType() & Server::value_type)
-			this->getServer()._sendMessage(*target, ":" + emitter->getUID() + "@" + reinterpret_cast<Server *>(emitter)->getHostname() + " MOTD " + targetName);
-		else if (emitter->getType() & RelayedServer::value_type)
-			this->getServer()._sendMessage(*target, ":" + emitter->getUID() + "@" + reinterpret_cast<RelayedServer *>(emitter)->getHostname() + " MOTD " + targetName);
-		else
-			Logger::critical("MOTD: unhandled type");
+		mFile.getline(buffer, 80);
+		buffer[mFile.gcount()] = '\0';
+		this->getServer()._sendMessage(emitter,
+			this->getServer().getPrefix() + RPL_MOTD(emitter.getUID(), buffer));
 	}
+	this->getServer()._sendMessage(emitter,
+		this->getServer().getPrefix() + RPL_ENDOFMOTD(emitter.getUID()));
+
 	return SUCCESS;
 }
 

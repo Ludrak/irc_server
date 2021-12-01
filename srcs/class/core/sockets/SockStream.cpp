@@ -113,7 +113,7 @@ throw (SockStream::InvalidHostException, SockStream::SSLException)
 	if ((this->_socket = socket(family, sock_type, 0)) < 0)
 		throw SockStream::SocketCreationException();
 	this->_resolveIP(host);
-	bzero(reinterpret_cast<void *>(&this->_addr), sizeof(this->_addr));
+	std::memset(reinterpret_cast<void *>(&this->_addr), 0, sizeof(this->_addr));
 	this->_addr.sin_port = htons(port);
 	this->_addr.sin_family = family;
 	this->_addr.sin_addr.s_addr = inet_addr(this->_ip.c_str());

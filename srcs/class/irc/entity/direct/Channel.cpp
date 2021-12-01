@@ -71,10 +71,13 @@ uint				Channel::addClient(Client & client)
 
 uint					Channel::removeClient(Client & client)
 {
-	//TODO send reply & dec / inc registration
 	if (this->isRegistered(client) == false)
-		return 1;//ERR_NOTONCHANNEL;
-	this->decrementJoinedClients();
+		return 1;//TODO ERR_NOTONCHANNEL;
+	if (!this->decrementJoinedClients())
+	{
+		Logger::critical("Try to decrement empty channel");
+		return (1);
+	}
 	this->_clients.remove(&client);
 	this->delSocket(client.getStream());
 	if (this->_creator == &client)

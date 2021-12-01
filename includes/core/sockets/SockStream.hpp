@@ -10,6 +10,7 @@ class SockStream;
 # include <openssl/crypto.h>
 
 # include <iostream>
+# include <cstring>
 # include <string>
 # include <sys/socket.h>
 # include <netinet/in.h>
@@ -22,6 +23,7 @@ class SockStream;
 # include <sys/types.h>
 # include <list>
 # include <netdb.h>
+
 # include "Package.hpp"
 # include "Logger.hpp"
 # include "ntos.hpp"

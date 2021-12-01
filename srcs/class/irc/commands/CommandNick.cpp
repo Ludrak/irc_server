@@ -21,6 +21,15 @@ CommandNick::~CommandNick()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
+/*
+User:
+	Command: NICK
+	Parameters: <nickname>
+Server:
+	Command: NICK
+	Parameters: <nickname> <hopcount> <username> <host> <servertoken>
+				<umode> <realname>
+*/
 uint					CommandNick::operator()(NetworkEntity & executor, std::string params)
 {
 	if (this->getServer()._password != "" && executor.getPassword() != this->getServer()._password)
@@ -104,8 +113,9 @@ uint				CommandNick::_nickFromServer(Server & executor, std::string & params)
 	}
 	uint hopcount;
 	try {
-		hopcount = std::stoi(Parser::getParam(params, 1));
-	}catch(const std::invalid_argument & e)
+		std::istringstream is(Parser::getParam(params, 1));
+		is >> hopcount;
+	} catch(const std::invalid_argument & e)
 	{
 		Logger::error("Non-number hopcount argument: " + Parser::getParam(params, 1));
 		return SUCCESS;

@@ -29,8 +29,11 @@ class CommandHandler
 				this->_commands.insert(std::make_pair(name, new T(*this)));
 			else
 				Logger::critical("Handler: Command " + name + " is inserted twice.");
-		}		
-		uint			handle(NetworkEntity & executor, std::string data);
+		}
+	
+		uint			handle(NetworkEntity & executor, std::string & data);
+		uint			numericReplyReceived(int error, AEntity & emitter, std::string & data);
+
 		ACommand*		getCommand(std::string & command_name);
 
 	private:

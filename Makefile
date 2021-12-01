@@ -1,4 +1,4 @@
-.PHONY: clean fclean re all check_sources check_headers
+.PHONY: clean fclean re all os check_sources check_headers
 
 # Name of target executable
 NAME		= ft_irc
@@ -81,8 +81,9 @@ COMMANDS_SRCS		=	CommandHandler.cpp \
 						CommandConnect.cpp \
 						CommandDie.cpp \
 						CommandPong.cpp \
-						CommandError.cpp \
 						CommandPart.cpp
+						CommandVersion.cpp \
+						CommandError.cpp
 					
 COMMANDS_HEADERS	=	CommandHandler.hpp \
 						ACommand.hpp \
@@ -99,9 +100,11 @@ COMMANDS_HEADERS	=	CommandHandler.hpp \
 						CommandConnect.hpp \
 						CommandDie.hpp \
 						CommandPong.hpp \
-						CommandError.hpp \
 						CommandPart.hpp
+						CommandVersion.hpp \
+						CommandError.hpp
 # CommandNjoin.hpp
+
 
 # Librarys (only for local archives in project folder)
 LIBRARYS	= 
@@ -112,16 +115,37 @@ OPENSSL_PATH= $(shell brew --prefix openssl@$(OPENSSL_VERSION))
 
 CLANG		=	clang++
 CPP_FLAGS	=	-Wextra -Wall -Werror -std=c++98 -g3 -fsanitize=address
-CPP_IFLAGS	=	-I $(OPENSSL_PATH)/include 
+CPP_IFLAGS	=	-I $(OPENSSL_PATH)/include
 
 CPP_LFLAGS	= -lssl -lcrypto \
 				-L  $(OPENSSL_PATH)/lib/ 
+
+# OS Detecting 
+
+ifeq ($(OS),Windows_NT)
+    OSDETECT = WIN32
+	CPP_FLAGS += -DWIN32
+else
+    UNAME_S := $(shell uname -s)
+    ifeq ($(UNAME_S),Linux)
+        OSDETECT = LINUX
+		CPP_FLAGS += -DLINUX
+		OPENSSL_PATH := /usr/
+    endif
+    ifeq ($(UNAME_S),Darwin)
+        OSDETECT = OSX
+		CPP_FLAGS += -DOSX
+		OPENSSL_PATH = $(shell brew --prefix openssl)
+    endif
+endif
 
 # Fancy prefixes 
 PREFIX_PROJECT=[\033[1;32m$(NAME)\033[0m]
 PREFIX_COMP=\033[1;30m-\033[0m-\033[1;37m>\033[0m[\033[1;32m✔\033[0m]
 PREFIX_LINK=[\033[1;32mLINK\033[0m]
+PREFIX_INFO=[\033[1;32mINFO\033[0m]
 PREFIX_WARN=[\033[0;33mWARN\033[0m]
+PREFIX_ERROR=[\033[0;91mERROR\033[0m]
 PREFIX_DUPL=[\033[1;33mDUPLICATES\033[0m]
 PREFIX_CLEAN=[\033[1;31mCLEAN\033[0m]
 
@@ -137,19 +161,31 @@ CPP_LFLAG	+=	$(addprefix -L,$(addprefix $(LIB_DIR), $(LIBRARYS)))
 
 #   Main rule
 all: select
-	@echo done
+	@echo "$(PREFIX_PROJECT)$(PREFIX_INFO) done"
+
+os:
+ifeq ($(OSDETECT),WIN32)
+	@echo "$(PREFIX_PROJECT)$(PREFIX_ERROR) This project cannot compile yet on windows"
+	@exit 0
+endif
+ifeq ($(OSDETECT), OSX)
+	@echo "$(PREFIX_PROJECT)$(PREFIX_INFO) Compilation target: OSX"
+endif
+ifeq ($(OSDETECT), LINUX)
+	@echo "$(PREFIX_PROJECT)$(PREFIX_INFO) Compilation target: Linux"
+endif
 
 select: CPP_FLAGS += -DSELECT
-select: $(NAME)
-# select: clean $(NAME)
+select: check_headers check_sources os $(NAME)
+# select: clean os $(NAME)
 
 kqueue: CPP_FLAGS += -DKQUEUE
-kqueue: clean $(NAME)
-# kqueue: $(NAME)
+kqueue: clean os $(NAME)
+# kqueue: check_headers check_sources os $(NAME)
 
 poll: CPP_FLAGS += -DPOLL
-poll: clean $(NAME)
-# poll: $(NAME)
+poll: clean os $(NAME)
+# poll: check_headers check_sources os $(NAME)
 
 #	check_sources :
 #	simple bash script to check duplicates sources files 
@@ -188,7 +224,7 @@ check_headers:
 	fi
 
 #	Linking rule
-$(NAME): check_headers check_sources $(BIN_DIR) $(OBJS)
+$(NAME): $(BIN_DIR) $(OBJS) 
 	@$(CLANG) $(OBJS) -o $(NAME) $(CPP_FLAGS) $(CPP_LFLAGS)
 	@echo "$(PREFIX_PROJECT)$(PREFIX_LINK) Linking done for: $(NAME)"
 

@@ -48,7 +48,7 @@ t_pollevent		AClient::_pollInClients(SockStream & sock)
 	if (byte_size < 0)
 	{
 		Logger::error(std::string("AClient: recv() failed : ") + strerror(errno) + std::string(" on socket <" + ntos(sock.getSocket()) + ">."));
-		return (POLL_ERR);
+		return (POLL_ERROR);
 	}	
 	else if (byte_size == 0)
 	{
@@ -97,7 +97,7 @@ t_pollevent		AClient::_pollOutClients(SockStream & sock)
 					sock.setkQueueEvents(this->_kq, this->_k_events, *it, EVFILT_READ);
 				}
 #endif
-		return (POLL_ERR);
+		return (POLL_ERROR);
 	}
 	char 	buffer[SEND_BUFFER_SZ] = { 0 };
 	size_t	buffer_sz = current_pkg->getRawData().size() > SEND_BUFFER_SZ ? SEND_BUFFER_SZ : current_pkg->getRawData().size();
@@ -113,7 +113,7 @@ t_pollevent		AClient::_pollOutClients(SockStream & sock)
 	if (byte_size < 0)
 	{
 		Logger::error("AClient: send() error on " + sock.getIP() + ntos(" : ") + strerror(errno));
-		return (POLL_ERR);
+		return (POLL_ERROR);
 	}
 	if (current_pkg->isInvalid() || current_pkg->getRawData().empty())
 	{

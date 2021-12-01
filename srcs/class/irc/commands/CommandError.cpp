@@ -25,7 +25,6 @@ CommandError::~CommandError()
    Command: ERROR
    Parameters: <error message>
 */
-
 uint					CommandError::operator()(NetworkEntity & executor, std::string params)
 {
 	(void)executor;
