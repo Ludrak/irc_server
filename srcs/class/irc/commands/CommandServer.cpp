@@ -43,26 +43,16 @@ uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 	if (nParams != 3 && nParams != 4)
 		return SUCCESS;
 
-	int			token;
-	int			hopcount;
+	int			token = -1;
+	uint		hopcount = 0;
 	std::string servname = Parser::getParam(params, 0);
 	std::string info = Parser::getParam(params, 3);
-	try 
-	{
-		//TODO fusion the two exceptions statements
-		std::istringstream is(Parser::getParam(params, 1));
-		is >> hopcount;
-	}
-	catch (std::invalid_argument e)
-	{ Logger::warning("Server registered with an invalid hopcount: " + Parser::getParam(params, 1)); }
-
-	try 
-	{	
-		std::istringstream is(Parser::getParam(params, 2));
-		is >> token;
-	}
-	catch (std::invalid_argument e)
-	{ Logger::warning("Server registered with an invalid token: " + Parser::getParam(params, 2)); }
+	std::istringstream isHop(Parser::getParam(params, 1));
+	isHop >> hopcount;
+	if (hopcount == 0){ Logger::warning("Server registered with an invalid hopcount: " + Parser::getParam(params, 1)); }
+	std::istringstream isTok(Parser::getParam(params, 2));
+	isTok >> token;
+	if (token < 0){ Logger::warning("Server registered with an invalid token: " + Parser::getParam(params, 2)); }
 	
 	std::stringstream tokss;
 	tokss << std::setfill('0') << std::setw(3) << token;

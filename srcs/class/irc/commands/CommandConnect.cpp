@@ -48,13 +48,10 @@ uint					CommandConnect::operator()(NetworkEntity & executor, std::string params
 	std::string target = Parser::getParam(params, 0);
 	std::string port_string = Parser::getParam(params, 1);
 	ushort port = 0;
-	try {
-		std::istringstream is(port_string);
-		is >> port;
-	}
-	catch (const std::invalid_argument & e)
-	{	
-		Logger::debug("Connect: Invalid port number received");
+	std::istringstream is(port_string);
+	is >> port;
+	if (port == 0)
+		Logger::debug("Connect: Invalid port number received: " + port_string);
 		return SUCCESS;
 	}
 	if (nbParam > 2)
@@ -69,6 +66,7 @@ uint					CommandConnect::operator()(NetworkEntity & executor, std::string params
 	Logger::info("Try connecting to server: " + target);
 	try {
 		this->getServer().connectOn(target, port, this->getServer().getProtocol(), this->getServer()._useTLS);
+		//REVIEW need to send back a CONNECT command? 
 	}
 	catch (const AClient::ConnectionException & e )
 	{

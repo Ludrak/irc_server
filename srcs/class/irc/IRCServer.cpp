@@ -53,9 +53,17 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 
 IRCServer::~IRCServer()
 {
-	// delete all entities
+	/* delete all entities */
 	for (std::map<std::string, AEntity *>::iterator it = this->_entities.begin();
 		it != this->_entities.end();
+		++it)
+	{
+		delete (*it).second;
+	}
+
+	/* delete all unregistered connections */
+	for (std::map<SockStream*, UnRegisteredConnection*>::iterator it = this->_unregistered_connections.begin();
+		it != this->_unregistered_connections.end();
 		++it)
 	{
 		delete (*it).second;
@@ -532,6 +540,7 @@ void						IRCServer::_onRecv(SockStream &server, Package &pkg)
 void				IRCServer::_onConnect ( SockStream &server)
 {
 	Logger::info("Connecting to forward server");
+	//REVIEW why forward is not added to _connections map
 	UnRegisteredConnection *forward = this->_unregistered_connections.insert(std::make_pair(&server, new UnRegisteredConnection(server))).first->second;
 	forward->setPassword(this->_password);
 	std::stringstream ss;

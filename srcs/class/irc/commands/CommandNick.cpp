@@ -132,14 +132,12 @@ uint				CommandNick::_nickFromServer(Server & executor, std::string & params)
 		this->getServer()._sendAllServers(killRequest);
 		return SUCCESS;
 	}
-	uint hopcount;
-	try {
-		//TODO remove exception and try catch
-		std::istringstream is(Parser::getParam(params, 1));
-		is >> hopcount;
-	} catch(const std::invalid_argument & e)
+	uint hopcount = 0;
+	std::istringstream is(Parser::getParam(params, 1));
+	is >> hopcount;
+	if (hopcount == 0)
 	{
-		Logger::error("Non-number hopcount argument: " + Parser::getParam(params, 1));
+		Logger::error("Invalid hopcount argument: " + Parser::getParam(params, 1));
 		return SUCCESS;
 	}
 	std::string username = Parser::getParam(params, 2);

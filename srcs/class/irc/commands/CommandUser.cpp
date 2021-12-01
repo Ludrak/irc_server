@@ -65,30 +65,29 @@ uint				CommandUser::_commandUSERunknown(UnRegisteredConnection & executor, std:
 	//REVIEW set more params syntax check
 	if (Parser::validUser(username) == false)
 		return SUCCESS;
-	try {
-		std::istringstream is(Parser::getParam(params, 1));
-		uint mode = 0;
-		is >> mode;
-		Client *new_client = new Client(this->getServer(),
-									executor,
-									mode,
-									Parser::getParam(params, 3));
-		new_client->setName(username);
-		this->getServer()._addClient(*new_client, &executor);
-		Logger::info("new user registered: " + new_client->getUID());
-		/* Send registration informations to new user*/
-		this->_sendWelcomeInfos(*new_client);
-		//Forward and backward this information:
-		std::stringstream reply_msg;
-		reply_msg << "NICK " << new_client->getUID() << " 1 " << new_client->getName() <<
-			" " << new_client->getHostname() << " " << new_client->getServerToken() <<
-			" " << new_client->getModeString() << " :" << new_client->getRealname();
-		this->getServer()._sendAllServers(reply_msg.str());
-		//TODO replace all invalid_argument exceptions by failure exceptions
-	} catch (const std::invalid_argument & e)
+	std::istringstream is(Parser::getParam(params, 1));
+	int mode = -1;
+	is >> mode;
+	if (mode < 0)
 	{
 		Logger::debug("Invalid mode argument (not a number)");
-	}
+		return SUCCESS;
+	}	
+	Client *new_client = new Client(this->getServer(),
+								executor,
+								mode,
+								Parser::getParam(params, 3));
+	new_client->setName(username);
+	this->getServer()._addClient(*new_client, &executor);
+	Logger::info("new user registered: " + new_client->getUID());
+	/* Send registration informations to new user */
+	this->_sendWelcomeInfos(*new_client);
+	//Forward and backward this information:
+	std::stringstream reply_msg;
+	reply_msg << "NICK " << new_client->getUID() << " 1 " << new_client->getName() <<
+		" " << new_client->getHostname() << " " << new_client->getServerToken() <<
+		" " << new_client->getModeString() << " :" << new_client->getRealname();
+	this->getServer()._sendAllServers(reply_msg.str());
 	return SUCCESS;
 }
 
