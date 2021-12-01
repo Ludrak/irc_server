@@ -217,7 +217,7 @@ explicitly deny connections to you.
 must return this error to indicate the attempt was
 unsuccessful.
 */
-# define ERR_NOPRIVILEGES(A) "481 " + A + " :Permission Denied- You're not an IRC operator"
+# define ERR_NOPRIVILEGES(exec) "481 " + exec + " :Permission Denied- You're not an IRC operator"
 
 /* Any command requiring 'chanop' privileges (such as
 MODE messages) must return this error if the client
@@ -231,7 +231,7 @@ channel.
 are to be refused and this error returned directly
 to the client.
 */
-# define ERR_CANTKILLSERVER() "483 :You cant kill a server!"
+# define ERR_CANTKILLSERVER(exec) "483 " + exec + " :You cant kill a server!"
 
 
 /* If a client sends an OPER message and the server has

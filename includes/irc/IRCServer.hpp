@@ -39,6 +39,7 @@ class CommandHandler;
 # include "CommandDie.hpp"
 # include "CommandPong.hpp"
 # include "CommandVersion.hpp"
+# include "CommandKill.hpp"
 
 # define SUCCESS				0
 
@@ -187,6 +188,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		friend class CommandDie;
 		friend class CommandPong;
 		friend class CommandVersion;
+		friend class CommandKill;
 };
 
 #endif /* ******************************************************* IRCSERVER_H */

@@ -82,6 +82,7 @@ COMMANDS_SRCS		=	CommandHandler.cpp \
 						CommandDie.cpp \
 						CommandPong.cpp \
 						CommandVersion.cpp \
+						CommandKill.cpp \
 						CommandError.cpp
 					
 COMMANDS_HEADERS	=	CommandHandler.hpp \
@@ -100,6 +101,7 @@ COMMANDS_HEADERS	=	CommandHandler.hpp \
 						CommandDie.hpp \
 						CommandPong.hpp \
 						CommandVersion.hpp \
+						CommandKill.hpp \
 						CommandError.hpp
 # CommandNjoin.hpp
 

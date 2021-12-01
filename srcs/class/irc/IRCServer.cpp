@@ -715,6 +715,7 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandDie>("DIE");
 	this->_handler.addCommand<CommandPong>("PONG");
 	this->_handler.addCommand<CommandVersion>("VERSION");
+	this->_handler.addCommand<CommandKill>("KILL");
 }
 
 
