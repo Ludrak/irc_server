@@ -89,11 +89,6 @@ uint					CommandNick::operator()(NetworkEntity & executor, std::string params)
 }
 
 
-// TODO in printServerState print all clients with their nicknames and all unRegisterd connections
-// TODO in onQuit and in _renameClient check for deleting user from EVERYWHERE
-// TODO print serverState after a connection leave the server
-// TODO handle nick collision => DO Kill command
-
 /*
 ** --------------------------------- METHODS ----------------------------------
 */
@@ -123,17 +118,23 @@ uint				CommandNick::_renameClient(NetworkEntity & executor, AEntity & emitter, 
 
 uint				CommandNick::_nickFromServer(Server & executor, std::string & params)
 {
-	if (Parser::nbParam(params) != 7) //REVIEW jarter nbParams variable
+	if (Parser::nbParam(params) != 7)
 		return SUCCESS;
 	std::string nick = Parser::getParam(params, 0);
 	if (this->getServer().alreadyInUseUID(nick) == true)
 	{
-		//nick collision
-		Logger::critical("Nick collision unhandled happened");
+		Logger::warning("Nick collision happend: " + nick);
+		/* nick collision */
+		std::string killRequest(this->getServer().getPrefix() + "KILL " + nick + " :Nick collision occured");
+		/* Delete local reference */
+		this->getHandler().handle(executor, killRequest);
+		/* Delete remote reference */
+		this->getServer()._sendAllServers(killRequest);
 		return SUCCESS;
 	}
 	uint hopcount;
 	try {
+		//TODO remove exception and try catch
 		std::istringstream is(Parser::getParam(params, 1));
 		is >> hopcount;
 	} catch(const std::invalid_argument & e)

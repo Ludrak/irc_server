@@ -129,10 +129,13 @@ uint		CommandHandler::numericReplyReceived(int error, AEntity & emitter, std::st
 	std::string targetName = Parser::getParam(data, 1);
 	if (targetName == this->_server.getUID())
 	{
-		Logger::error("Receiving an unhandled numeric reply: " + data);
+		if (error == 401)
+			Logger::debug("Receiving `No such nick or channel` is normal after a nick collision");
+		else
+			Logger::error("Receiving an unhandled numeric reply: " + data);
 		return SUCCESS;
 	}
-	if (this->_server._entities.count(targetName) == 0)
+	else if (this->_server._entities.count(targetName) == 0)
 	{
 		Logger::warning("Handler: Invalid target: " + targetName);
 		return SUCCESS;
