@@ -4,11 +4,11 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-CommandHandler::CommandHandler( IRCServer & server) : _server(server)
+CommandHandler::CommandHandler( IRCServer & server) : _server(server), _connectionEmitter(NULL)
 {
 }
 
-CommandHandler::CommandHandler( const CommandHandler & src ) :  _server(src._server), _commands(src._commands)
+CommandHandler::CommandHandler( const CommandHandler & src ) :  _server(src._server), _connectionEmitter(NULL), _commands(src._commands)
 {
 }
 
@@ -130,9 +130,16 @@ uint		CommandHandler::numericReplyReceived(int error, AEntity & emitter, std::st
 	if (targetName == this->_server.getUID())
 	{
 		if (error == 401)
+		{
 			Logger::debug("Receiving `No such nick or channel` is normal after a nick collision");
-		else
-			Logger::error("Receiving an unhandled numeric reply: " + data);
+			return SUCCESS;
+		}
+		else if (error == 462)
+		{
+			if (this->getConnectionEmitter() != NULL)
+				return this->transmitingReply(*this->getConnectionEmitter(), data);
+		}
+		Logger::error("Receiving an unhandled numeric reply: " + data);
 		return SUCCESS;
 	}
 	else if (this->_server._entities.count(targetName) == 0)
@@ -140,12 +147,25 @@ uint		CommandHandler::numericReplyReceived(int error, AEntity & emitter, std::st
 		Logger::warning("Handler: Invalid target: " + targetName);
 		return SUCCESS;
 	}
+	else
+		return this->transmitingReply(targetName, emitter, data);
+	return SUCCESS;
+}
+
+uint		CommandHandler::transmitingReply(std::string & targetName, AEntity & emitter, std::string & data)
+{
 	Logger::info("Transmiting numeric response to: " + targetName);
 	AEntity *target = this->_server._entities[targetName];
 	this->_server._sendMessage(*target, emitter.getPrefix() + data);
 	return SUCCESS;
 }
 
+uint		CommandHandler::transmitingReply(AEntity & target, std::string & data)
+{
+	Logger::info("Transmiting numeric response to: " + target.getUID());
+	this->_server._sendMessage(target, data);
+	return SUCCESS;
+}
 
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
@@ -155,6 +175,22 @@ IRCServer&				CommandHandler::getServer( void )
 {
 	return this->_server;
 }
+
+AEntity*				CommandHandler::getConnectionEmitter( void ) const
+{
+	return this->_connectionEmitter;
+}
+
+void					CommandHandler::setConnectionEmitter(AEntity & emitter)
+{
+	this->_connectionEmitter = &emitter;
+}
+
+void					CommandHandler::unsetConnectionEmitter( void )
+{
+	this->_connectionEmitter = NULL;
+}
+
 
 ACommand*				CommandHandler::getCommand(std::string & command_name)
 {
