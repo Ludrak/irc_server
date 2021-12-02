@@ -79,7 +79,7 @@ void				CommandMode::modeForUser(NetworkEntity & executor, std::string uid, std:
 {
 	if (executor.getUID() != uid)
 	{
-		this->getServer()._sendMessage(executor, this->getServer().makePrefix(NULL, NULL) + ERR_USERSDONTMATCH());
+		this->getServer()._sendMessage(executor, this->getServer().getPrefix() + ERR_USERSDONTMATCH());
 		return ;
 	}
 	else if (mode.empty())

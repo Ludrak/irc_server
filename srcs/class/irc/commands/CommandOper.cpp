@@ -31,7 +31,7 @@ uint					CommandOper::operator()(NetworkEntity & executor, std::string params)
 	//TODO more globaly: add config file and parse it 
 	if (Parser::nbParam(params) < 2)
 	{
-		this->getServer()._sendMessage(executor, this->getServer().makePrefix(NULL, NULL) + ERR_NEEDMOREPARAMS(executor.getUID(), std::string("OPER")));
+		this->getServer()._sendMessage(executor, this->getServer().getPrefix() + ERR_NEEDMOREPARAMS(executor.getUID(), std::string("OPER")));
 		return SUCCESS;
 	}
 	else if (executor.getType() & Client::value_type)
@@ -45,13 +45,13 @@ uint					CommandOper::operator()(NetworkEntity & executor, std::string params)
 		}
 		else if (this->getServer()._operPassword != password)
 		{
-			this->getServer()._sendMessage(executor, this->getServer().makePrefix(NULL, NULL) + ERR_PASSWDMISMATCH(executor.getUID()));
+			this->getServer()._sendMessage(executor, this->getServer().getPrefix() + ERR_PASSWDMISMATCH(executor.getUID()));
 			return SUCCESS;
 		}
 		/* Successfully becoming an IRC operator */
 		static_cast<Client&>(executor).setServerOP(true);
 		Logger::info(executor.getUID() + " became an IRC operator.");
-		this->getServer()._sendMessage(executor, this->getServer().makePrefix(NULL, NULL) + RPL_YOUREOPER(executor.getUID()));
+		this->getServer()._sendMessage(executor, this->getServer().getPrefix() + RPL_YOUREOPER(executor.getUID()));
 		//TODO send mode +o message to other servers
 		std::string motdRequest(executor.getPrefix() + " MOTD");
 		this->getHandler().handle(executor, motdRequest);

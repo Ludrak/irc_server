@@ -22,7 +22,6 @@ class CommandHandler;
 
 // Commands
 # include "CommandHandler.hpp"
-# include "ACommand.hpp"
 # include "CommandPass.hpp"
 # include "CommandNick.hpp"
 # include "CommandUser.hpp"
@@ -77,7 +76,6 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		bool						alreadyInUseUID(std::string & uid) const; 
 
 		/* prefix parser */
-		std::string					makePrefix(const AEntity *user=NULL, const AEntity *host_server=NULL);
 		// bool						parsePrefix(const std::string &prefix, Server **const sender_server, RelayedClient **const user, RelayedServer **const host_server);
 		bool						parsePrefix(NetworkEntity & excutor, const std::string &prefix,  RelayedServer **const host_server, AEntity **const user, std::string *username);
 
@@ -172,6 +170,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		/* be protected by IRCServer without having to pass a reference to 			 */
 		/* CommandHandler -> ACommand -> CommandX to get fields from IRCServer	     */
 		friend class CommandHandler;
+		
 		/* friend keyword does'nt support inheritance so we have to friend every     */
 		/* command class                                                             */
 		friend class CommandPass;

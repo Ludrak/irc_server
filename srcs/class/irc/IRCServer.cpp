@@ -760,28 +760,6 @@ bool							IRCServer::alreadyInUseUID(std::string & uid) const
 
 // prefix format -> Server-Server: <server_uid>SPACE
 // prefix format -> Server-Client: <nickname>[!<username>@<host_uid>]SPACE
-std::string							IRCServer::makePrefix(const AEntity *user, const AEntity *host_server)
-{
-	std::string prefix = ":";
-
-	if (user && host_server 
-	&& (user->getType() & Client::value_type || user->getType() & RelayedClient::value_type)
-	&& (host_server->getType() & Server::value_type || host_server->getType() & RelayedServer::value_type))
-	{
-		prefix += user->getUID() + "!" + user->getName() + "@" + host_server->getUID() + " ";
-	}
-	else
-	{
-		prefix += this->getUID() + " ";
-	}
-	return (prefix);
-}
-
-
-
-
-// prefix format -> Server-Server: <server_uid>SPACE
-// prefix format -> Server-Client: <nickname>[!<username>@<host_uid>]SPACE
 bool								IRCServer::parsePrefix(NetworkEntity & executor, const std::string &prefix,  RelayedServer **const host_server, AEntity **const emitter, std::string *username)
 {
 	if (prefix.find(":") != 0 || !host_server)

@@ -37,7 +37,7 @@ uint					CommandQuit::operator()(NetworkEntity & executor, std::string params)
 		AEntity& emitter = this->getEmitter();
 		if (quitMessage.empty())
 			quitMessage = emitter.getUID();
-		prefix = this->getServer().makePrefix(&emitter, &this->getServer());
+		prefix = emitter.getPrefix();
 		except = &executor;
 		this->getServer()._entities.erase(emitter.getUID());
 		this->getServer()._clients.erase(emitter.getUID());
@@ -50,7 +50,7 @@ uint					CommandQuit::operator()(NetworkEntity & executor, std::string params)
 		Logger::debug("Quit direct connection");
 		if (quitMessage.empty())
 			quitMessage = executor.getUID();
-		prefix = this->getServer().makePrefix(&executor, &this->getServer());
+		prefix = executor.getPrefix();
 		Logger::info(executor.getUID() + " is quitting");
 		this->getServer().disconnect(executor.getStream());
 		
