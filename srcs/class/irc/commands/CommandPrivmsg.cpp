@@ -63,7 +63,11 @@ uint					CommandPrivmsg::operator()(NetworkEntity & executor, std::string params
 			Logger::info(this->getEmitter().getUID() + " relay a message from " + emitter.getUID() + " to " + target->getUID());
 			std::string msg = emitter.getPrefix() + " PRIVMSG " + target->getUID() + " :" + Parser::getParam(params, 1);
 			Logger::debug("MSG = " + msg);
+			// send local
 			this->getServer()._sendMessage(*target, msg, &this->getEmitter());
+
+			//send relay
+			this->getServer()._sendAllServers(msg, &executor);
 			break ;
 	}
 	return SUCCESS;

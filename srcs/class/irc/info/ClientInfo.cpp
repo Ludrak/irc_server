@@ -143,7 +143,7 @@ int 						ClientInfo::joinChannel(Channel &channel)
 {
     if (!this->incrementJoinedChannels())
         return (405);
-    this->_channels.push_back(&channel);
+    this->_channels.push_front(&channel);
 	return SUCCESS;
 }
 
@@ -151,6 +151,7 @@ void                        ClientInfo::leaveAllChannels(const std::string &info
 {
     for (std::list<Channel*>::iterator it = this->_channels.begin(); it != this->_channels.end(); )
     {
+		this->getServerReference()._sendAllServers(this->getPrefix() + "PART " + (*it)->getUID() + " :" + info);
         this->leaveChannel(**(it++), info);
     }
     this->_concurrentChannels = 0;

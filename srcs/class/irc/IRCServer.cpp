@@ -449,6 +449,7 @@ void							IRCServer::_onClientQuit(SockStream &s)
 				{
 					/* client netsplited on that server */
 					Logger::warning("netsplit occured ! drop connection with: " + relayedClient->getIdent());
+					relayedClient->leaveAllChannels("netsplit occured");
 					this->_sendAllServers(relayedClient->getPrefix() + " QUIT " + relayedClient->getUID() + " :netsplit occured.");
 					this->_clients.erase(relayedClient->getUID());
 					this->_entities.erase(relayedClient->getUID());
@@ -565,6 +566,7 @@ void				IRCServer::_onQuit( SockStream &server)
 			{
 				/* client netsplited on that server */
 				Logger::warning("netsplit occured ! drop connection with: " + relayedClient->getIdent());
+				relayedClient->leaveAllChannels("netsplit occurred");
 				this->_sendAllServers(relayedClient->getPrefix() + " QUIT " + relayedClient->getUID() + " :netsplit occured.");
 				this->_clients.erase(relayedClient->getUID());
 				this->_entities.erase(relayedClient->getUID());

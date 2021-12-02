@@ -62,7 +62,7 @@ uint				Channel::addClient(AEntity & client)
 		return 462;//ERR_ALREADYREGISTRED;
 	else if (!this->incrementJoinedClients())
 		return 471;//ERR_CHANNELISFULL;
-	this->_clients.push_back(&client);
+	this->_clients.push_front(&client);
 	Logger::info("<" + client.getUID() + "> join channel <" + this->getUID() + ">");
 	return SUCCESS;
 }
@@ -103,14 +103,14 @@ void					Channel::broadcastPackage(Package & pkg, const std::string &uid)
 			new_pkg->setRecipient(&client.getStream());
 			client.getServerReference().sendPackage(new_pkg, client.getStream());
 		}
-		else if ((*it)->getType() & RelayedClient::value_type)
+		/*else if ((*it)->getType() & RelayedClient::value_type)
 		{
 			RelayedClient &client = static_cast<RelayedClient &>(*(*it));
 			Logger::debug("Channel send to relayedClient" + client.getUID());
 			Package* new_pkg = new Package(pkg);
 			new_pkg->setRecipient(&client.getServer().getStream());
 			client.getServerReference().sendPackage(new_pkg, client.getServer().getStream());
-		}
+		}*/
 	}
 }
 

@@ -407,9 +407,9 @@ channels and contents are sent back in a series of
 RPL_NAMEREPLY messages with a RPL_ENDOFNAMES to mark
 the end.
 */
-# define RPL_NAMREPLY(A, B, C) "353 :" + A + " [[@|+]" + B + " [[@|+]" + C + " [...]]]"
+# define RPL_NAMREPLY(exec, A, B) "353 " + exec + " " + A + " :" + B
 
-# define RPL_ENDOFNAMES(A) "366 :" + A + " End of /NAMES list"
+# define RPL_ENDOFNAMES(exec, A) "366 " + exec + " " + A + " :End of /NAMES list"
 
 
 /* In replying to the LINKS message, a server must send
