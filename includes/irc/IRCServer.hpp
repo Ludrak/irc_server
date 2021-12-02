@@ -42,7 +42,7 @@ class CommandHandler;
 # include "CommandVersion.hpp"
 # include "CommandKill.hpp"
 # include "CommandNotice.hpp"
-# include "CommandStats.hpp"
+# include "CommandNjoin.hpp"
 
 # define SUCCESS				0
 
@@ -67,7 +67,6 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 
 		bool						connectToNetwork(const std::string & host, ushort port, std::string & password, const bool useTLS=false);
 		const IProtocol&			getProtocol( void ) const;
-		Channel*					getChannel(int ChannelUID);
 		NetworkEntity*				getEntityByStream(SockStream & s);
 		std::string					getCreationDate( void ) const;
 		UnRegisteredConnection*		getUnRegisteredConnectionByUID(const std::string UID);
@@ -194,7 +193,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		friend class CommandVersion;
 		friend class CommandKill;
 		friend class CommandNotice;
-		friend class CommandStats;
+		friend class CommandNjoin;
 
 		/* so that clients have a reference to the server they're on */
 		friend class ClientInfo;
