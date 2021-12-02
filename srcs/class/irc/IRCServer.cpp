@@ -1,7 +1,5 @@
 #include "IRCServer.hpp"
 
-//REVIEW is it a good idea?
-// const uint				IRCServer::value_type = Server::value_type | Client::value_type;
 const uint				IRCServer::value_type = Server::value_type;
 
 /*
@@ -13,14 +11,15 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 :	ASockManager(ssl_cert_path, ssl_key_path),
 	ANode(host),
 	AEntity(IRCServer::value_type, "token"),
-	ServerInfo("name", "info", "default hostname", "IRC|amazircd"),
+	ServerInfo("name", ntos(IRC_CURRENT_VERSION), "default hostname", "IRC|amazircd"),
 	_handler(*this),
 	_protocol(),
 	_forwardPassword(""),
 	_creationTime(std::time(NULL)),
 	_operName("becomeOper"),
 	_operPassword("becomeOper"),
-	_shortMotdEnabled(true)
+	_shortMotdEnabled(true),
+	_debugLevel(0)
 {
 	this->_initCommands();
 	Logger::debug("IRCServer constructor");
@@ -54,9 +53,17 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 
 IRCServer::~IRCServer()
 {
-	// delete all entities
+	/* delete all entities */
 	for (std::map<std::string, AEntity *>::iterator it = this->_entities.begin();
 		it != this->_entities.end();
+		++it)
+	{
+		delete (*it).second;
+	}
+
+	/* delete all unregistered connections */
+	for (std::map<SockStream*, UnRegisteredConnection*>::iterator it = this->_unregistered_connections.begin();
+		it != this->_unregistered_connections.end();
 		++it)
 	{
 		delete (*it).second;
@@ -112,11 +119,45 @@ void			IRCServer::_printServerState( void )
 		}
 		else
 		{
+			
 			Logger::error("Invalid server list member type");
 		}
 
 
 	}
+	Logger::debug("--- clients ---");
+	for (std::map<std::string, AEntity *>::const_iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
+	{
+		if (it->second->getType() & Client::value_type)
+		{
+			ClientInfo &client = static_cast<ClientInfo&>(*reinterpret_cast<Client *>(it->second));
+			Logger::debug("-- " + it->second->getUID() + 
+				"\n\t - name     : " + it->second->getName() +
+				"\n\t - realname : " + client.getRealname() +
+				"\n\t - host     : " + client.getHostname() +
+				"\n\t - server   : " + client.getServerToken() +
+				"\n\t - isOP     : " + ntos(client.isServerOP()) +
+				"\n\t - nbChan   : " + ntos(client.getConcurrentChannels()) +
+				"\n\t - nbChanMax: " + ntos(client.getConcurrentChannelsMax())
+			);
+		}
+		else
+		{
+			ClientInfo &client = static_cast<ClientInfo&>(*reinterpret_cast<RelayedClient *>(it->second));
+			Logger::debug("-- " + it->second->getUID() + 
+				"\n\t - name     : " + it->second->getName() +
+				"\n\t - realname : " + client.getRealname() +
+				"\n\t - hop      : " + ntos(reinterpret_cast<RelayedClient*>(it->second)->getHopCount()) +
+				"\n\t - host     : " + client.getHostname() +
+				"\n\t - server   : " + client.getServerToken() +
+				"\n\t - isOP     : " + ntos(client.isServerOP()) +
+				"\n\t - nbChan   : " + ntos(client.getConcurrentChannels()) +
+				"\n\t - nbChanMax: " + ntos(client.getConcurrentChannelsMax())
+			);
+		}
+	}
+	Logger::debug("--- unregistered ---");
+	Logger::debug("nb unregistered connection: " + ntos(this->_unregistered_connections.size()));
 }
 
 
@@ -241,7 +282,7 @@ void							IRCServer::_deleteServer(const std::string &nick)
 
 
 
-void							IRCServer::_sendMessage(AEntity & target, const std::string &message, const AEntity *except)
+void							IRCServer::_sendMessage(AEntity & target, const std::string &message, AEntity *except)
 {
 	int type = target.getType() & ~AEntity::value_type & ~NetworkEntity::value_type & ~RelayedEntity::value_type;// TODO ~ error
 	switch (type)
@@ -250,10 +291,7 @@ void							IRCServer::_sendMessage(AEntity & target, const std::string &message,
 		{
 			Logger::debug("Sending channel message");
 			Package package(this->_protocol, this->_protocol.format(message));
-			// &reinterpret_cast<const Client*>(except)->getStream();
-			(void)except;
-			//TODO add except when sending a Channel message (don't send to request initiator)
-			reinterpret_cast<Channel*>(&target)->broadcastPackage(package);
+			reinterpret_cast<Channel*>(&target)->broadcastPackage(package, except ? &reinterpret_cast<NetworkEntity*>(except)->getStream() : NULL);
 			break;
 		}
 		case Client::value_type :
@@ -305,7 +343,7 @@ void							IRCServer::_sendMessage(AEntity & target, const std::string &message,
 
 
 
-void							IRCServer::_sendMessage(AEntity & target, const std::stringstream &message, const AEntity *except)
+void							IRCServer::_sendMessage(AEntity & target, const std::stringstream &message, AEntity *except)
 {
 	this->_sendMessage(target, message.str(), except);
 }
@@ -385,7 +423,11 @@ void						IRCServer::_onClientJoin(SockStream & s)
 	this->_unregistered_connections.insert(std::make_pair(&s, connection));
 	this->_connections.insert(std::make_pair(&s, connection));
 	Logger::info("new incomming connection from " + s.getHost());
-	this->_printServerState();
+	if (this->getDebugLevel())
+	{
+		Logger::debug("after onClientJoin: ");
+		this->_printServerState();
+	}
 }
 
 
@@ -396,7 +438,8 @@ void							IRCServer::_onClientRecv(SockStream & s, Package & pkg)
 	NetworkEntity *entity = getEntityByStream(s);
 	if (!entity || pkg.getData().empty())
 		return ;
-	uint ret = this->_handler.handle(*entity, pkg.getData());
+	std::string payload = pkg.getData();
+	uint ret = this->_handler.handle(*entity, payload);
 	if (ret)
 		Logger::error("onClientRecv: Something bad happened in handler");
 }
@@ -404,7 +447,6 @@ void							IRCServer::_onClientRecv(SockStream & s, Package & pkg)
 
 
 
-// TODO REFRACTOR ALL
 void							IRCServer::_onClientQuit(SockStream &s)
 {
 	NetworkEntity*	nEntity	= getEntityByStream(s);
@@ -413,6 +455,7 @@ void							IRCServer::_onClientQuit(SockStream &s)
 		Logger::critical("ClientQuit: No entity corresponding was found.");
 		return ;
 	}
+	Logger::info("disconnecting: " + nEntity->getUID() + "@" + nEntity->getStream().getHost());
 	if (nEntity->getType() & (Server::value_type | Server::value_type_forward))
 	{
 		Server	*srv = reinterpret_cast<Server*>(nEntity);
@@ -457,12 +500,21 @@ void							IRCServer::_onClientQuit(SockStream &s)
 			else ++it;
 		}
 	}
+	else if (nEntity->getType() & Client::value_type)
+	{
+		reinterpret_cast<Client*>(nEntity)->leaveAllChannels("disconnected");
+	}
 	this->_entities.erase(nEntity->getUID());
 	this->_clients.erase(nEntity->getUID());
 	this->_servers.erase(nEntity->getUID());
 	this->_connections.erase(&nEntity->getStream());
 	this->_unregistered_connections.erase(&nEntity->getStream());
 	delete nEntity;
+	if (this->getDebugLevel())
+	{
+		Logger::debug("after onClientQuit: ");
+		this->_printServerState();
+	}
 }
 
 
@@ -472,14 +524,13 @@ void							IRCServer::_onClientQuit(SockStream &s)
 
 
 
-
-// TODO REFRACTOR AND HANDLE FORWARD
 void						IRCServer::_onRecv(SockStream &server, Package &pkg)
 {
 	NetworkEntity *entity = getEntityByStream(server);
 	if (!entity || pkg.getData().empty())
 		return ;
-	uint ret = this->_handler.handle(*entity, pkg.getData());
+	std::string payload = pkg.getData();
+	uint ret = this->_handler.handle(*entity, payload);
 	if (ret)
 		Logger::error("onRecv: Something bad happened in handler");
 }
@@ -490,6 +541,7 @@ void						IRCServer::_onRecv(SockStream &server, Package &pkg)
 void				IRCServer::_onConnect ( SockStream &server)
 {
 	Logger::info("Connecting to forward server");
+	//REVIEW why forward is not added to _connections map
 	UnRegisteredConnection *forward = this->_unregistered_connections.insert(std::make_pair(&server, new UnRegisteredConnection(server))).first->second;
 	forward->setPassword(this->_password);
 	std::stringstream ss;
@@ -501,6 +553,11 @@ void				IRCServer::_onConnect ( SockStream &server)
 	ss.str("");
 	ss << "SERVER " << this->_name << " 0 " << this->getUID() << " :" << this->_info; 
 	this->_sendMessage(server, ss);
+	if (this->getDebugLevel())
+	{
+		Logger::debug("after onConnect");
+		this->_printServerState();
+	}
 }
 
 
@@ -516,7 +573,14 @@ void				IRCServer::_onQuit( SockStream &server)
 		return ;
 	}
 	/* get corresponding entity*/
-	if ((nEntity->getType() & Server::value_type_forward) == false)
+	if ((nEntity->getType() & UnRegisteredConnection::value_type))
+	{
+		Logger::info("Drop unsuccessfull connection to forward server");
+		this->_unregistered_connections.erase(&nEntity->getStream());
+		delete nEntity;
+		return ;
+	}
+	else if ((nEntity->getType() & Server::value_type_forward) == false)
 	{
 		//TODO Do something here for this message. I don't know what, it is 7A.M ^^
 		Logger::critical("ClientQuit: Corresponding entity is not a forward server.");
@@ -568,9 +632,14 @@ void				IRCServer::_onQuit( SockStream &server)
 	this->_entities.erase(nEntity->getUID());
 	this->_servers.erase(nEntity->getUID());
 	this->_connections.erase(&nEntity->getStream());
+	//REVIEW for a server we don't need to erase from unregisteredConnection right?
 	this->_unregistered_connections.erase(&nEntity->getStream());
 	delete nEntity;
-
+	if (this->getDebugLevel())
+	{
+		Logger::debug("after onQuit: ");
+		this->_printServerState();
+	}
 }
 
 
@@ -628,6 +697,17 @@ std::string					IRCServer::getMotdsPath( void ) const
 }
 
 
+void						IRCServer::setDebugLevel( bool debug )
+{
+	this->_debugLevel = debug;
+}
+
+
+uint						IRCServer::getDebugLevel( void ) const
+{
+	return this->_debugLevel;
+}
+
 /*
 ** --------------------------------- COMMANDS ---------------------------------
 */
@@ -652,6 +732,10 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandConnect>("CONNECT");
 	this->_handler.addCommand<CommandDie>("DIE");
 	this->_handler.addCommand<CommandPong>("PONG");
+	this->_handler.addCommand<CommandPart>("PART");
+	this->_handler.addCommand<CommandVersion>("VERSION");
+	this->_handler.addCommand<CommandKill>("KILL");
+	this->_handler.addCommand<CommandNotice>("NOTICE");
 }
 
 
@@ -676,32 +760,13 @@ bool							IRCServer::alreadyInUseUID(std::string & uid) const
 
 // prefix format -> Server-Server: <server_uid>SPACE
 // prefix format -> Server-Client: <nickname>[!<username>@<host_uid>]SPACE
-std::string							IRCServer::makePrefix(const AEntity *user, const AEntity *host_server)
-{
-	std::string prefix = ":";
-
-	if (user && host_server 
-	&& (user->getType() & Client::value_type || user->getType() & RelayedClient::value_type)
-	&& (host_server->getType() & Server::value_type || host_server->getType() & RelayedServer::value_type))
-	{
-		prefix += user->getUID() + "!" + user->getName() + "@" + host_server->getUID() + " ";
-	}
-	else
-	{
-		prefix += this->getUID() + " ";
-	}
-	return (prefix);
-}
-
-
-
-
-// prefix format -> Server-Server: <server_uid>SPACE
-// prefix format -> Server-Client: <nickname>[!<username>@<host_uid>]SPACE
-bool								IRCServer::parsePrefix(const std::string &prefix,  RelayedServer **const host_server, AEntity **const emitter, std::string *username)
+bool								IRCServer::parsePrefix(NetworkEntity & executor, const std::string &prefix,  RelayedServer **const host_server, AEntity **const emitter, std::string *username)
 {
 	if (prefix.find(":") != 0 || !host_server)
+	{
+		*emitter = &executor;
 		return (false);
+	}
 	/* extended prefix */
 	if (prefix.find("@") != std::string::npos && emitter && host_server) //REVIEW no host_server here (can have @ witout !)
 	{
@@ -733,25 +798,12 @@ bool								IRCServer::parsePrefix(const std::string &prefix,  RelayedServer **c
 		if (this->_clients.count(firstName) != 1 )
 		{
 			Logger::critical("Unknown user in prefix: " + firstName);
+			*emitter = &executor;
 			return (false);
 		}
-		// else if (this->_clients[firstName]->getType() & RelayedClient::value_type) == false)
-		// {
-		// 	Logger::critical("Prefix original sender is not a relayed client");
-		// 	return false;
-		// }
 		*emitter = this->_clients[firstName];
 		*username = uname;
-		// if (firstName != this->getUID()) //REVIEW is always needed?
-		// {
-		// 	if (this->_servers.count(secondName) == 0)
-		// 	{
-		// 		//TODO try with getting IP  from hostname (can receive z4r7p4.42lyon.fr and it's valid)
-		// 		Logger::critical("Unknown host in prefix: " + secondName);
-		// 		return (false);
-		// 	}
-		// 	*host_server = reinterpret_cast<RelayedServer*>(this->_servers[secondName]);
-		// }
+		// 		//TODO try with getting IP  from hostname (can receive z4r7p4.42lyon.fr and it's valid) (we should be able to do that)
 	}
 	/* simple prefix */
 	else
@@ -760,11 +812,18 @@ bool								IRCServer::parsePrefix(const std::string &prefix,  RelayedServer **c
 		*emitter = NULL;
 		std::string uid = prefix.substr(1, prefix.size() - 1);
 		Logger::debug("Prefix uid: " + uid);
-		if (this->_servers.count(uid) == 0) 
+		if (uid == this->getUID())
+		{
+			Logger::warning("Self executed request");
+			*emitter = this;
+			return true;
+		}
+		else if (this->_servers.count(uid) == 0) 
 		{
 			if (this->_clients.count(uid) == 0)
 			{
 				Logger::critical("Unknown server/client in prefix: " + uid);
+				*emitter = &executor;
 				return (false);
 			}
 			else if (this->_clients[uid]->getType() & RelayedClient::value_type)
@@ -786,7 +845,7 @@ bool								IRCServer::parsePrefix(const std::string &prefix,  RelayedServer **c
 		else
 		{
 			Logger::debug("Server in prefix is a local" + uid);
-			*emitter =this->_servers[uid];
+			*emitter = this->_servers[uid];
 		}
 	}
 	return (true);

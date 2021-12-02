@@ -22,11 +22,15 @@ CommandSquit::~CommandSquit()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
+/*
+	Command: SQUIT
+	Parameters: <server> <comment>
+*/
 uint					CommandSquit::operator()(NetworkEntity & executor, std::string params)
 {
 	if (Parser::nbParam(params) < 2)
 	{
-		this->getServer()._sendMessage(executor, this->getServer().makePrefix(NULL, NULL) + ERR_NEEDMOREPARAMS(executor.getUID(), std::string("SQUIT")));
+		this->getServer()._sendMessage(executor, this->getServer().getPrefix() + ERR_NEEDMOREPARAMS(executor.getUID(), std::string("SQUIT")));
 		return SUCCESS;
 	}
 	std::string serverToken = Parser::getParam(params, 0);
@@ -36,7 +40,7 @@ uint					CommandSquit::operator()(NetworkEntity & executor, std::string params)
 		//Squit from a client
 		if (static_cast<Client &>(executor).isServerOP() == false)
 		{
-			this->getServer()._sendMessage(executor, this->getServer().makePrefix(NULL, NULL) + ERR_NOPRIVILEGES(executor.getUID()));
+			this->getServer()._sendMessage(executor, this->getServer().getPrefix() + ERR_NOPRIVILEGES(executor.getUID()));
 			return SUCCESS;
 		}
 		return this->_quitServer(executor, serverToken, comment);
@@ -44,18 +48,18 @@ uint					CommandSquit::operator()(NetworkEntity & executor, std::string params)
 	else
 	{
 		Logger::debug("SQUIT command from server");
-		const AEntity* emitter = this->getClient();
-		//TODO reform here when prefix parsing system has been reviewed
-		if (emitter == NULL)
+		AEntity& emitter = this->getEmitter();
+		if (emitter.getFamily() == CLIENT_ENTITY_FAMILY)
 		{
-			Logger::critical("Invalid prefix: no emitter transmitted");
-			return SUCCESS;
+			//if a server send a SQUIT emitted by a client it's indicate that a server link should be dropped, handle it or forward it
+			return this->_quitServer(emitter, serverToken, comment);
 		}
-		else if (emitter->getFamily() == SERVER_ENTITY_FAMILY)
+		else
 		{
+			/* Informative response about a SQUIT */
 			if (this->getServer()._servers.count(serverToken) == 0)
 			{
-				this->getServer()._sendMessage(executor, this->getServer().makePrefix(NULL, NULL) + ERR_NOSUCHSERVER(executor.getUID(), serverToken));
+				this->getServer()._sendMessage(executor, this->getServer().getPrefix() + ERR_NOSUCHSERVER(executor.getUID(), serverToken));
 				return SUCCESS;
 			}
 			//if a server send a SQUIT emitted by a server it's indicate a remote server link has been dropped, handle this update and send update to all others
@@ -63,16 +67,9 @@ uint					CommandSquit::operator()(NetworkEntity & executor, std::string params)
 			this->getServer()._entities.erase(serverToken);
 			this->getServer()._servers.erase(serverToken);
 			this->getServer()._sendAllServers(
-				":" + emitter->getUID() + " SQUIT " + serverToken + " :" + comment,
-				&executor
-			);
-		}
-		else
-		{
-			//if a server send a SQUIT emitted by a client it's indicate that a server link should be dropped, handle it or forward it
-			return this->_quitServer(*emitter, serverToken, comment);
+				":" + emitter.getUID() + " SQUIT " + serverToken + " :" + comment,
+				&executor);
 		}	
-
 	}
 	return SUCCESS;
 }
@@ -82,7 +79,7 @@ uint				CommandSquit::_quitServer(const AEntity & emitter, std::string & serverT
 
 	if (this->getServer()._servers.count(serverToken) == 0)
 	{
-		this->getServer()._sendMessage(const_cast<AEntity &>(emitter), this->getServer().makePrefix(NULL, NULL) + ERR_NOSUCHSERVER(emitter.getUID(), serverToken));
+		this->getServer()._sendMessage(const_cast<AEntity &>(emitter), this->getServer().getPrefix() + ERR_NOSUCHSERVER(emitter.getUID(), serverToken));
 		return SUCCESS;
 	}
 	AEntity *server = this->getServer()._servers[serverToken];
@@ -105,7 +102,6 @@ uint				CommandSquit::_quitServer(const AEntity & emitter, std::string & serverT
 
 bool				CommandSquit::hasPermissions(AEntity & executor)
 {
-	//TODO implement right for SQUIT
 	if (executor.getType() & UnRegisteredConnection::value_type)
 		return false;
 	return true;

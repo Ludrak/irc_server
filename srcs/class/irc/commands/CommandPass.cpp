@@ -22,10 +22,13 @@ CommandPass::~CommandPass()
 */
 
 /*
-   Command: PASS
-   Parameters: <password> <version> <flags> [<options>]
+User:
+	Command: PASS
+	Parameters: <password>
+Server:
+	Command: PASS
+	Parameters: <password> <version> <flags> [<options>]
 */
-
 uint					CommandPass::operator()(NetworkEntity & executor, std::string params)
 {
 	if (this->getServer()._entities.count(executor.getUID()) != 0)

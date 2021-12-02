@@ -43,19 +43,16 @@ uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 	if (nParams != 3 && nParams != 4)
 		return SUCCESS;
 
-	int			token;
-	int			hopcount;
+	int			token = -1;
+	int			hopcount = -1;
 	std::string servname = Parser::getParam(params, 0);
 	std::string info = Parser::getParam(params, 3);
-	try 
-	{ hopcount = std::stoi(Parser::getParam(params, 1)); }
-	catch (std::invalid_argument e)
-	{ Logger::warning("Server registered with an invalid hopcount: " + Parser::getParam(params, 1)); }
-
-	try 
-	{ token = std::stoi(Parser::getParam(params, 2)); }
-	catch (std::invalid_argument e)
-	{ Logger::warning("Server registered with an invalid token: " + Parser::getParam(params, 2)); }
+	std::istringstream isHop(Parser::getParam(params, 1));
+	isHop >> hopcount;
+	if (hopcount < 0){ Logger::warning("Server registered with an invalid hopcount: " + Parser::getParam(params, 1)); }
+	std::istringstream isTok(Parser::getParam(params, 2));
+	isTok >> token;
+	if (token < 0){ Logger::warning("Server registered with an invalid token: " + Parser::getParam(params, 2)); }
 	
 	std::stringstream tokss;
 	tokss << std::setfill('0') << std::setw(3) << token;
@@ -67,14 +64,14 @@ uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 		//TODO change behavior when token is invalid (maybe with ERROR with appropriate message)
 		// TODO add prefix
 		Package *explosive = new Package(this->getServer().getProtocol(),
-			this->getServer().getProtocol().format(ERR_ALREADYREGISTRED(executor.getUID())), &executor.getStream(), true);
+			this->getServer().getProtocol().format(ERR_ALREADYREGISTRED(tokss.str())), &executor.getStream(), true);
 		Logger::warning("Send explosive package to executor");
 		this->getServer().sendPackage(explosive, executor.getStream());
 		return SUCCESS;
 	}
-	if (executor.getType() & UnRegisteredConnection::value_type)
+	else if (executor.getType() & UnRegisteredConnection::value_type)
 	{
-		// new server joined the our network
+		/* new server joined the our network */
 		int type = (executor.getStream().getType() == CLIENT) ? Server::value_type_forward : Server::value_type;
 		Server *new_serv = new Server(static_cast<UnRegisteredConnection&>(executor), tokss.str(),
 			servname, info, executor.getStream().getHost(), type);
@@ -82,7 +79,10 @@ uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 		std::stringstream reply_msg;
 		reply_msg << "SERVER " << this->getServer().getName() << " 0 " << this->getServer().getUID() << " :" << this->getServer().getInfo();
 		if (type & Server::value_type_forward)
+		{
 			Logger::info("Connection to forward success");
+			this->getHandler().unsetConnectionEmitter();
+		}
 		else
 		{
 			Logger::debug("Resend (server infos): " + reply_msg.str());
@@ -167,13 +167,13 @@ uint				CommandServer::_sendDataToServer(Server & new_serv)
 		if (it->second->getType() & Client::value_type)
 		{
 			Client *client = reinterpret_cast<Client*>(it->second);
-			reply_msg << "NICK " << client->getUID() << " 1 " << client->getName() << " " << client->getHostname() << " " << client->getServerToken() << " " << client->getModeString() << " :" << client->getRealname();
+			reply_msg << this->getServer().getPrefix() << "NICK " << client->getUID() << " 1 " << client->getName() << " " << client->getHostname() << " " << client->getServerToken() << " " << client->getModeString() << " :" << client->getRealname();
 			// reply_msg << "NICK " << client->getUID() << " 1 " << client->getUID() << " :" << client->getInfo();
 		}
 		else if (it->second->getType() & RelayedClient::value_type)
 		{
 			RelayedClient *client = reinterpret_cast<RelayedClient*>(it->second);
-			reply_msg << "NICK " << client->getUID() << " " << client->getHopCount() + 1 << " " << client->getName() << " " << client->getHostname() << " " << client->getServerToken() << " " << client->getModeString() << " :" << client->getRealname();
+			reply_msg << this->getServer().getPrefix() << "NICK " << client->getUID() << " " << client->getHopCount() + 1 << " " << client->getName() << " " << client->getHostname() << " " << client->getServerToken() << " " << client->getModeString() << " :" << client->getRealname();
 		}
 		else 
 			continue;

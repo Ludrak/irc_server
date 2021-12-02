@@ -21,6 +21,15 @@ CommandMode::~CommandMode()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
+/*
+User:
+	Command: MODE
+	Parameters: <nickname>
+				*( ( "+" / "-" ) *( "i" / "w" / "o" / "O" / "r" ) )
+Channel:
+	Command: MODE
+	Parameters: <channel> *( ( "-" / "+" ) *<modes> *<modeparams> )
+*/
 uint					CommandMode::operator()(NetworkEntity & executor, std::string params)
 {
 	uint nbParam = Parser::nbParam(params);
@@ -70,7 +79,7 @@ void				CommandMode::modeForUser(NetworkEntity & executor, std::string uid, std:
 {
 	if (executor.getUID() != uid)
 	{
-		this->getServer()._sendMessage(executor, this->getServer().makePrefix(NULL, NULL) + ERR_USERSDONTMATCH());
+		this->getServer()._sendMessage(executor, this->getServer().getPrefix() + ERR_USERSDONTMATCH());
 		return ;
 	}
 	else if (mode.empty())
@@ -103,12 +112,6 @@ void				CommandMode::modeForChannel(uint nbParam, NetworkEntity & executor, std:
 	std::string mode = Parser::getParam(params, 2);
 	Channel *chan = this->getServer()._channels[uid];
 	if (mode.find("O") != std::string::npos && nbParam >= 3)
-	{
-		if (this->getClient() == NULL)
-			chan->setCreator(executor);
-		else
-			chan->setCreator(*this->getClient());
-
-	}
+		chan->setCreator(this->getEmitter());
 	return ;
 }

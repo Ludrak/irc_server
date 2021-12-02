@@ -62,9 +62,9 @@ const Server*		ACommand::getSender( void ) const
 	return this->_sender;
 }
 
-const AEntity*		ACommand::getClient( void ) const
+AEntity&		ACommand::getEmitter( void ) const
 {
-	return this->_client;
+	return *this->_client;
 }
 
 const AEntity*		ACommand::getClientHost( void ) const
@@ -77,9 +77,9 @@ void				ACommand::setSender(Server * sender)
 	this->_sender = sender;
 }
 
-void				ACommand::setClient(AEntity * client)
+void				ACommand::setEmitter(AEntity & client)
 {
-	this->_client = client;
+	this->_client = &client;
 }
 
 void				ACommand::setClientHost(AEntity * Host)

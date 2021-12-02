@@ -3,12 +3,12 @@
 ANode::ANode(const std::string & host, const std::string &ssl_cert_path, const std::string &ssl_key_path) 
 : ASockManager(ssl_cert_path, ssl_key_path), AServer(host), AClient()
 {
-	Logger::debug("ANode constructor");
+	Logger::core("ANode constructor");
 }
 
 ANode::~ANode(void)
 {
-	Logger::debug("ANode destructor");
+	Logger::core("ANode destructor");
 }
 
 t_pollevent					ANode::_onPollEvent(int socket, int event)

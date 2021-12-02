@@ -21,6 +21,11 @@ CommandJoin::~CommandJoin()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
+/*
+	Command: JOIN
+	Parameters: ( <channel> *( "," <channel> ) [ <key> *( "," <key> ) ] )
+				/ "0"
+*/
 uint					CommandJoin::operator()(NetworkEntity & executor, std::string params)
 {
     size_t nbParam = Parser::nbParam(params);
@@ -86,7 +91,7 @@ uint					CommandJoin::operator()(NetworkEntity & executor, std::string params)
 			std::stringstream ss;
 			ss <<  ":" << executor.getUID() << " test@sender-server JOIN :" << new_chan->getUID();
 			this->getServer()._sendMessage(executor, ss);
-			this->getHandler().handle(executor, "MODE " + new_chan->getUID() +  " O " + executor.getUID());
+			// this->getHandler().handle(executor, "MODE " + new_chan->getUID() +  " O " + executor.getUID());
 			continue ;
 		}
 		AEntity* aChannel = this->getServer()._channels[*itc];
@@ -108,8 +113,8 @@ uint					CommandJoin::operator()(NetworkEntity & executor, std::string params)
 					    this->getServer()._sendMessage(executor, ERR_CHANNELISFULL(chan->getUID()));
                         return SUCCESS;
 				}
-				Package pkg(this->getServer().getProtocol(), this->getServer().getProtocol().format(":" + executor.getUID() + " test@sender-server JOIN :" + aChannel->getUID()));
-				chan->broadcastPackage(pkg);
+				std::string message = executor.getPrefix() + " JOIN " + this->getServer()._channels[*itc]->getUID();
+				this->getServer()._sendMessage(*this->getServer()._channels[*itc], message, &executor);
 			}
 		}
 	}

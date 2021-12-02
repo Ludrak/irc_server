@@ -26,3 +26,6 @@
 * [sha256 with c++](https://stackoverflow.com/questions/2262386/generate-sha256-with-openssl-and-c/10632725)
 * [TLS wikipedia](https://fr.wikipedia.org/wiki/Transport_Layer_Security)
 
+
+Future ameliorations:
+- For now when privileges are needed, server check it before sending it to the target => server can have different OP configurations

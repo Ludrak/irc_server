@@ -3,8 +3,6 @@
 
 class SockStream;
 
-# include <iostream>
-# include <string>
 # include "Protocol.hpp"
 
 class Package
@@ -29,6 +27,7 @@ class Package
 		};
 
 	public:
+		//REVIEW Quel est l'interet d'avoir le recipient dans le package? sachant qu'on doit le redonner à sendPackage a chaque fois
 		Package( const IProtocol &protocol, const std::string &data="", const SockStream *recipient=NULL, const bool is_explosive=false ) throw(Package::SizeExceededException, Package::InvalidProtocolException);
 		Package( Package const &src );
 		virtual ~Package();

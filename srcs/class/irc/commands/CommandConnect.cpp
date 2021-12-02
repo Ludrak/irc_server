@@ -48,12 +48,11 @@ uint					CommandConnect::operator()(NetworkEntity & executor, std::string params
 	std::string target = Parser::getParam(params, 0);
 	std::string port_string = Parser::getParam(params, 1);
 	ushort port = 0;
-	try {
-		port = std::stoi(port_string);
-	}
-	catch (const std::invalid_argument & e)
-	{	
-		Logger::debug("Connect: Invalid port number received");
+	std::istringstream is(port_string);
+	is >> port;
+	if (port == 0)
+	{
+		Logger::debug("Connect: Invalid port number received: " + port_string);
 		return SUCCESS;
 	}
 	if (nbParam > 2)
@@ -68,6 +67,7 @@ uint					CommandConnect::operator()(NetworkEntity & executor, std::string params
 	Logger::info("Try connecting to server: " + target);
 	try {
 		this->getServer().connectOn(target, port, this->getServer().getProtocol(), this->getServer()._useTLS);
+		this->getHandler().setConnectionEmitter(this->getEmitter());
 	}
 	catch (const AClient::ConnectionException & e )
 	{
@@ -97,24 +97,12 @@ uint				CommandConnect::_forwardRequest(NetworkEntity & executor, std::string & 
 		return SUCCESS;
 	}
 
-	std::string prefix;
-	const AEntity *emitter = this->getClient();
-	if (emitter == NULL)
-		emitter = &executor;
-	prefix = emitter->getPrefix();
-	AEntity *remoteServer = this->getServer()._servers[forward];
+	AEntity&	emitter = this->getEmitter();
+	AEntity*	remoteServer = this->getServer()._servers[forward];
 	if (remoteServer->getType() & RelayedServer::value_type)
-	{
-		/* remote is a RelayedServer */
-		/* send it with remoterServer param */
-		this->getServer()._sendMessage(*remoteServer, emitter->getPrefix() + " CONNECT " + target + " " + port + " " + forward);
-	}
+		this->getServer()._sendMessage(*remoteServer, emitter.getPrefix() + " CONNECT " + target + " " + port + " " + forward);
 	else
-	{
-		/* remote is a local connection */
-		/* send it without remoterServer param */
-		this->getServer()._sendMessage(*remoteServer, emitter->getPrefix() + " CONNECT " + target + " " + port);
-	}
+		this->getServer()._sendMessage(*remoteServer, emitter.getPrefix() + " CONNECT " + target + " " + port);
 	return SUCCESS;
 }
 
@@ -126,10 +114,5 @@ bool				CommandConnect::hasPermissions(AEntity & executor)
 		return false;
 	return true;
 }
-
-/*
-** --------------------------------- ACCESSOR ---------------------------------
-*/
-
 
 /* ************************************************************************** */

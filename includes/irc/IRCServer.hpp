@@ -22,7 +22,6 @@ class CommandHandler;
 
 // Commands
 # include "CommandHandler.hpp"
-# include "ACommand.hpp"
 # include "CommandPass.hpp"
 # include "CommandNick.hpp"
 # include "CommandUser.hpp"
@@ -38,6 +37,10 @@ class CommandHandler;
 # include "CommandConnect.hpp"
 # include "CommandDie.hpp"
 # include "CommandPong.hpp"
+# include "CommandPart.hpp"
+# include "CommandVersion.hpp"
+# include "CommandKill.hpp"
+# include "CommandNotice.hpp"
 
 # define SUCCESS				0
 
@@ -45,6 +48,7 @@ class CommandHandler;
 # define IRC_DEFAULT_PORT		6667
 # define IRC_DEFAULT_TLS_PORT	6697
 # define IRC_DEFAULT_PASS		""
+# define IRC_CURRENT_VERSION	"021O"
 
 class IRCServer : public ANode, public AEntity, public ServerInfo
 {
@@ -67,12 +71,13 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		UnRegisteredConnection*		getUnRegisteredConnectionByUID(const std::string UID);
 		std::string					getMotdsPath( void ) const;
 
+		void						setDebugLevel( bool debug);
+		uint						getDebugLevel( void ) const;
 		bool						alreadyInUseUID(std::string & uid) const; 
 
 		/* prefix parser */
-		std::string					makePrefix(const AEntity *user=NULL, const AEntity *host_server=NULL);
 		// bool						parsePrefix(const std::string &prefix, Server **const sender_server, RelayedClient **const user, RelayedServer **const host_server);
-		bool						parsePrefix(const std::string &prefix,  RelayedServer **const host_server, AEntity **const user, std::string *username);
+		bool						parsePrefix(NetworkEntity & excutor, const std::string &prefix,  RelayedServer **const host_server, AEntity **const user, std::string *username);
 
 	private:
 
@@ -110,14 +115,17 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 */
 
 		/* protocol for data transmission */
-		IRCProtocol								_protocol;
+		IRCProtocol					_protocol;
 
-		//TODO change position 
-		std::string								_forwardPassword;
-		time_t									_creationTime;
-		std::string								_operName;
-		std::string								_operPassword;
-		bool									_shortMotdEnabled;
+/*
+** ------------------------------- STATE -------------------------------
+*/
+		std::string					_forwardPassword;
+		time_t						_creationTime;
+		std::string					_operName;
+		std::string					_operPassword;
+		bool						_shortMotdEnabled;
+		uint						_debugLevel;
 /*
 ** --------------------------------- EVENTS ---------------------------------
 */
@@ -140,8 +148,8 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 
 		AEntity				*_registerClient(AEntity & client, int type);
 		void				_registerServer(AEntity & server, int type);
-		void				_sendMessage(AEntity & target, const std::stringstream &message, const AEntity *except=NULL);
-		void				_sendMessage(AEntity & target, const std::string &message, const AEntity *except=NULL);
+		void				_sendMessage(AEntity & target, const std::stringstream &message, AEntity *except=NULL);
+		void				_sendMessage(AEntity & target, const std::string &message, AEntity *except=NULL);
 		void				_sendMessage(SockStream & target, const std::stringstream &message);
 		void				_sendMessage(SockStream & target, const std::string &message);
 		
@@ -162,6 +170,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		/* be protected by IRCServer without having to pass a reference to 			 */
 		/* CommandHandler -> ACommand -> CommandX to get fields from IRCServer	     */
 		friend class CommandHandler;
+		
 		/* friend keyword does'nt support inheritance so we have to friend every     */
 		/* command class                                                             */
 		friend class CommandPass;
@@ -179,6 +188,13 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		friend class CommandConnect;
 		friend class CommandDie;
 		friend class CommandPong;
+		friend class CommandPart;
+		friend class CommandVersion;
+		friend class CommandKill;
+		friend class CommandNotice;
+
+		/* so that clients have a reference to the server they're on */
+		friend class Client;
 };
 
 #endif /* ******************************************************* IRCSERVER_H */

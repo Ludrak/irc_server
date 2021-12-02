@@ -17,21 +17,20 @@ ASockManager::ASockManager(const std::string &ssl_cert_path, const std::string &
 		SSL_CTX_use_certificate_file(this->_ssl_ctx, ssl_cert_path.c_str(), SSL_FILETYPE_PEM);
 		SSL_CTX_use_PrivateKey_file(this->_ssl_ctx, ssl_key_path.c_str(), SSL_FILETYPE_PEM);
         this->_useTLS = true;
-		Logger::debug("Constructor ASockManager on TLS");
+		Logger::core("Constructor ASockManager on TLS");
 	}
 	else
 	{
         Logger::info("SSL disabled: not all cert/key paths filled.");
-		Logger::debug("Constructor ASockManager");
+		Logger::core("Constructor ASockManager");
         this->_useTLS = false;
 	}
 }
 
-//REVIEW Do we need a special implementation for select/kqueue/poll or just one methos is enough?
 void				ASockManager::shutdown( void )
 {
     this->_running = false;
-    Logger::debug("Manager: shutdown is programmed");
+    Logger::core("Manager: shutdown is programmed");
 }
 
 void            ASockManager::delSocket(const SockStream &sock)
@@ -151,9 +150,9 @@ void            ASockManager::run( void )
                 FD_SET(it->second->getSocket(), &write_efds);
         }
 
-        Logger::debug("select()");
+        Logger::core("select()");
         /* selecting which fds are available for IO operations */
-        int n_changes = select(big_fd + 1, &read_efds, &write_efds, NULL, NULL);
+        int n_changes = select(big_fd + 1, &read_efds, &write_efds, NULL, reinterpret_cast<timeval *>(NULL));
         if (n_changes == -1)
         {
             Logger::critical("select() failed: " + ntos(strerror(errno)));

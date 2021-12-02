@@ -22,7 +22,7 @@ throw (InvalidHostException, SSLException)
 	_cSSL(NULL),
 	_received_data(protocol)
 {
-	Logger::debug("default SockStream constructor");
+	Logger::core("default SockStream constructor");
 	this->_createSocket("127.0.0.1", 8080);
 }
 
@@ -90,13 +90,13 @@ void							SockStream::_resolveIP(const std::string &host)
 	if (hostent && hostent->h_addr_list && *hostent->h_addr_list)
 	{
 		this->_ip = inet_ntoa(*((struct in_addr*)hostent->h_addr_list[0]));
-		Logger::debug("Resolved IP: " + this->_ip);
+		Logger::core("Resolved IP: " + this->_ip);
 		struct hostent *h = gethostbyaddr(*hostent->h_addr_list, hostent->h_length, hostent->h_addrtype);
 		if (h)
 			this->_host = h->h_name;
 		else
 			this->_host = this->_ip;
-		Logger::debug("resolved host: " + this->_host);
+		Logger::core("resolved host: " + this->_host);
 	}
 	else
 	{
@@ -109,11 +109,11 @@ void							SockStream::_resolveIP(const std::string &host)
 void							SockStream::_createSocket(const std::string &host, uint16_t port, sa_family_t family, int sock_type)
 throw (SockStream::InvalidHostException, SockStream::SSLException)
 {
-	Logger::debug("create socket");
+	Logger::core("create socket");
 	if ((this->_socket = socket(family, sock_type, 0)) < 0)
 		throw SockStream::SocketCreationException();
 	this->_resolveIP(host);
-	bzero(reinterpret_cast<void *>(&this->_addr), sizeof(this->_addr));
+	std::memset(reinterpret_cast<void *>(&this->_addr), 0, sizeof(this->_addr));
 	this->_addr.sin_port = htons(port);
 	this->_addr.sin_family = family;
 	this->_addr.sin_addr.s_addr = inet_addr(this->_ip.c_str());

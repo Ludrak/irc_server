@@ -4,11 +4,11 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-CommandHandler::CommandHandler( IRCServer & server) : _server(server)
+CommandHandler::CommandHandler( IRCServer & server) : _server(server), _connectionEmitter(NULL)
 {
 }
 
-CommandHandler::CommandHandler( const CommandHandler & src ) :  _server(src._server), _commands(src._commands)
+CommandHandler::CommandHandler( const CommandHandler & src ) :  _server(src._server), _connectionEmitter(NULL), _commands(src._commands)
 {
 }
 
@@ -53,7 +53,7 @@ std::ostream &			operator<<( std::ostream & o, CommandHandler const & i )
 ** --------------------------------- METHODS ----------------------------------
 */
 
-uint			CommandHandler::handle(NetworkEntity & executor, std::string data)
+uint			CommandHandler::handle(NetworkEntity & executor, std::string & data)
 {
 	// Server			*sender = NULL;
 	AEntity			*emitter = NULL;
@@ -63,7 +63,8 @@ uint			CommandHandler::handle(NetworkEntity & executor, std::string data)
 	Logger::debug("Raw message: " + data);
 	if (data[0] == ':')
 	{
-		this->_server.parsePrefix(data.substr(0, data.find(" ")), &clientHost, &emitter, &uname);
+		/* now, emitter is always filled with valid data */
+		this->_server.parsePrefix(executor, data.substr(0, data.find(" ")), &clientHost, &emitter, &uname);
 		data = data.substr(data.find(" ") + 1, data.size() - data.find(" ") - 1);
 		data = data.substr(data.find_first_not_of(" "), data.size() - data.find_first_not_of(" "));
 		if (clientHost == NULL)
@@ -71,44 +72,98 @@ uint			CommandHandler::handle(NetworkEntity & executor, std::string data)
 			//REVIEW In the end remove this debug
 			Logger::debug("handler: clientHost is NULL");
 		}
-	}
-	std::string command = data.substr(0, data.find(" "));
-	try {
-		int err = std::stoi(command);
-		//TODO see prefix and redirect message if not for us
-		if (err >= 400)
-			Logger::error("ERR: " + data);
-		else
-			Logger::info("RPL: " + data);
-
-	} catch(std::invalid_argument &e)
-	{
-		if (this->_commands.count(command) == 1)
+		if (emitter == NULL)
 		{
-			ACommand & cmd = *(this->_commands[command]);
-			if ( cmd.hasPermissions(executor))
-			{
-				// cmd.setSender(sender);
-				cmd.setClient(emitter); //TODO rename setClient and  getClient to setEmitter et getEmitter
-				cmd.setClientHost(clientHost);
-				Logger::debug("command " + command + " (" + executor.getStream().getHost() + ")");
-				Logger::debug("data =" + data + "-");
-				if (command.size() + 1 > data.size())
-					return cmd(executor, data.substr(command.size(), data.size() - command.size()));
-				else
-					return cmd(executor, data.substr(command.size() + 1, data.size() - (command.size() + 1)));
-			}
-			else
-			{
-				Logger::warning("Not enought privilegies (" + command + ")");
-				this->_server._sendMessage(executor, ERR_UNKNOWNCOMMAND(executor.getUID(), command));
-			}
-		}
-		else {
-			this->_server._sendMessage(executor, ERR_UNKNOWNCOMMAND(executor.getUID(), command));
-			Logger::warning("Unknown command (" + command + ")");
+			Logger::critical("Handler: Emitter is NULL");
+			return ERROR;
 		}
 	}
+	else
+	{
+		//TODO change all needed things to allow executing parsePrefix in all cases (even when no prefix are given)
+		if (emitter == NULL)
+			emitter = &executor;
+	}
+	size_t cmdEnd = data.find(" ");
+	std::string command = data.substr(0, cmdEnd);
+	if (cmdEnd == std::string::npos)
+		cmdEnd = data.size();
+	else
+		cmdEnd += 1;
+	std::istringstream is (command);
+	int err = -1;
+	is >> err;
+	if (err > 0)
+		return this->numericReplyReceived(err, *emitter, data);
+	else if (this->_commands.count(command) == 1)
+	{
+		ACommand & cmd = *(this->_commands[command]);
+		if ( cmd.hasPermissions(executor))
+		{
+			/* Permission allowed */
+			// cmd.setSender(sender);
+			cmd.setEmitter(*emitter);
+			cmd.setClientHost(clientHost);
+			Logger::debug("command " + command + " (" + executor.getUID() + "@" + executor.getStream().getHost() + ")");
+			std::string params = data.substr(cmdEnd, data.size() - command.size());
+			Logger::debug("params: |" + params + "|");
+			return cmd(executor, params);
+		}
+		else
+			Logger::warning("Not enought privilegies (" + command + ")");
+	}
+	else
+		Logger::warning("Unknown command (" + command + ")");
+	this->_server._sendMessage(*emitter, ERR_UNKNOWNCOMMAND(emitter->getUID(), command));
+	return SUCCESS;
+}
+
+
+
+uint		CommandHandler::numericReplyReceived(int error, AEntity & emitter, std::string & data)
+{
+	if (error >= 400)
+		Logger::debug("ERR (" + ntos(error) + "): " + data);
+	else
+		Logger::debug("RPL (" + ntos(error) + "): " + data);
+	std::string targetName = Parser::getParam(data, 1);
+	if (targetName == this->_server.getUID())
+	{
+		if (error == 401)
+		{
+			Logger::debug("Receiving `No such nick or channel` is normal after a nick collision");
+			return SUCCESS;
+		}
+		else if (error == 462)
+		{
+			if (this->getConnectionEmitter() != NULL)
+				return this->transmitingReply(*this->getConnectionEmitter(), data);
+		}
+		Logger::error("Receiving an unhandled numeric reply: " + data);
+		return SUCCESS;
+	}
+	else if (this->_server._entities.count(targetName) == 0)
+	{
+		Logger::warning("Handler: Invalid target: " + targetName);
+		return SUCCESS;
+	}
+	else
+		return this->transmitingReply(targetName, emitter, data);
+	return SUCCESS;
+}
+
+uint		CommandHandler::transmitingReply(std::string & targetName, AEntity & emitter, std::string & data)
+{
+	Logger::info("Transmiting numeric response to: " + targetName);
+	AEntity *target = this->_server._entities[targetName];
+	this->_server._sendMessage(*target, emitter.getPrefix() + data);
+	return SUCCESS;
+}
+
+uint		CommandHandler::transmitingReply(AEntity & target, std::string & data)
+{
+	Logger::info("Transmiting numeric response to: " + target.getUID());
+	this->_server._sendMessage(target, data);
 	return SUCCESS;
 }
 
@@ -120,6 +175,22 @@ IRCServer&				CommandHandler::getServer( void )
 {
 	return this->_server;
 }
+
+AEntity*				CommandHandler::getConnectionEmitter( void ) const
+{
+	return this->_connectionEmitter;
+}
+
+void					CommandHandler::setConnectionEmitter(AEntity & emitter)
+{
+	this->_connectionEmitter = &emitter;
+}
+
+void					CommandHandler::unsetConnectionEmitter( void )
+{
+	this->_connectionEmitter = NULL;
+}
+
 
 ACommand*				CommandHandler::getCommand(std::string & command_name)
 {
