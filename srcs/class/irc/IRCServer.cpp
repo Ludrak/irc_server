@@ -447,7 +447,6 @@ void							IRCServer::_onClientRecv(SockStream & s, Package & pkg)
 
 
 
-// TODO REFRACTOR ALL
 void							IRCServer::_onClientQuit(SockStream &s)
 {
 	NetworkEntity*	nEntity	= getEntityByStream(s);
@@ -574,7 +573,14 @@ void				IRCServer::_onQuit( SockStream &server)
 		return ;
 	}
 	/* get corresponding entity*/
-	if ((nEntity->getType() & Server::value_type_forward) == false)
+	if ((nEntity->getType() & UnRegisteredConnection::value_type))
+	{
+		Logger::info("Drop unsuccessfull connection to forward server");
+		this->_unregistered_connections.erase(&nEntity->getStream());
+		delete nEntity;
+		return ;
+	}
+	else if ((nEntity->getType() & Server::value_type_forward) == false)
 	{
 		//TODO Do something here for this message. I don't know what, it is 7A.M ^^
 		Logger::critical("ClientQuit: Corresponding entity is not a forward server.");
@@ -626,6 +632,7 @@ void				IRCServer::_onQuit( SockStream &server)
 	this->_entities.erase(nEntity->getUID());
 	this->_servers.erase(nEntity->getUID());
 	this->_connections.erase(&nEntity->getStream());
+	//REVIEW for a server we don't need to erase from unregisteredConnection right?
 	this->_unregistered_connections.erase(&nEntity->getStream());
 	delete nEntity;
 	if (this->getDebugLevel())
@@ -728,6 +735,7 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandPart>("PART");
 	this->_handler.addCommand<CommandVersion>("VERSION");
 	this->_handler.addCommand<CommandKill>("KILL");
+	this->_handler.addCommand<CommandNotice>("NOTICE");
 }
 
 

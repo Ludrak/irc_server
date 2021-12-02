@@ -38,6 +38,11 @@ uint					CommandPrivmsg::operator()(NetworkEntity & executor, std::string params
 		case 2:
 			/* right numbers of params */
 			std::string targetName = Parser::getParam(params, 0);
+			std::string data = Parser::getParam(params, 1);
+			if (data.find('\x01') == std::string::npos)
+				Logger::debug("Privmsg: not a CTCP request");
+			else
+				Logger::info("Privmsg: CTCP request");
 			Logger::debug("Privmsg target: " + targetName); 
 			if (this->getServer()._entities.count(targetName) == 0)
 			{
