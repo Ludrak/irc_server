@@ -133,6 +133,9 @@ class SockStream
 		Package						&getReceivedData(void);
 		std::list<Package*>			&getPendingData(void);
 
+		void						addTrafficSize(const uint64_t size);
+		uint64_t					getTraffic() const;
+
 # ifdef	POLL
 		int							getPollEvents(void) const;
 		void						setPollEvent(int event);
@@ -184,6 +187,7 @@ class SockStream
 		const IProtocol				*_protocol;
 		bool						_useTLS;
 		SSL							*_cSSL;
+		uint64_t					_trafficSize;
 
 	private:
 		Package				 		_received_data;

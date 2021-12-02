@@ -15,7 +15,7 @@ throw (InvalidHostException, SSLException)
 #elif	defined(KQUEUE)
 	_kqueue_events(EVFILT_READ),
 #endif
-	_ip(""),
+	_ip("127.0.0.1"),
 	_host(""),
 	_protocol(&protocol),
 	_useTLS(useTLS),
@@ -35,8 +35,8 @@ throw (InvalidHostException, SSLException)
 #elif	defined(KQUEUE)
 	_kqueue_events(EVFILT_READ),
 #endif
-	_ip(""),
-	_host(""),
+	_ip(host),
+	_host(host),
 	_protocol(&protocol),
 	_useTLS(useTLS),
 	_cSSL(NULL),
@@ -308,7 +308,17 @@ bool							SockStream::hasTLS(void) const
 SSL								*SockStream::getSSL() const
 {
 	return (this->_cSSL);
-} 
+}
+
+void							SockStream::addTrafficSize(const uint64_t size)
+{
+	this->_trafficSize += size;
+}
+
+uint64_t						SockStream::getTraffic() const
+{
+	return (this->_trafficSize);
+}
 
 
 /* ************************************************************************** */

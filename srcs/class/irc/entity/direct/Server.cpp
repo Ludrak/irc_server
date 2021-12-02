@@ -1,7 +1,7 @@
 #include "Server.hpp"
 
 Server::Server(
-    const UnRegisteredConnection &serv,
+    UnRegisteredConnection &serv,
     const std::string   &token,
     const std::string   &name,
     const std::string   &info,

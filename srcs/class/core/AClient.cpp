@@ -67,6 +67,7 @@ t_pollevent		AClient::_pollInClients(SockStream & sock)
 		this->delSocket(sock);
 		return (POLL_DELETE);
 	}
+	sock.addTrafficSize(byte_size);
 	buffer[byte_size] = '\0';
 	sock.getReceivedData().addData(buffer);			
 	while (!sock.getReceivedData().isInvalid()){
@@ -115,6 +116,7 @@ t_pollevent		AClient::_pollOutClients(SockStream & sock)
 		Logger::error("AClient: send() error on " + sock.getIP() + ntos(" : ") + strerror(errno));
 		return (POLL_ERROR);
 	}
+	sock.addTrafficSize(byte_size);
 	if (current_pkg->isInvalid() || current_pkg->getRawData().empty())
 	{
 		delete current_pkg;

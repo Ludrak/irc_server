@@ -72,7 +72,7 @@ are returned when an invalid use of "PRIVMSG $<server>" or "PRIVMSG #<host>" is 
 /* Returned to a registered client to indicate that the
 command sent is unknown by the server.
 */
-# define ERR_UNKNOWNCOMMAND(A, B) "421 " + A + " " + B + " :Unknown command"
+# define ERR_UNKNOWNCOMMAND(exec, A) "421 " + exec + " " + A + " :Unknown command"
 
 
 /* Server's MOTD file could not be opened by the server.
@@ -355,9 +355,9 @@ channel topic, one of two replies is sent.  If
 the topic is set, RPL_TOPIC is sent back else
 RPL_NOTOPIC.
 */
-# define RPL_NOTOPIC(A) "331 :" + A + " No topic is set"
+# define RPL_NOTOPIC(exec, A) "331 " + exec + " " + A + " :No topic is set"
 
-# define RPL_TOPIC(A, B) "332 :" + A + " " + B
+# define RPL_TOPIC(exec, A, B) "332 " + exec + " " + A + " :" + B
 
 
 /* Returned by the server to indicate that the

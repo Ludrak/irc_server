@@ -84,7 +84,7 @@ void			IRCServer::_printServerState( void )
 			Logger::debug("Creator: " + it->second->getCreator()->getUID());
 		else
 			Logger::debug("Creator: none");
-		for (std::list<Client *>::iterator itc = it->second->clientBegin(); itc != it->second->clientEnd(); ++itc)
+		for (std::list<AEntity *>::iterator itc = it->second->clientBegin(); itc != it->second->clientEnd(); ++itc)
 		{
 			Logger::debug("\t- " + (*itc)->getUID());
 		}
@@ -249,21 +249,23 @@ void							IRCServer::_sendMessage(AEntity & target, const std::string &message,
 	{
 		case Channel::value_type :
 		{
-			Logger::debug("Sending channel message");
+			Logger::debug("Sending channel message: " + message);
 			Package package(this->_protocol, this->_protocol.format(message));
-			reinterpret_cast<Channel*>(&target)->broadcastPackage(package, except ? &reinterpret_cast<NetworkEntity*>(except)->getStream() : NULL);
+			reinterpret_cast<Channel*>(&target)->broadcastPackage(package, except ? except->getUID() : "");
 			break;
 		}
 		case Client::value_type :
 		{
 			Logger::debug("Sending Client message: " + message);
 			Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<Client*>(&target)->getStream());
+
+			std::cout << "sendpkg " << package << "  " << &reinterpret_cast<Client*>(&target)->getStream() << std::endl;
 			this->sendPackage(package, reinterpret_cast<Client*>(&target)->getStream());
 			break;
 		}	
 		case RelayedClient::value_type :
 		{
-			Logger::debug("Sending RelayedClient message");
+			Logger::debug("Sending RelayedClient message: " + message);
 			Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<RelayedClient*>(&target)->getServer().getStream());
 			this->sendPackage(package, reinterpret_cast<RelayedClient*>(&target)->getServer().getStream());
 			break;
@@ -284,14 +286,14 @@ void							IRCServer::_sendMessage(AEntity & target, const std::string &message,
 		}
 		case RelayedServer::value_type :
 		{
-			Logger::debug("Sending RelayedServer message");
+			Logger::debug("Sending RelayedServer message: " + message);
 			Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<RelayedServer*>(&target)->getServer().getStream());
 			this->sendPackage(package, reinterpret_cast<RelayedServer*>(&target)->getServer().getStream());
 			break;
 		}
 		case UnRegisteredConnection::value_type :
 		{
-			Logger::debug("Sending UnregisteredConnection message");
+			Logger::debug("Sending UnregisteredConnection message: " + message);
 			Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<UnRegisteredConnection*>(&target)->getStream());
 			this->sendPackage(package, reinterpret_cast<UnRegisteredConnection*>(&target)->getStream());
 			break;
@@ -459,6 +461,10 @@ void							IRCServer::_onClientQuit(SockStream &s)
 	else if (nEntity->getType() & Client::value_type)
 	{
 		reinterpret_cast<Client*>(nEntity)->leaveAllChannels("disconnected");
+	}
+	else if (nEntity->getType() & RelayedClient::value_type)
+	{
+		reinterpret_cast<RelayedClient*>(nEntity)->leaveAllChannels("disconnected");
 	}
 	this->_entities.erase(nEntity->getUID());
 	this->_clients.erase(nEntity->getUID());
@@ -667,6 +673,7 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandPong>("PONG");
 	this->_handler.addCommand<CommandPart>("PART");
 	this->_handler.addCommand<CommandVersion>("VERSION");
+	this->_handler.addCommand<CommandStats>("STATS");
 }
 
 
@@ -748,7 +755,7 @@ bool								IRCServer::parsePrefix(NetworkEntity & executor, const std::string &
 			Logger::debug("Parse secondName: " + secondName);
 		}
 		
-		if (this->_clients.count(firstName) != 1 )
+		if (this->_clients.count(firstName) != 1)
 		{
 			Logger::critical("Unknown user in prefix: " + firstName);
 			*emitter = &executor;
@@ -779,7 +786,13 @@ bool								IRCServer::parsePrefix(NetworkEntity & executor, const std::string &
 		*emitter = NULL;
 		std::string uid = prefix.substr(1, prefix.size() - 1);
 		Logger::debug("Prefix uid: " + uid);
-		if (this->_servers.count(uid) == 0) 
+		if (uid == this->getUID())
+		{
+			Logger::warning("Self executed request");
+			*emitter = this;
+			return (true);
+		}
+		else if (this->_servers.count(uid) == 0) 
 		{
 			if (this->_clients.count(uid) == 0)
 			{

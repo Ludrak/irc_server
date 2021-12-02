@@ -88,9 +88,9 @@ void			Package::setRecipient( const SockStream *recipient )
     this->_recipient = recipient;
 }
 
-SockStream      *Package::getRecipient( void ) const
+const SockStream      *Package::getRecipient( void ) const
 {
-    return (const_cast<SockStream*>(this->_recipient));
+    return (this->_recipient);
 }
 
 bool            Package::isExplosive( void )

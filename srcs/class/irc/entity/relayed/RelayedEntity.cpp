@@ -9,7 +9,6 @@ RelayedEntity::RelayedEntity(Server &relay, const int hopcount, const std::strin
 
 RelayedEntity::~RelayedEntity()
 {
-
 }
 
 int                 RelayedEntity::getHopCount() const
@@ -22,4 +21,8 @@ const Server        &RelayedEntity::getServer() const
     return (this->_relay);
 }
  
-
+Server              &RelayedEntity::getServer()
+{
+    return (this->_relay);
+}
+ 

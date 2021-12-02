@@ -6,8 +6,9 @@
 #  include <sys/time.h>
 #  include <event.h>
 # else
-# include <sys/event.h>
+#  include <sys/event.h>
 # endif
+
 # include <iostream>
 # include <map>
 # include <poll.h>

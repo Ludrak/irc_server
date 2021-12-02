@@ -43,7 +43,7 @@ class Package
 		bool				isExplosive( void );
 		std::string			getData( void ) const;
 		std::string			getRawData( void ) const;
-		SockStream      	*getRecipient( void ) const;
+		const SockStream    *getRecipient( void ) const;
 		void				setRecipient( const SockStream *recipient );
 
 	private:

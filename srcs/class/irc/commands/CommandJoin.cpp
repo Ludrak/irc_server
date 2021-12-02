@@ -28,98 +28,145 @@ CommandJoin::~CommandJoin()
 */
 uint					CommandJoin::operator()(NetworkEntity & executor, std::string params)
 {
-    size_t nbParam = Parser::nbParam(params);
+ 	size_t nbParam = Parser::nbParam(params);
 	if ( nbParam == 0)
 	{
         this->getServer()._sendMessage(executor, ERR_NEEDMOREPARAMS(executor.getUID(), std::string("JOIN")));
         return SUCCESS;
     }
 	std::list<std::string> channels(Parser::paramToList(Parser::getParam(params, 0)));
-	if (channels.size() == 1 && channels.front().compare("0") == 0)
-    {
-        // TODO what to do on relayed client ?
-		//TODO response: here it is exactly as doing PART for every Channel: implement it after PART
-	    static_cast<Client &>(executor).leaveAllChannels();
-        return SUCCESS;
-    }
-	else if (static_cast<Client &>(executor).maxChannelAccessReached())
-	{
-        // TODO same as above
-        this->getServer()._sendMessage(executor, ERR_TOOMANYCHANNELS(executor.getUID()));
-        return SUCCESS;
-    }
-
-    std::list<std::string> keys(Parser::paramToList(Parser::getParam(params, 1)));
-
-	std::list<std::string>::iterator itk = keys.begin();
-	for (std::list<std::string>::iterator itc = channels.begin(); itc != channels.end(); ++itc)
-	{
-		if (itk != keys.end())
-			Logger::debug("executor " + executor.getUID() + ": ask to join channel: " + *itc + " with key: " + *itk++);
-		else
-			Logger::debug("executor " + executor.getUID() + ": ask to join channel: " + *itc);
-		if (this->getServer()._channels.count(*itc) == false)
+	//CLIENT SIDE
+	//if (this->getEmitter().getFamily() == CLIENT_ENTITY_FAMILY)
+	//{
+		ClientInfo*	client_info;
+		if (this->getEmitter().getType() & RelayedClient::value_type)
 		{
+			client_info = static_cast<ClientInfo*>(static_cast<RelayedClient*>(&this->getEmitter()));
+		}
+		else if (this->getEmitter().getType() & Client::value_type)
+		{
+			client_info = static_cast<ClientInfo*>(static_cast<Client*>(&this->getEmitter()));
+		}
+
+		if (channels.size() == 1 && channels.front().compare("0") == 0)
+		{
+			client_info->leaveAllChannels();
+			return SUCCESS;
+		}
+		else if (client_info->maxChannelAccessReached())
+		{
+			this->getServer()._sendMessage(this->getEmitter(), ERR_TOOMANYCHANNELS(this->getEmitter().getUID()));
+			return SUCCESS;
+		}
+
+		std::list<std::string> keys(Parser::paramToList(Parser::getParam(params, 1)));
+
+		std::list<std::string>::iterator itk = keys.begin();
+		for (std::list<std::string>::iterator itc = channels.begin(); itc != channels.end(); ++itc)
+		{
+			if (itk != keys.end())
+				Logger::debug("executor " + this->getEmitter().getUID() + ": ask to join channel: " + *itc + " with key: " + *itk++);
+			else
+				Logger::debug("executor " + this->getEmitter().getUID() + ": ask to join channel: " + *itc);
+
 			//Channel don't exist
-			if ( Parser::validChannelName(*itc) == false)
+			if (this->getServer()._channels.count(*itc) == 0)
 			{
-				Logger::debug("Join: invalid channel name |" + *itc + "|");
-				this->getServer()._sendMessage(executor, ERR_NOSUCHCHANNEL(executor.getUID(), *itc));
+				if (Parser::validChannelName(*itc) == false)
+				{
+					Logger::debug("Join: invalid channel name |" + *itc + "|");
+					this->getServer()._sendMessage(this->getEmitter(), this->getEmitter().getPrefix() + ERR_NOSUCHCHANNEL(this->getEmitter().getUID(), *itc));
+					continue ;
+				}
+				if (client_info->maxChannelAccessReached())
+				{
+					this->getServer()._sendMessage(this->getEmitter(), this->getEmitter().getPrefix() + ERR_TOOMANYCHANNELS(this->getEmitter().getUID()));
+					return (SUCCESS);
+				}
+
+
+				Channel* new_chan =  new Channel(*itc);
+				Logger::info("Creating a new channel: " + new_chan->getUID());
+
+				if (client_info->joinChannel(*new_chan))
+				{
+					Logger::critical("Cannot join freshly created channel: " + new_chan->getUID());
+					return (ERROR);
+				}
+
+				Logger::debug("Adding client " + this->getEmitter().getUID() + " to channel " + new_chan->getUID());
+				uint ret = new_chan->addClient(this->getEmitter());
+				if (ret != SUCCESS)
+					return ret;
+
+				this->getServer()._channels.insert(std::make_pair(new_chan->getUID(), new_chan));
+				this->getServer()._entities.insert(std::make_pair(new_chan->getUID(), new_chan));
+
+ 				this->getServer()._sendMessage(*new_chan, this->getEmitter().getPrefix() + "JOIN " + new_chan->getUID());
+			 	this->getServer()._sendAllServers(this->getEmitter().getPrefix() + "JOIN " + new_chan->getUID(), &executor);
+				this->getServer()._sendMessage(this->getEmitter(), this->getServer().getPrefix() + RPL_NOTOPIC(this->getEmitter().getUID(), new_chan->getUID()));
+				std::string data = this->getServer().getPrefix() + "MODE " + new_chan->getUID() +  " O " + executor.getUID();
+				this->getHandler().handle(executor, data);
 				continue ;
 			}
-			Logger::info("Creating a new channel: " + *itc);
-			Channel* new_chan =  new Channel(*itc);
-			switch (reinterpret_cast<Client *>(&executor)->joinChannel(*new_chan))
-			{
-                case 1:
-					this->getServer()._sendMessage(executor, ERR_TOOMANYCHANNELS(executor.getUID()));
-                    continue ;
-			    case 2:
-					this->getServer()._sendMessage(executor, ERR_ALREADYREGISTRED(executor.getUID()));
-                    continue ;
-	            case 4:
-					this->getServer()._sendMessage(executor, ERR_CHANNELISFULL(new_chan->getUID()));
-                    continue ;
-				case SUCCESS:
-					break ;
-            }
-            // TODO _addChannel()
-			this->getServer()._channels.insert(std::make_pair(*itc, new_chan));
-            this->getServer()._entities.insert(std::make_pair(*itc, new_chan));
-
-            // TODO handle prefix
-			std::stringstream ss;
-			ss <<  ":" << executor.getUID() << " test@sender-server JOIN :" << new_chan->getUID();
-			this->getServer()._sendMessage(executor, ss);
-			// this->getHandler().handle(executor, "MODE " + new_chan->getUID() +  " O " + executor.getUID());
-			continue ;
-		}
-		AEntity* aChannel = this->getServer()._channels[*itc];
-		if ((aChannel->getType() & Channel::value_type) == false)
-			this->getServer()._sendMessage(executor, ERR_NOSUCHCHANNEL(executor.getUID(), *itc));
-		else
-		{
 			//Channel Exist
-			Channel *chan = dynamic_cast<Channel*>(aChannel);
-			if (chan->isRegistered(static_cast<Client &>(executor)) == false)
+			Channel* chan = this->getServer()._channels[*itc];
+			if ((chan->getType() & Channel::value_type) == false)
+				this->getServer()._sendMessage(this->getEmitter(), ERR_NOSUCHCHANNEL(this->getEmitter().getUID(), *itc));
+			else
 			{
-				Logger::info("Adding " + executor.getUID() + " on channel: " + *itc);
-				switch (static_cast<Client &>(executor).joinChannel(*chan))
+				if (chan->isRegistered(this->getEmitter()) == false)
 				{
-					case 1:
-						this->getServer()._sendMessage(executor, ERR_CHANNELISFULL(chan->getUID()));
-                        return SUCCESS;
-                	case 2:
-					    this->getServer()._sendMessage(executor, ERR_CHANNELISFULL(chan->getUID()));
-                        return SUCCESS;
+					Logger::info("Adding " + this->getEmitter().getUID() + " on channel: " + *itc);
+					uint err = client_info->joinChannel(*chan);
+					switch (err)
+					{
+						case 405:
+							this->getServer()._sendMessage(this->getEmitter(), ERR_TOOMANYCHANNELS(this->getEmitter().getUID()));
+							continue ;
+						case 462:
+							this->getServer()._sendMessage(this->getEmitter(), ERR_ALREADYREGISTRED(this->getEmitter().getUID()));
+							continue ;
+						case 471:
+							this->getServer()._sendMessage(this->getEmitter(), ERR_CHANNELISFULL(chan->getUID()));
+							continue ;
+						case SUCCESS:
+							chan->addClient(this->getEmitter());
+							break ;
+						default:
+							Logger::critical("Join: return error: " + ntos(err));
+					}
+					std::string message = this->getEmitter().getPrefix() + "JOIN " + chan->getUID();
+					this->getServer()._sendMessage(*chan, message, &this->getServer());
+					this->getServer()._sendAllServers(this->getEmitter().getPrefix() + "JOIN " + chan->getUID(), &executor);
+
+					if (this->getEmitter().getType() & NetworkEntity::value_type)
+					{
+						if (!chan->getTopic().empty())
+						{
+							this->getServer()._sendMessage(this->getEmitter(), this->getServer().getPrefix() +
+													RPL_TOPIC(this->getEmitter().getUID(), chan->getUID(), chan->getTopic()));
+						}
+						else
+						{
+							this->getServer()._sendMessage(this->getEmitter(), this->getServer().getPrefix() +
+													RPL_NOTOPIC(this->getEmitter().getUID(), chan->getUID()));
+						}
+					}
 				}
-				std::string message = executor.getPrefix() + " JOIN " + this->getServer()._channels[*itc]->getUID();
-				this->getServer()._sendMessage(*this->getServer()._channels[*itc], message, &executor);
 			}
 		}
-	}
-	return SUCCESS;
+
+	//}
+	//SERVER SIDE
+	/*else
+	{
+		//std::string message = this->getEmitter().getPrefix() + "JOIN " + this->getServer()._channels[*itc]->getUID();
+	}*/
+	return (SUCCESS);
 }
+
+
 
 
 
@@ -129,7 +176,7 @@ uint					CommandJoin::operator()(NetworkEntity & executor, std::string params)
 
 bool				CommandJoin::hasPermissions(AEntity & executor)
 {
-	if (executor.getFamily() == CLIENT_ENTITY_FAMILY)
+	if (executor.getFamily() == CLIENT_ENTITY_FAMILY || executor.getFamily() == SERVER_ENTITY_FAMILY)
 	    return true;
     return (false);
 }

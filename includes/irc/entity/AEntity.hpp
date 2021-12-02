@@ -33,6 +33,7 @@ class	AEntity : public CommonInfo
 		virtual ~AEntity();
 		uint				getType() const;
 		uint				getFamily() const;
+		time_t				getCreationTime() const;
 
 		virtual const std::string		getPrefix( void ) const;
 	protected:
@@ -40,6 +41,7 @@ class	AEntity : public CommonInfo
 
 		uint				_type;
 		uint				_family;
+		time_t				_creationTime;
 };
 
 #endif /* ******************************************************** AENTITY_HPP */
