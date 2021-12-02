@@ -44,12 +44,12 @@ uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 		return SUCCESS;
 
 	int			token = -1;
-	uint		hopcount = 0;
+	int			hopcount = -1;
 	std::string servname = Parser::getParam(params, 0);
 	std::string info = Parser::getParam(params, 3);
 	std::istringstream isHop(Parser::getParam(params, 1));
 	isHop >> hopcount;
-	if (hopcount == 0){ Logger::warning("Server registered with an invalid hopcount: " + Parser::getParam(params, 1)); }
+	if (hopcount < 0){ Logger::warning("Server registered with an invalid hopcount: " + Parser::getParam(params, 1)); }
 	std::istringstream isTok(Parser::getParam(params, 2));
 	isTok >> token;
 	if (token < 0){ Logger::warning("Server registered with an invalid token: " + Parser::getParam(params, 2)); }

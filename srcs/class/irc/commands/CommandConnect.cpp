@@ -51,6 +51,7 @@ uint					CommandConnect::operator()(NetworkEntity & executor, std::string params
 	std::istringstream is(port_string);
 	is >> port;
 	if (port == 0)
+	{
 		Logger::debug("Connect: Invalid port number received: " + port_string);
 		return SUCCESS;
 	}
