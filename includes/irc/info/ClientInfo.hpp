@@ -2,12 +2,16 @@
 # define CLIENTINFO_HPP
 
 class IRCServer;
+# include "AEntity.hpp"
 # include <vector>
-# include "CommonInfo.hpp"
+# include <list>
 # include "UnRegisteredConnectionInfo.hpp"
 # include "Logger.hpp"
 
 # define NB_CLIENT_REGISTRATION_MAX 12
+
+//need Channel
+class Channel;
 
 class ClientInfo
 {
@@ -23,33 +27,39 @@ class ClientInfo
 		);
 		
 		/* channels */
-		bool				maxChannelAccessReached( void ) const;
-		uint				getConcurrentChannels( void ) const; 
-		uint				getConcurrentChannelsMax( void ) const;
-		bool				incrementJoinedChannels( void );
-		bool				decrementJoinedChannels( void );
+		bool						maxChannelAccessReached( void ) const;
+		uint						getConcurrentChannels( void ) const; 
+		uint						getConcurrentChannelsMax( void ) const;
+		bool						incrementJoinedChannels( void );
+		bool						decrementJoinedChannels( void );
 
 		/* mode */
-		uint				getMode( void ) const;
-		std::string			getModeString( void );
-		bool				isEnable( uint modeMask ) const;
-		void				toogleMode( uint modeMask );
-		void				enableMode( uint modeMask );
-		void				disableMode( uint modeMask );
+		uint						getMode( void ) const;
+		std::string					getModeString( void );
+		bool						isEnable( uint modeMask ) const;
+		void						toogleMode( uint modeMask );
+		void						enableMode( uint modeMask );
+		void						disableMode( uint modeMask );
 
-		const std::string&	getRealname( void ) const;
-		void				setRealname( const std::string &real_name );
+		const std::string&			getRealname( void ) const;
+		void						setRealname( const std::string &real_name );
 
-		const std::string&	getServerToken( void ) const;
-		void				setServerToken( const std::string &server_token );
+		const std::string&			getServerToken( void ) const;
+		void						setServerToken( const std::string &server_token );
 
-		const std::string&	getHostname( void ) const;
-		void				setHostname( const std::string &host );
+		const std::string&			getHostname( void ) const;
+		void						setHostname( const std::string &host );
 
-		bool				isServerOP( void ) const;
-		void				setServerOP( const bool op );
+		bool						isServerOP( void ) const;
+		void						setServerOP( const bool op );
 
-		IRCServer			&getServerReference(void);
+		IRCServer					&getServerReference(void);
+
+		const std::list<Channel*>	&getChannels() const;
+		int 						joinChannel(Channel &channel);
+		void                        leaveAllChannels(const std::string &info="");
+		virtual void                leaveChannel(Channel &channel, const std::string &info="");
+
 
 		virtual const std::string	getPrefix( void ) const = 0;
 
@@ -62,9 +72,12 @@ class ClientInfo
 		uint						_serverOp;
 		uint						_concurrentChannels;
 		uint						_concurrentChannelsMax;
-	
+		std::list<Channel*>			_channels;
+
 	private:
 		ClientInfo();
 };
+
+# include "Channel.hpp"
 
 #endif //CLIENTINFO_HPP

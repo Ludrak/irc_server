@@ -132,3 +132,66 @@ IRCServer					&ClientInfo::getServerReference(void)
 	return (this->_serverReference);
 }
 
+
+const std::list<Channel*>	&ClientInfo::getChannels() const
+{
+    return (this->_channels);
+}
+
+
+int 						ClientInfo::joinChannel(Channel &channel)
+{
+    if (!this->incrementJoinedChannels())
+        return (405);
+    this->_channels.push_front(&channel);
+	return SUCCESS;
+}
+
+void                        ClientInfo::leaveAllChannels(const std::string &info)
+{
+    for (std::list<Channel*>::iterator it = this->_channels.begin(); it != this->_channels.end(); )
+    {
+		this->getServerReference()._sendAllServers(this->getPrefix() + "PART " + (*it)->getUID() + " :" + info);
+        this->leaveChannel(**(it++), info);
+    }
+    this->_concurrentChannels = 0;
+    this->_channels = std::list<Channel*>();
+}
+
+void                        ClientInfo::leaveChannel(Channel &channel, const std::string &info)
+{
+    if (!this->decrementJoinedChannels())
+    {
+        Logger::critical("Client leaving unjoined channel");
+        return;
+    }
+
+	for (std::list<AEntity*>::iterator it = channel.clientBegin(); it != channel.clientEnd(); ++it)
+	{
+		if ((*it)->getType() & NetworkEntity::value_type)
+		{
+			this->getServerReference()._sendMessage(**it, this->getPrefix() + "PART " + channel.getUID() + " :" + info);
+		}
+	}
+	int err = 0;
+	Client *c = dynamic_cast<Client*>(this);
+	if (c)
+	{
+		err = channel.removeClient(*c);
+	}
+	else
+	{
+		RelayedClient *rc = dynamic_cast<RelayedClient*>(this);
+		if (rc)
+			err = channel.removeClient(*rc);
+	}
+	this->_channels.remove(&channel);
+
+	if (channel.getConcurrentClients() == 0)
+	{
+		Logger::info("No clients left on " + channel.getUID() + ", deleting it from server");
+		this->getServerReference()._channels.erase(channel.getUID());
+		this->getServerReference()._entities.erase(channel.getUID());
+		delete &channel;
+	}
+}

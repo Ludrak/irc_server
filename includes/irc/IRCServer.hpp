@@ -19,6 +19,7 @@ class CommandHandler;
 # include "ClientInfo.hpp"
 # include "RelayedClient.hpp"
 # include "RelayedServer.hpp"
+# include "NetworkEntity.hpp"
 
 // Commands
 # include "CommandHandler.hpp"
@@ -41,6 +42,7 @@ class CommandHandler;
 # include "CommandVersion.hpp"
 # include "CommandKill.hpp"
 # include "CommandNotice.hpp"
+# include "CommandStats.hpp"
 
 # define SUCCESS				0
 
@@ -192,9 +194,10 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		friend class CommandVersion;
 		friend class CommandKill;
 		friend class CommandNotice;
+		friend class CommandStats;
 
 		/* so that clients have a reference to the server they're on */
-		friend class Client;
+		friend class ClientInfo;
 };
 
 #endif /* ******************************************************* IRCSERVER_H */

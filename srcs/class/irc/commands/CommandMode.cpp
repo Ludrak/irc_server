@@ -67,7 +67,7 @@ bool				CommandMode::hasPermissions(AEntity & executor)
 {
 	if (executor.getType() & UnRegisteredConnection::value_type)
 		return false;
-	else if (executor.getFamily() == SERVER_ENTITY_FAMILY)
+	else if (this->getEmitter().getFamily() == SERVER_ENTITY_FAMILY)
 	{
 		Logger::debug("Access denied because of server type");
 		return false;

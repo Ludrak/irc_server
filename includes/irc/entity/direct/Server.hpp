@@ -16,7 +16,7 @@ class Server : public NetworkEntity, public ServerInfo
 		/* initalizes from an unregistred connection */
 		/* type is set to SERVER_ENTITY_TYPE */
 		Server(
-			const UnRegisteredConnection &serv,
+			UnRegisteredConnection	&serv,
 			const std::string   &token,
 			const std::string   &name,
 			const std::string   &info,

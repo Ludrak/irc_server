@@ -2,15 +2,16 @@
 # define CHANNEL_HPP
 
 # include "AEntity.hpp"
-# include "Client.hpp"
 # include "ASockManager.hpp"
 # include "ChannelInfo.hpp"
+# include "NetworkEntity.hpp"
+# include "RelayedEntity.hpp"
 
 # define NB_CHANNEL_REGISTRATION_MAX 12
 
 # define M_MODERATED		1 << 1
 
-class Channel : public AEntity, public ASockHandler, public ChannelInfo
+class Channel : public AEntity, public ChannelInfo
 {
 	public:
 		static const uint	value_type = CHANNEL_ENTITY_TYPE;
@@ -25,26 +26,32 @@ class Channel : public AEntity, public ASockHandler, public ChannelInfo
 		const AEntity		*getCreator(void) const;
 		void				setCreator(const AEntity & client);
 
-		uint				addClient(Client & client);
-		uint				removeClient(Client & client);
-		bool				isRegistered(Client & client);
-		void				broadcastPackage(Package & pkg, const SockStream * except = NULL);
+		uint				addClient(AEntity & client);
+		uint				removeClient(AEntity & client);
+		bool				isRegistered(AEntity & client);
+		void				broadcastPackage(Package & pkg, const std::string &uid="");
 		void            	delSocket(const SockStream &sock);
-	
-		std::list<Client *>::iterator		clientBegin( void );
-		std::list<Client *>::const_iterator	clientBegin( void ) const;
-		std::list<Client *>::iterator		clientEnd( void );
-		std::list<Client *>::const_iterator	clientEnd( void ) const;
-		std::list<Client *>::iterator		operatorBegin( void );
-		std::list<Client *>::const_iterator	operatorBegin( void ) const;
-		std::list<Client *>::iterator		operatorEnd( void );
-		std::list<Client *>::const_iterator	operatorEnd( void ) const;
 
-		//TODO := check for passing M_REGISTRATION_LIMITED to AEntity beacause used by Client too and add a test on this flag before sayin 'cannot inc or dec'
+		const std::string	&getTopic(void) const;
+		void				setTopic(const std::string &new_topic);
+	
+		std::list<AEntity *>::iterator		clientBegin( void );
+		std::list<AEntity *>::const_iterator	clientBegin( void ) const;
+		std::list<AEntity *>::iterator		clientEnd( void );
+		std::list<AEntity *>::const_iterator	clientEnd( void ) const;
+		std::list<AEntity *>::iterator		operatorBegin( void );
+		std::list<AEntity *>::const_iterator	operatorBegin( void ) const;
+		std::list<AEntity *>::iterator		operatorEnd( void );
+		std::list<AEntity *>::const_iterator	operatorEnd( void ) const;
+
+		//TODO := check for passing M_REGISTRATION_LIMITED to ClientInfo beacause used by Client too and add a test on this flag before sayin 'cannot inc or dec'
 	private:
 		const AEntity*			_creator;
-		std::list<Client *> 	_clients;
-		std::list<Client *> 	_operators;
+		std::list<AEntity *>	_clients;
+		std::list<AEntity *>	_operators;
+		std::string				_topic;
 };
+
+# include "Client.hpp"
 
 #endif /* ********************************************************* CHANNEL_H */

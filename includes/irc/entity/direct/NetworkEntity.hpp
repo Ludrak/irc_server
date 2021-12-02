@@ -14,7 +14,8 @@ class NetworkEntity : public AEntity
         NetworkEntity(SockStream &stream, const std::string &uid, const uint type);
         virtual ~NetworkEntity();
 
-        SockStream          &getStream() const;
+        const SockStream    &getStream() const;
+        SockStream          &getStream();
 
     private:
         SockStream          &_stream;

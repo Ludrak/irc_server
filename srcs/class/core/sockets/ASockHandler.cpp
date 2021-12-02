@@ -1,4 +1,4 @@
-
+#include <string>
 #include "ASockHandler.hpp"
 
 ASockHandler::ASockHandler()
@@ -27,6 +27,7 @@ SockStream      *ASockHandler::getSocket(const ushort socket)
 void		    ASockHandler::sendPackage(Package *pkg, SockStream &recipient)
 {
 	Logger::core("added package " + ntos(pkg) + " to pending list of " + recipient.getIP());
+	Logger::core("Package data: [" + pkg->getData() + "]");
 #ifdef	POLL
 	recipient.setPollEvent(POLLOUT);
 #elif	defined(EPOLL)

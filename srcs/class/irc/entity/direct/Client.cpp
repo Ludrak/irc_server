@@ -3,7 +3,7 @@
 //REVIEW see for handling 'username' see also in UserCommand
 Client::Client(
     IRCServer                       &server_reference,
-    const UnRegisteredConnection    &client,
+    UnRegisteredConnection          &client,
     const uint                      mode,
     const std::string               &real_name
 )
@@ -20,47 +20,6 @@ Client::Client(
 Client::~Client()
 {
 
-}
-
-const std::list<Channel*>	&Client::getChannels() const
-{
-    return (this->_channels);
-}
-
-
-int 						Client::joinChannel(Channel &channel)
-{
-    if (!this->incrementJoinedChannels())
-        return (1);
-    uint ret = channel.addClient(*this);
-	if (ret != SUCCESS)
-		return ret;
-    this->_channels.push_back(&channel);
-	return SUCCESS;
-}
-
-void                        Client::leaveAllChannels(const std::string &info)
-{
-    for (std::list<Channel*>::iterator it = this->_channels.begin(); it != this->_channels.end(); )
-    {
-        this->leaveChannel(**(it++), info);
-    }
-    this->_concurrentChannels = 0;
-    this->_channels = std::list<Channel*>();
-}
-
-void                        Client::leaveChannel(Channel &channel, const std::string &info)
-{
-    if (!this->decrementJoinedChannels())
-    {
-        Logger::critical("Client leaving unjoined channel");
-        return;
-    }
-    channel.removeClient(*this);
-    this->_channels.remove(&channel);
-
-    std::string message = this->getPrefix() + " PART " + channel.getUID() + " :" + info;
-    this->getServerReference()._sendMessage(channel, message, this);
 }
 
 const std::string			Client::getIdent( void ) const

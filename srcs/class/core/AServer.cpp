@@ -143,6 +143,7 @@ t_pollevent					AServer::_pollInClients(SockStream & sock)
 		this->disconnect(sock);
 		return (POLL_DELETE);
 	}
+	sock.addTrafficSize(byte_size);
 	buffer[byte_size] = '\0';
 	sock.getReceivedData().addData(buffer);			
 	while (!sock.getReceivedData().isInvalid()){
@@ -192,8 +193,8 @@ t_pollevent					AServer::_pollOutClients(SockStream & sock)
 		Logger::error("AServer: send() error on " + sock.getIP() + ntos(" : ") + strerror(errno));
 		return (POLL_ERROR);
 	}
+	sock.addTrafficSize(byte_size);
 	current_pkg->nflush(byte_size);
-
 	if (current_pkg->isInvalid() || current_pkg->getRawData().empty())
 	{
 		Logger::core("sent & deleted package " + ntos(current_pkg) + ntos(" of ") + sock.getIP() + " explosive: " + ntos(current_pkg->isExplosive()));

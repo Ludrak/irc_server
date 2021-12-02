@@ -16,6 +16,7 @@ class RelayedEntity : public AEntity
 
         int                 getHopCount() const;
         const Server        &getServer() const;
+        Server              &getServer();
 
     private:
         uint                _hopCount;

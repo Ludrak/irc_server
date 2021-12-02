@@ -98,11 +98,11 @@ uint			CommandHandler::handle(NetworkEntity & executor, std::string & data)
 	else if (this->_commands.count(command) == 1)
 	{
 		ACommand & cmd = *(this->_commands[command]);
+		cmd.setEmitter(*emitter);
 		if ( cmd.hasPermissions(executor))
 		{
 			/* Permission allowed */
 			// cmd.setSender(sender);
-			cmd.setEmitter(*emitter);
 			cmd.setClientHost(clientHost);
 			Logger::debug("command " + command + " (" + executor.getUID() + "@" + executor.getStream().getHost() + ")");
 			std::string params = data.substr(cmdEnd, data.size() - command.size());

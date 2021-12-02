@@ -4,14 +4,14 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-Channel::Channel(const std::string & channelName) : AEntity(Channel::value_type, channelName), ASockHandler(), _creator(NULL)
+Channel::Channel(const std::string & channelName) : AEntity(Channel::value_type, channelName), _creator(NULL), _topic("")
 {
 	this->_uid = channelName;
 	this->_concurrentClients = 0;
 	this->_concurrentClientsMax = 10;
 }
 
-Channel::Channel( const Channel & src ) : AEntity(Channel::value_type, src.getUID()), ASockHandler(), _clients(src._clients), _operators(src._operators)
+Channel::Channel( const Channel & src ) : AEntity(Channel::value_type, src.getUID()), _clients(src._clients), _operators(src._operators)
 {
 
 }
@@ -53,58 +53,62 @@ std::ostream &			operator<<( std::ostream & o, Channel const & i )
 ** --------------------------------- METHODS ----------------------------------
 */
 
-uint				Channel::addClient(Client & client)
+uint				Channel::addClient(AEntity & client)
 {
-	// TODO send right reply / inc /dec registration
-	//TODO change incRegistration for being blocked only when mode `l` is actived
+	//IMPROVEMENT change incRegistration for being blocked only when mode `l` is actived
+	if (!(client.getType() & (Client::value_type | RelayedClient::value_type)))
+		return (1);
 	if (this->isRegistered(client) == true)
-		return 2;//ERR_ALREADYREGISTRED;
-	else if (this->incrementJoinedClients() == false)
-		return 4;//ERR_CHANNELISFULL;
-	this->_clients.push_back(&client);
-	this->addSocket(client.getStream());
+		return 462;//ERR_ALREADYREGISTRED;
+	else if (!this->incrementJoinedClients())
+		return 471;//ERR_CHANNELISFULL;
+	this->_clients.push_front(&client);
 	Logger::info("<" + client.getUID() + "> join channel <" + this->getUID() + ">");
-	//TODO send here the message to everyone saying someone is added to channel
-	//TODO this involve adding a protocol to Channel (this will be necessary for TLS ? ) 
 	return SUCCESS;
 }
 
-uint					Channel::removeClient(Client & client)
+uint					Channel::removeClient(AEntity & client)
 {
-	//TODO send reply & dec / inc registration
+	if (client.getFamily() != CLIENT_ENTITY_FAMILY)
+	{
+		Logger::critical ("removing non client family entity from channel");
+		return (1);
+	}
 	if (this->isRegistered(client) == false)
-		return 1;//ERR_NOTONCHANNEL;
-	this->decrementJoinedClients();
+		return 442;//ERR_NOTONCHANNEL;
+	if (!this->decrementJoinedClients())
+	{
+		Logger::critical ("try to decrement empty channel");
+		return (2);
+	}
 	this->_clients.remove(&client);
-	this->delSocket(client.getStream());
 	if (this->_creator == &client)
 		this->_creator = NULL;
 	Logger::info("<" + client.getUID() + "> leave channel <" + this->getUID() + ">");
 	return SUCCESS;
 }
 
-void            		Channel::delSocket(const SockStream &sock)
+void					Channel::broadcastPackage(Package & pkg, const std::string &uid)
 {
-	this->_sockets.erase(sock.getSocket());
-}
-
-
-void						Channel::broadcastPackage(Package & pkg, const SockStream * except)
-{
-	for (std::list<Client*>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
+	for (std::list<AEntity*>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
 	{
-		if (&(*it)->getStream() != except)
+		if (!uid.empty() && (*it)->getUID() == uid)
+			continue;
+
+		if ((*it)->getType() & Client::value_type)
 		{
+			Client &client = static_cast<Client &>(**it);
+			Logger::debug("Channel send to Client: " + client.getUID());
 			Package* new_pkg = new Package(pkg);
-			new_pkg->setRecipient(&(*it)->getStream());
-			this->sendPackage(new_pkg, (*it)->getStream());
+			new_pkg->setRecipient(&client.getStream());
+			client.getServerReference().sendPackage(new_pkg, client.getStream());
 		}
 	}
 }
 
-bool					Channel::isRegistered(Client & client)
+bool					Channel::isRegistered(AEntity & client)
 {
-	for (std::list<Client *>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
+	for (std::list<AEntity *>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
 	{
 		if ((*it)->getUID() == client.getUID())
 			return true;
@@ -127,44 +131,53 @@ void								Channel::setCreator(const AEntity & client)
 	this->_creator = &client;
 }
 
-std::list<Client *>::iterator		Channel::clientBegin( void )
+std::list<AEntity *>::iterator		Channel::clientBegin( void )
 {
 	return this->_clients.begin();
 }
 
-std::list<Client *>::const_iterator	Channel::clientBegin( void ) const
+std::list<AEntity *>::const_iterator	Channel::clientBegin( void ) const
 {
 	return this->_clients.cbegin();
 }
 
-std::list<Client *>::iterator		Channel::clientEnd( void )
+std::list<AEntity *>::iterator		Channel::clientEnd( void )
 {
 	return this->_clients.end();
 }
 
-std::list<Client *>::const_iterator	Channel::clientEnd( void ) const
+std::list<AEntity *>::const_iterator	Channel::clientEnd( void ) const
 {
 	return this->_clients.cend();
 }
 
-std::list<Client *>::iterator		Channel::operatorBegin( void )
+std::list<AEntity *>::iterator		Channel::operatorBegin( void )
 {
 	return this->_operators.begin();
 }
 
-std::list<Client *>::const_iterator	Channel::operatorBegin( void ) const
+std::list<AEntity *>::const_iterator	Channel::operatorBegin( void ) const
 {
 	return this->_operators.cbegin();
 }
 
-std::list<Client *>::iterator		Channel::operatorEnd( void )
+std::list<AEntity *>::iterator		Channel::operatorEnd( void )
 {
 	return this->_operators.end();
 }
 
-std::list<Client *>::const_iterator	Channel::operatorEnd( void ) const
+std::list<AEntity *>::const_iterator	Channel::operatorEnd( void ) const
 {
 	return this->_operators.cend();
+}
+
+const std::string					&Channel::getTopic(void) const
+{
+	return (this->_topic);
+}
+void								Channel::setTopic(const std::string &new_topic)
+{
+	this->_topic = new_topic;
 }
 
 /* ************************************************************************** */
