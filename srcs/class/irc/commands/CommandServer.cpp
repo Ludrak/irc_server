@@ -80,23 +80,23 @@ uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 		reply_msg << "SERVER " << this->getServer().getName() << " 0 " << this->getServer().getUID() << " :" << this->getServer().getInfo();
 		if (type & Server::value_type_forward)
 		{
-			Logger::info("Connection to forward success");
+			Logger::info("Successfull connection to forward server");
 			this->getHandler().unsetConnectionEmitter();
 		}
 		else
 		{
-			Logger::debug("Resend (server infos): " + reply_msg.str());
+			Logger::debug("Resend (server infos) -- accepting new server connection: " + reply_msg.str());
 			this->getServer()._sendMessage(*new_serv, reply_msg);
 		}
-		Logger::info("Sending local data to the new server");
 		/* Send our data to the new server */
+		Logger::info("Sharing local informations with the new server.");
 		this->_sendDataToServer(*new_serv);
 		this->getServer()._addServer(*new_serv, reinterpret_cast<UnRegisteredConnection*>(&executor));
 		Logger::info ("new server joined the network (" + new_serv->getUID() + "@" + new_serv->getStream().getHost() + ")");
 	}
 	else if ((executor.getType() & (Server::value_type | Server::value_type_forward)) && hopcount > 0)
 	{
-		// server is introducing a new relayed server
+		/* server introducing a new relayed server */
 		Logger::debug("server introducting a new relayed");
 		std::stringstream tok;
 		tok << std::setfill('0') << std::setw(3) << token;
@@ -120,7 +120,6 @@ uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 		this->getServer().sendPackage(explosive, executor.getStream());
 		return SUCCESS;
 	}
-	Logger::debug("out of function commandServer"); // REVIEW delete this debug after completing server command
 	return SUCCESS;
 }
 
@@ -177,7 +176,6 @@ uint				CommandServer::_sendDataToServer(Server & new_serv)
 		this->getServer()._sendMessage(new_serv, reply_msg);
 	}
 	/* Send all channels */
-	Logger::warning("Sending all channels to: " + new_serv.getUID());
 	for(std::map<std::string, Channel*>::iterator it = this->getServer()._channels.begin(); it != this->getServer()._channels.end(); ++it)
 	{
 		std::string nicknames(this->getServer().getPrefix() + "NJOIN " + it->second->getUID() + " ");

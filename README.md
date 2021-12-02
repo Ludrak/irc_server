@@ -17,3 +17,4 @@ CommonInfo
 ## Futures évolution
 
 - Attribute `O` channel flag only to `safe-channel` wich should be uniq
+- `Away` status (RPL_AWAY) (easy to implement)
