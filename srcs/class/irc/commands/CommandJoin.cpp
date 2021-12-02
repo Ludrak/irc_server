@@ -85,26 +85,28 @@ uint					CommandJoin::operator()(NetworkEntity & executor, std::string params)
 
 			Channel* new_chan =  new Channel(*itc);
 			Logger::info("Creating a new channel: " + new_chan->getUID());
-
+			//REVIEW should only be gived to safer channel
 			if (client_info->joinChannel(*new_chan))
 			{
 				Logger::critical("Cannot join freshly created channel: " + new_chan->getUID());
+				delete new_chan;
 				return (ERROR);
 			}
 
 			Logger::debug("Adding client " + this->getEmitter().getUID() + " to channel " + new_chan->getUID());
 			uint ret = new_chan->addClient(this->getEmitter());
 			if (ret != SUCCESS)
+			{
+				Logger::critical("Send error message to user + delete new_chan + remove new_chan from client_info._channels");
 				return ret;
-
+			}
+			new_chan->setCreator(this->getEmitter());
 			this->getServer()._channels.insert(std::make_pair(new_chan->getUID(), new_chan));
 			this->getServer()._entities.insert(std::make_pair(new_chan->getUID(), new_chan));
 
 			this->getServer()._sendMessage(*new_chan, this->getEmitter().getPrefix() + "JOIN " + new_chan->getUID());
 			this->getServer()._sendAllServers(this->getEmitter().getPrefix() + "JOIN " + new_chan->getUID(), &executor);
 			this->getServer()._sendMessage(this->getEmitter(), this->getServer().getPrefix() + RPL_NOTOPIC(this->getEmitter().getUID(), new_chan->getUID()));
-			std::string data = this->getServer().getPrefix() + "MODE " + new_chan->getUID() +  " O " + executor.getUID();
-			this->getHandler().handle(executor, data);
 			continue ;
 		}
 		//Channel Exist

@@ -13,3 +13,7 @@ AEntity
         <= ClientInfo
 CommonInfo
         <= ServerInfo
+
+## Futures évolution
+
+- Attribute `O` channel flag only to `safe-channel` wich should be uniq

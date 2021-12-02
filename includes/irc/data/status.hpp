@@ -252,7 +252,7 @@ the a mode flag sent was not recognized.
 /* Error sent to any user trying to view or change the
 user mode for a user other than themselves.
 */
-# define ERR_USERSDONTMATCH() "502 Cant change mode for other users"
+# define ERR_USERSDONTMATCH(exec) "502 " + exec + " :Cant change mode for other users"
 
 
 /*

@@ -39,9 +39,10 @@ uint					CommandMode::operator()(NetworkEntity & executor, std::string params)
 		return SUCCESS;
 	}
 	std::string uid = Parser::getParam(params, 0);
-	if (this->getServer()._entities.count(uid) == 1)
+	if (this->getServer()._entities.count(uid) == 0)
 	{
-		this->modeForUser(executor, uid, Parser::getParam(params, 1));
+		this->getServer()._sendMessage(executor, ERR_NOSUCHNICK(executor.getUID(), uid));
+		return SUCCESS;
 	}
 	else if (this->getServer()._channels.count(uid) == 1)
 	{
@@ -53,7 +54,7 @@ uint					CommandMode::operator()(NetworkEntity & executor, std::string params)
 		this->modeForChannel(nbParam, executor, params);
 	}
 	else
-		this->getServer()._sendMessage(executor, ERR_NOSUCHNICK(executor.getUID(), uid));
+		this->modeForUser(executor, uid, Parser::getParam(params, 1));
 	return SUCCESS;
 }
 
@@ -77,9 +78,10 @@ bool				CommandMode::hasPermissions(AEntity & executor)
 
 void				CommandMode::modeForUser(NetworkEntity & executor, std::string uid, std::string mode)
 {
-	if (executor.getUID() != uid)
+	if (this->getEmitter().getUID() != uid)
 	{
-		this->getServer()._sendMessage(executor, this->getServer().getPrefix() + ERR_USERSDONTMATCH());
+		Logger::debug("Njoin: " + this->getEmitter().getUID() + " Change mode for the other user: " + uid);
+		this->getServer()._sendMessage(executor, this->getServer().getPrefix() + ERR_USERSDONTMATCH(this->getEmitter().getUID()));
 		return ;
 	}
 	else if (mode.empty())

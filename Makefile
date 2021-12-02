@@ -85,6 +85,7 @@ COMMANDS_SRCS		=	CommandHandler.cpp \
 						CommandNotice.cpp \
 						CommandPart.cpp \
 						CommandVersion.cpp \
+						CommandNjoin.cpp \
 						CommandError.cpp \
 						CommandStats.cpp
 					
@@ -107,9 +108,9 @@ COMMANDS_HEADERS	=	CommandHandler.hpp \
 						CommandNotice.hpp \
 						CommandPart.hpp \
 						CommandVersion.hpp \
+						CommandNjoin.hpp \
 						CommandError.hpp \
 						CommandStats.hpp
-# CommandNjoin.hpp
 
 
 # Librarys (only for local archives in project folder)

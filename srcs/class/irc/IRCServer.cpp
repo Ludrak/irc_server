@@ -732,6 +732,7 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandJoin>("JOIN");
 	this->_handler.addCommand<CommandServer>("SERVER");
 	this->_handler.addCommand<CommandError>("ERROR");
+	//REVIEW remove mode message? 
 	this->_handler.addCommand<CommandMode>("MODE");
 	this->_handler.addCommand<CommandQuit>("QUIT");
 	this->_handler.addCommand<CommandSquit>("SQUIT");
@@ -744,7 +745,7 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandVersion>("VERSION");
 	this->_handler.addCommand<CommandKill>("KILL");
 	this->_handler.addCommand<CommandNotice>("NOTICE");
-	this->_handler.addCommand<CommandStats>("STATS");
+	this->_handler.addCommand<CommandNjoin>("NJOIN");
 }
 
 

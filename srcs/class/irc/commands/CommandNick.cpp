@@ -160,6 +160,7 @@ uint				CommandNick::_nickFromServer(Server & executor, std::string & params)
 	//Forward and backward this info
 	std::stringstream reply_msg;
 	reply_msg << "NICK " << rClient->getUID() << " " << rClient->getHopCount() + 1 << " " << rClient->getName() << " " << rClient->getHostname() << " " << rClient->getServerToken() << " " << rClient->getModeString() << " :" << rClient->getRealname();
+	Logger::debug("sending to all servers except: " + executor.getUID());
 	this->getServer()._sendAllServers(reply_msg.str(), &executor);
 	return SUCCESS;
 }

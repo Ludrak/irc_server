@@ -92,7 +92,6 @@ uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 		/* Send our data to the new server */
 		this->_sendDataToServer(*new_serv);
 		this->getServer()._addServer(*new_serv, reinterpret_cast<UnRegisteredConnection*>(&executor));
-		// TODO send all channels w/ NJOIN
 		Logger::info ("new server joined the network (" + new_serv->getUID() + "@" + new_serv->getStream().getHost() + ")");
 	}
 	else if ((executor.getType() & (Server::value_type | Server::value_type_forward)) && hopcount > 0)
@@ -104,18 +103,17 @@ uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 		RelayedServer *new_serv = new RelayedServer(static_cast<Server&>(executor), hopcount, tok.str(),
 			servname, info, executor.getStream().getHost());
 		this->getServer()._addServer(*new_serv, NULL);
-		Logger::debug("Resend: " + ss.str());
+		Logger::debug("Resend to all server (except:" + executor.getUID() + "): " + ss.str());
 		this->getServer()._sendAllServers(ss.str(), &executor);
 		Logger::info ("new server joined the network (" + new_serv->getUID() + "@" + new_serv->getHostname() + " is " + ntos(new_serv->getHopCount()) + " hop(s) away)");
 	}
 	else if (Server::value_type_forward && hopcount == 0)
 	{
-		Logger::debug("value_type_forward hopcount == 0");
+		Logger::critical("value_type_forward hopcount == 0");
 		return SUCCESS;
 	}
 	else
 	{
-		//TODO kick
 		Package *explosive = new Package(this->getServer().getProtocol(),
 			this->getServer().getProtocol().format("ERROR :invalid parameters"), &executor.getStream(), true);
 		Logger::warning("Send explosive package to executor");
@@ -135,7 +133,7 @@ uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 uint				CommandServer::_sendDataToServer(Server & new_serv)
 {
 	std::stringstream reply_msg;
-	/* send All servers */
+	/* send all servers */
 	for (std::map<std::string, AEntity*>::iterator it = this->getServer()._servers.begin();
 	it != this->getServer()._servers.end();
 	++it)
@@ -158,7 +156,7 @@ uint				CommandServer::_sendDataToServer(Server & new_serv)
 			continue;
 		this->getServer()._sendMessage(new_serv, reply_msg);
 	}
-	/* send All clients */
+	/* send all clients */
 	for (std::map<std::string, AEntity*>::iterator it = this->getServer()._clients.begin();
 	it != this->getServer()._clients.end();
 	++it)
@@ -168,7 +166,6 @@ uint				CommandServer::_sendDataToServer(Server & new_serv)
 		{
 			Client *client = reinterpret_cast<Client*>(it->second);
 			reply_msg << this->getServer().getPrefix() << "NICK " << client->getUID() << " 1 " << client->getName() << " " << client->getHostname() << " " << client->getServerToken() << " " << client->getModeString() << " :" << client->getRealname();
-			// reply_msg << "NICK " << client->getUID() << " 1 " << client->getUID() << " :" << client->getInfo();
 		}
 		else if (it->second->getType() & RelayedClient::value_type)
 		{
@@ -178,6 +175,22 @@ uint				CommandServer::_sendDataToServer(Server & new_serv)
 		else 
 			continue;
 		this->getServer()._sendMessage(new_serv, reply_msg);
+	}
+	/* Send all channels */
+	Logger::warning("Sending all channels to: " + new_serv.getUID());
+	for(std::map<std::string, Channel*>::iterator it = this->getServer()._channels.begin(); it != this->getServer()._channels.end(); ++it)
+	{
+		std::string nicknames(this->getServer().getPrefix() + "NJOIN " + it->second->getUID() + " ");
+		for (std::list<AEntity *>::iterator itNick = it->second->clientBegin(); itNick != it->second->clientEnd();)
+		{
+			if (it->second->getCreator() && it->second->getCreator()->getUID() == (*itNick)->getUID())
+				nicknames += "@@";
+			nicknames += (*itNick)->getUID();
+			if (++itNick != it->second->clientEnd())
+				nicknames += ",";
+		}
+		Logger::debug("Sending: " + nicknames);
+		this->getServer()._sendMessage(new_serv, nicknames);
 	}
 	return SUCCESS;
 }

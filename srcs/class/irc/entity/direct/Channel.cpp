@@ -138,7 +138,7 @@ std::list<AEntity *>::iterator		Channel::clientBegin( void )
 
 std::list<AEntity *>::const_iterator	Channel::clientBegin( void ) const
 {
-	return this->_clients.cbegin();
+	return this->_clients.begin();
 }
 
 std::list<AEntity *>::iterator		Channel::clientEnd( void )
@@ -148,7 +148,7 @@ std::list<AEntity *>::iterator		Channel::clientEnd( void )
 
 std::list<AEntity *>::const_iterator	Channel::clientEnd( void ) const
 {
-	return this->_clients.cend();
+	return this->_clients.end();
 }
 
 std::list<AEntity *>::iterator		Channel::operatorBegin( void )
@@ -158,7 +158,7 @@ std::list<AEntity *>::iterator		Channel::operatorBegin( void )
 
 std::list<AEntity *>::const_iterator	Channel::operatorBegin( void ) const
 {
-	return this->_operators.cbegin();
+	return this->_operators.begin();
 }
 
 std::list<AEntity *>::iterator		Channel::operatorEnd( void )
@@ -168,7 +168,7 @@ std::list<AEntity *>::iterator		Channel::operatorEnd( void )
 
 std::list<AEntity *>::const_iterator	Channel::operatorEnd( void ) const
 {
-	return this->_operators.cend();
+	return this->_operators.end();
 }
 
 const std::string					&Channel::getTopic(void) const

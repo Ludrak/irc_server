@@ -2,7 +2,7 @@
 
 uint					AServer::_defaultMaxConnections = 30;
 
-
+//TODO add socket id to log
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
@@ -145,7 +145,7 @@ t_pollevent					AServer::_pollInClients(SockStream & sock)
 	}
 	sock.addTrafficSize(byte_size);
 	buffer[byte_size] = '\0';
-	sock.getReceivedData().addData(buffer);			
+	sock.getReceivedData().addData(buffer);
 	while (!sock.getReceivedData().isInvalid()){
 		int socket = sock.getSocket();
 		Logger::core("received package from " + sock.getIP());
