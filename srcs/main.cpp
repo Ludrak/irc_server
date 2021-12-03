@@ -13,10 +13,28 @@
 **	--info <info>			: specifies some additional infos for the server
 **	--max-connections <n> 	: specifies a number of maxium connection for that server
 **	--crlf					: use plain text crlf for data transmission (! default !) 
+//REVIEW: deprecated --ssl?
 **	--ssl					: uses ssl for data transmission
 **	--ssl-cert <cert>		: specifies ssl certificate for incomming connections and data encryption
 **	--ssl-key <key>			: specifies ssl key for incomming connections and data encryption
 */
+
+int		printUsage(void)
+{
+	Logger::info("ft_irc by Nlecaill and Lrobino.");
+	Logger::info("Usage:");
+	Logger::info("--servname <name>     : specifies a name for the server, usefull for server-server connections");
+	Logger::info("--token <token>       : specifies a token which is the SUID for the server, must be unique through all network  !");
+	Logger::info("--info <info>         : specifies some additional infos for the server");
+	Logger::info("--max-connections <n> : specifies a number of maxium connection for that server");
+	Logger::info("--crlf                : use plain text crlf for data transmission (! default !) ");
+	// Logger::info("--ssl                 : uses ssl for data transmission");
+	Logger::info("--tls-port <port>     : specifies ssl port for incomming connections and data encryption");
+	Logger::info("--ssl-cert <cert>     : specifies ssl certificate for incomming connections and data encryption");
+	Logger::info("--ssl-key <key>       : specifies ssl key for incomming connections and data encryption");
+	exit(SUCCESS);
+	return SUCCESS;
+}
 
 /* param checker */
 bool	isValidServerName(const std::string &name)
@@ -74,10 +92,17 @@ bool	isValidPort(const std::string &str)
 # define ARG_NOTFOUND	0
 # define ARG_ERROR		1
 # define ARG_OK			2
-uint	getArg(const char *const identifier, const int n, const int ac, const char *const *const argv, bool (*validityChecker)(const std::string &))
+uint	getArg(const char *const identifier,
+				const int n,
+				const int ac,
+				const char *const *const argv,
+				bool (*validityChecker)(const std::string &)=NULL,
+				bool asArgument=true)
 {
 	if (n < ac && std::strcmp(argv[n], identifier) == 0)
 	{
+		if (asArgument == false)
+			return (ARG_OK);
 		if (n + 1 < ac)
 		{
 			if (!validityChecker(argv[n + 1]))
@@ -149,16 +174,31 @@ int		main(int ac, char **av)
 
 	// get forward server arg
 	int	argn = 1;
-	if (ac > 1) {
+	if (ac <= 1)
+		return printUsage();
+	else if (ac > 1) {
 		has_network_connection = getForward(av[1], &network_host, &network_port, &network_pass);
 		if (has_network_connection)
 			argn = 2;
 	}
+	int arg_code;;
 	// get last arguments 
 	while (argn < ac)
 	{
+		arg_code = ARG_NOTFOUND;
+
+		/* display help */
+		arg_code = getArg("--help", argn, ac, av, NULL, false);
+		if (arg_code == ARG_OK)
+		{
+			printUsage();	
+			argn += 2;
+			continue;
+		}
+		else if (arg_code == ARG_ERROR)
+			return (EXIT_FAILURE);
+
 		/* server host */
-		int arg_code = ARG_NOTFOUND;
 		arg_code = getArg("--host", argn, ac, av, isValidServerHost);
 		if (arg_code == ARG_OK)
 		{
@@ -253,6 +293,7 @@ int		main(int ac, char **av)
 		if (std::strncmp(av[argn], "--", 2) == 0)
 		{
 			Logger::error("unknown argument: " + ntos(av[argn]));
+			printUsage();
 			return (EXIT_FAILURE);
 		}
 		/* port */
@@ -276,35 +317,37 @@ int		main(int ac, char **av)
 		Logger::error("No port specified");
 		return (EXIT_FAILURE);
 	}
-	
-	std::cout << "*************************************************" << std::endl;
-	std::cout << "* IRC Server (" << server_name << "@" << server_host << ")" << std::endl;
-	std::cout << "*" << std::endl;
-	if (has_network_connection)
-	{
-		std::cout << "* Network:" << std::endl;
-		std::cout << "* - host:            " << network_host << std::endl;
-		std::cout << "* - port:            " << network_port << std::endl;
-		std::cout << "* - pass:            " << network_pass << std::endl;
-		std::cout << "*" << std::endl;
-	}
-	std::cout << "* Server:" << std::endl;
-	std::cout << "* - host:            " << server_host << std::endl;
-	std::cout << "* - port:            " << server_port << std::endl;
-	std::cout << "* - password:        " << server_pass << std::endl;
-	std::cout << "*" << std::endl;
 
-	std::cout << "* Server infos:" << std::endl;
-	std::cout << "* - name:            " << server_name << std::endl;
-	std::cout << "* - token:           " << std::setfill('0') << std::setw(3) << server_token << std::endl;
-	std::cout << "* - max connections: " << server_max_connections << std::endl;
-	std::cout << "* - info:            " << server_info << std::endl;
-	std::cout << "*************************************************" << std::endl;
 
-	Logger::setLogLevel(DEBUG);
-	IRCServer server(server_port, server_pass, server_host, ssl_cert, ssl_key, tls_port);
 	std::stringstream ss;
 	ss << std::setfill('0') << std::setw(3) << server_token;
+	
+	Logger::info("*************************************************");
+	Logger::info("* IRC Server (" + server_name + "@" +  server_host + ")");
+	Logger::info("*");
+	if (has_network_connection)
+	{
+		Logger::info("* Network:");
+		Logger::info("* - host:            " + network_host);
+		Logger::info("* - port:            " + ntos(network_port));
+		Logger::info("* - pass:            " + network_pass);
+		Logger::info("*");
+	}
+	Logger::info("* Server:");
+	Logger::info("* - host:            " + server_host);
+	Logger::info("* - port:            " + ntos(server_port));
+	Logger::info("* - password:        " + server_pass);
+	Logger::info("*");
+
+	Logger::info("* Server infos:");
+	Logger::info("* - name:            " + server_name);
+	Logger::info("* - token:           " + ss.str());
+	Logger::info("* - max connections: " + ntos(server_max_connections));
+	Logger::info("* - info:            " + server_info);
+	Logger::info("*************************************************");
+
+	Logger::setLogLevel(CORE);
+	IRCServer server(server_port, server_pass, server_host, ssl_cert, ssl_key, tls_port);
 
 	server.setName(server_name);
 	server.setUID(ss.str());

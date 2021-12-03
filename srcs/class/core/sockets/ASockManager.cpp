@@ -21,7 +21,7 @@ ASockManager::ASockManager(const std::string &ssl_cert_path, const std::string &
 	}
 	else
 	{
-        Logger::info("SSL disabled: not all cert/key paths filled.");
+        Logger::warning("SSL disabled: not all cert/key paths filled.");
 		Logger::core("Constructor ASockManager");
         this->_useTLS = false;
 	}
