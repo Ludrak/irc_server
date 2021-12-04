@@ -454,7 +454,7 @@ void							IRCServer::_onClientQuit(SockStream &s)
 	NetworkEntity*	nEntity	= getEntityByStream(s);
 	if (nEntity == NULL)
 	{
-		Logger::critical("ClientQuit: No entity corresponding was found.");
+		Logger::debug("ClientQuit: No entity corresponding was found.");
 		return ;
 	}
 	Logger::info("disconnecting: " + nEntity->getUID() + "@" + nEntity->getStream().getHost());
@@ -666,7 +666,6 @@ NetworkEntity*						IRCServer::getEntityByStream(SockStream & s)
 	/* get in global connections */
 	if (this->_connections.count(&s) == 1)
 		return (this->_connections[&s]);
-	Logger::critical("received from SockStream not attached to any Entity");
 	return (NULL);
 }
 

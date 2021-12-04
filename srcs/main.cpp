@@ -37,6 +37,7 @@ int		printUsage(void)
 }
 
 /* param checker */
+//REVIEW replace by Parser::validServerName (and implement it)
 bool	isValidServerName(const std::string &name)
 {
 	(void)name;

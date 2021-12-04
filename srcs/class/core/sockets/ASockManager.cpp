@@ -12,7 +12,9 @@ ASockManager::ASockManager(const std::string &ssl_cert_path, const std::string &
 
         const SSL_METHOD  *method = TLS_server_method();
 		this->_ssl_ctx = SSL_CTX_new(method);
-	    SSL_CTX_set_min_proto_version(this->_ssl_ctx, TLS1_3_VERSION);
+	    SSL_CTX_set_min_proto_version(this->_ssl_ctx, TLS1_2_VERSION);
+		SSL_CTX_get_read_ahead(this->_ssl_ctx);
+		//TLS
 		//SSL_CTX_set_options(this->_ssl_ctx, SSL_OP_ALL);
 		SSL_CTX_use_certificate_file(this->_ssl_ctx, ssl_cert_path.c_str(), SSL_FILETYPE_PEM);
 		SSL_CTX_use_PrivateKey_file(this->_ssl_ctx, ssl_key_path.c_str(), SSL_FILETYPE_PEM);
@@ -183,6 +185,7 @@ void            ASockManager::run( void )
 				{
 					Logger::warning(e.what());
 				}
+				/* Check if a socket has been removed */
                 if (this->_sockets.size() != sz)
                     break;
             }

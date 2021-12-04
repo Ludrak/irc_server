@@ -166,7 +166,7 @@ class SockStream
 		void						initTLS(SSL_CTX *ctx) throw (SockStream::SSLException);
 		
 		SSL							*getSSL() const;
-		void						acceptSSL();
+		int							acceptSSL();
 		void						connectSSL();
 
 	protected:

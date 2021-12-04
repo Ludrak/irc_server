@@ -68,11 +68,23 @@ t_pollevent					AServer::_pollFromServer(int socket, int event)
 	}
 	
 	SockStream	*client_ss = new SockStream(client_sock, client_addr, *it->second->getProtocol(), this->_sockets[socket]->hasTLS(), this->_ssl_ctx);
+	int ret = 1;
 	if (client_ss->hasTLS())
-		client_ss->acceptSSL();
+	{
+		ret = client_ss->acceptSSL();
+		if (ret == -1)
+		{
+			this->disconnect(*client_ss);
+			return POLL_NOACCEPT; 
+		}
+		//TLS
+		// else if (ret == 0)
+			// return POLL_NOACCEPT;
+	}
 	client_ss->setType(REMOTE_CLIENT);
 	this->addSocket(*client_ss);
-	this->_onClientJoin(*client_ss);
+	if (ret != 0) //TLS
+		this->_onClientJoin(*client_ss);
 #ifdef KQUEUE
 	struct kevent new_event;
 	EV_SET(&new_event, client_sock, EVFILT_READ, EV_ADD, NOTE_LOWAT, 1, NULL);
@@ -100,7 +112,7 @@ t_pollevent					AServer::_pollFromClients(int socket, int event)
 	{
 		/* client socket is readable */
 		t_pollevent ev = this->_pollInClients(*it->second);
-		if (ev == POLL_DELETE)
+		if (ev == POLL_DELETE || ev == POLL_ERROR)
 			return (POLL_DELETE);
 	}
 #ifdef	POLL
@@ -134,8 +146,9 @@ t_pollevent					AServer::_pollInClients(SockStream & sock)
 	{
 		if (sock.hasTLS() && sock.getSSL())
 			ERR_print_errors_fp(stderr);
-
-		Logger::error(std::string("AServer: recv() failed : ") + strerror(errno) + std::string(" on socket <" + ntos(sock.getSocket()) + ">."));
+		Logger::error(std::string("AServer: recv() failed : ") + strerror(errno) + std::string(" on socket <" + ntos(sock.getSocket()) + ">. (has tls: " + ntos(sock.hasTLS()) + ", getSSl: " + ntos(sock.getSSL()) + ")"));
+		if (errno == 0)
+			this->disconnect(sock);
 		return (POLL_ERROR);
 	}
 	else if (byte_size == 0) 
