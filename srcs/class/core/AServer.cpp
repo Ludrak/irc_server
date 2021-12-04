@@ -45,7 +45,6 @@ void						AServer::run()
 
 t_pollevent					AServer::_pollFromServer(int socket, int event)
 {
-	Logger::core("pollFromServer");
 	std::map<ushort, SockStream*>::iterator it = this->_sockets.find(socket);
 	if (it->second->getAcceptToComplete())
 	{
@@ -54,12 +53,11 @@ t_pollevent					AServer::_pollFromServer(int socket, int event)
 		int ret = 1;
 		if (it->second->hasTLS())
 		{
-			Logger::core("For tls");
 			ret = it->second->acceptSSL();
 			if (ret == -1)
 			{
-				Logger::core("ERROR => need to stop connection with socket");
-				// this->disconnect(*client_ss);
+				it->second->setAcceptToComplete(false);
+				this->disconnect(*it->second);
 				return POLL_NOACCEPT; 
 			}
 			else if (ret == 0)
@@ -86,7 +84,6 @@ t_pollevent					AServer::_pollFromServer(int socket, int event)
 	sockaddr_in		client_addr;
 	socklen_t		client_addr_len;
 	int				client_sock;
-	Logger::core("Accept");
 
 	client_sock = accept(socket, reinterpret_cast<sockaddr *>(&client_addr), &client_addr_len);
 	if (client_sock <= 0)
@@ -280,10 +277,8 @@ t_pollevent					AServer::_onPollEvent(int socket, int event)
 	if (this->_sockets[socket] && event == EV_EOF)
 		return POLL_DELETE;
 #endif
-	Logger::core("pollEvent");
 	/* trying to read events from clients first */
 	t_pollevent ev = this->_pollFromClients(socket, event);
-	Logger::core("pollEvent client ev = " + ntos(ev));
 	if (ev != POLL_NOTFOUND)
 		return ev;
 

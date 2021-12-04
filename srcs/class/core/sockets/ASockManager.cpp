@@ -177,7 +177,6 @@ void            ASockManager::run( void )
             }
             if (events > 0)
             {
-				Logger::core("DEBUG: event for:" + ntos(it->second->getSocket()) + "@" + it->second->getHost() );
                 size_t sz = this->_sockets.size();
 				try {
                 	this->_onPollEvent(it->second->getSocket(), events);
