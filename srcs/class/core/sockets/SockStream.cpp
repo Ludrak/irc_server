@@ -20,7 +20,8 @@ throw (InvalidHostException, SSLException)
 	_protocol(&protocol),
 	_useTLS(useTLS),
 	_cSSL(NULL),
-	_received_data(protocol)
+	_received_data(protocol),
+	_toComplete(false)
 {
 	Logger::core("default SockStream constructor");
 	this->_createSocket("127.0.0.1", 8080);
@@ -40,7 +41,8 @@ throw (InvalidHostException, SSLException)
 	_protocol(&protocol),
 	_useTLS(useTLS),
 	_cSSL(NULL),
-	_received_data(protocol)
+	_received_data(protocol),
+	_toComplete(false)
 {
 	this->_createSocket(host, port);
 }
@@ -61,7 +63,8 @@ throw (SSLException)
 	_protocol(&protocol),
 	_useTLS(useTLS),
 	_cSSL(NULL),
-	_received_data(protocol)
+	_received_data(protocol),
+	_toComplete(false)
 {
 	struct in_addr ipAddr = address.sin_addr;
 	char ip_str[INET_ADDRSTRLEN];
@@ -344,5 +347,14 @@ uint64_t						SockStream::getTraffic() const
 	return (this->_trafficSize);
 }
 
+void							SockStream::setAcceptToComplete(bool yes)
+{
+	this->_toComplete = yes;
+}
+
+bool							SockStream::getAcceptToComplete( void ) const
+{
+	return this->_toComplete;
+}
 
 /* ************************************************************************** */

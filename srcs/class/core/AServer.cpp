@@ -45,7 +45,34 @@ void						AServer::run()
 
 t_pollevent					AServer::_pollFromServer(int socket, int event)
 {
+	Logger::core("pollFromServer");
 	std::map<ushort, SockStream*>::iterator it = this->_sockets.find(socket);
+	if (it->second->getAcceptToComplete())
+	{
+		/* need to accept TLS another time */
+		Logger::core("Need to accept another time");
+		int ret = 1;
+		if (it->second->hasTLS())
+		{
+			Logger::core("For tls");
+			ret = it->second->acceptSSL();
+			if (ret == -1)
+			{
+				Logger::core("ERROR => need to stop connection with socket");
+				// this->disconnect(*client_ss);
+				return POLL_NOACCEPT; 
+			}
+			else if (ret == 0)
+				it->second->setAcceptToComplete(true);
+			else
+			{
+				Logger::core("Finaly accepting connection");
+				it->second->setAcceptToComplete(false);			
+				it->second->setType(REMOTE_CLIENT);
+				this->_onClientJoin(*it->second);
+			}
+		}
+	}
 #ifdef	POLL
 	if (it == this->_sockets.end() || it->second->getType() != SERVER || ~event & POLLIN)
 #elif	defined(EPOLL)
@@ -59,6 +86,7 @@ t_pollevent					AServer::_pollFromServer(int socket, int event)
 	sockaddr_in		client_addr;
 	socklen_t		client_addr_len;
 	int				client_sock;
+	Logger::core("Accept");
 
 	client_sock = accept(socket, reinterpret_cast<sockaddr *>(&client_addr), &client_addr_len);
 	if (client_sock <= 0)
@@ -77,14 +105,17 @@ t_pollevent					AServer::_pollFromServer(int socket, int event)
 			this->disconnect(*client_ss);
 			return POLL_NOACCEPT; 
 		}
-		//TLS
-		// else if (ret == 0)
-			// return POLL_NOACCEPT;
+		else if (ret == 0)
+			client_ss->setAcceptToComplete(true);
+		else
+			client_ss->setAcceptToComplete(false);			
 	}
-	client_ss->setType(REMOTE_CLIENT);
 	this->addSocket(*client_ss);
 	if (ret != 0) //TLS
+	{
+		client_ss->setType(REMOTE_CLIENT);
 		this->_onClientJoin(*client_ss);
+	}
 #ifdef KQUEUE
 	struct kevent new_event;
 	EV_SET(&new_event, client_sock, EVFILT_READ, EV_ADD, NOTE_LOWAT, 1, NULL);
@@ -249,9 +280,10 @@ t_pollevent					AServer::_onPollEvent(int socket, int event)
 	if (this->_sockets[socket] && event == EV_EOF)
 		return POLL_DELETE;
 #endif
-
+	Logger::core("pollEvent");
 	/* trying to read events from clients first */
 	t_pollevent ev = this->_pollFromClients(socket, event);
+	Logger::core("pollEvent client ev = " + ntos(ev));
 	if (ev != POLL_NOTFOUND)
 		return ev;
 
@@ -294,7 +326,7 @@ bool						AServer::listenOn( ushort port, IProtocol &protocol , const bool useTL
 
 void		    			AServer::disconnect( SockStream &client )
 {
-	Logger::core("AServer: disconnecting: " + client.getHost());
+	Logger::core("AServer: disconnecting: " + ntos(client.getSocket()) + "@" + client.getHost());
 #ifdef KQUEUE
 	for (std::vector<struct kevent>::iterator it = this->_k_events.begin(); it != this->_k_events.end(); ++it)
 	{

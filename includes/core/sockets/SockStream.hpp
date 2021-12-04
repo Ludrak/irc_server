@@ -168,6 +168,8 @@ class SockStream
 		SSL							*getSSL() const;
 		int							acceptSSL();
 		void						connectSSL();
+		void						setAcceptToComplete(bool yes);
+		bool						getAcceptToComplete( void ) const;
 
 	protected:
 		ushort						_socket;
@@ -192,7 +194,7 @@ class SockStream
 	private:
 		Package				 		_received_data;
 		std::list<Package*>			_pending_data;
-
+		bool						_toComplete;
 		SockStream( SockStream const & src );
 
 		void						_resolveIP(const std::string &host);
