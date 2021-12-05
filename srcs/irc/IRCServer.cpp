@@ -745,6 +745,7 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandKill>("KILL");
 	this->_handler.addCommand<CommandNotice>("NOTICE");
 	this->_handler.addCommand<CommandNjoin>("NJOIN");
+	this->_handler.addCommand<CommandList>("LIST");
 }
 
 

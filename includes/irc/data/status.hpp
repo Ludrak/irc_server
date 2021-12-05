@@ -69,6 +69,12 @@ are returned when an invalid use of "PRIVMSG $<server>" or "PRIVMSG #<host>" is 
 # define ERR_WILDTOPLEVEL(A) "414 :" + A + " Wildcard in toplevel domain"
 
 
+/*
+Returned by a server in response to a LIST or NAMES message to indicate the result contains too many items to be returned to the client.
+*/
+# define ERR_TOOMANYMATCHES(exec, A) "416 " + exec + " " + A + " :Output too long (try locally)"
+
+
 /* Returned to a registered client to indicate that the
 command sent is unknown by the server.
 */
@@ -339,11 +345,14 @@ server's response to a LIST command.  If there are
 no channels available to return, only the start
 and end reply must be sent.
 */
+/*
+Do not use RPL_LISTSTART: deprecated
+*/
 # define RPL_LISTSTART() "321 Channel :Users Name"
 
-# define RPL_LIST(A, B, C) "322 " + A + " " + B + " :" + C
+# define RPL_LIST(exec, A, B, C) "322 " + exec + " " + A + " " + B + " :" + C
 
-# define RPL_LISTEND() "323 :End of /LIST"
+# define RPL_LISTEND(exec) "323 " + exec + " :End of /LIST"
 
 
 

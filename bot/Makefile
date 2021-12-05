@@ -9,8 +9,8 @@ INC_DIR		= includes
 BIN_DIR		= bin
 LIB_DIR		= lib
 
-PATH_SCORE	= ../srcs/class/core
-PATH_SUTIL	= ../srcs/class/utils
+PATH_SCORE	= ../srcs/core
+PATH_SUTIL	= ../srcs/utils
 PATH_HCORE	= ../includes/core
 PATH_HUTIL	= ../includes/utils
 
