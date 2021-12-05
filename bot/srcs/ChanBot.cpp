@@ -72,7 +72,7 @@ bool							ChanBot::connect()
 			connection exception, we are root on that server
 			until another connection succeeds
 		*/
-		Logger::warning ("Forward connection failed: running server as root node");
+		Logger::warning ("Connection to server failed: aborting operations");
 		return false;
 	}
 	return true;
@@ -103,6 +103,10 @@ void			ChanBot::_onConnect ( SockStream &server)
 	this->sendPackage(package, server);
 
 	message = "OPER becomeOper becomeOper";
+	package = new Package(this->_protocol, this->_protocol.format(message), &server);
+	this->sendPackage(package, server);
+
+	message = "LIST";
 	package = new Package(this->_protocol, this->_protocol.format(message), &server);
 	this->sendPackage(package, server);
 }

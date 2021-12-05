@@ -19,7 +19,8 @@ int main(int ac, char **av)
 		return 1;
 	}
 	ChanBot tony(network_host, network_port, network_pass);
-	tony.connect();
+	if (!tony.connect())
+		return 1;
 	tony.run();
 	return 0;
 }
