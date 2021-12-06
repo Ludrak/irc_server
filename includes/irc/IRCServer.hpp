@@ -43,6 +43,7 @@ class CommandHandler;
 # include "CommandKill.hpp"
 # include "CommandNotice.hpp"
 # include "CommandNjoin.hpp"
+# include "CommandTopic.hpp"
 
 # define SUCCESS				0
 
@@ -194,6 +195,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		friend class CommandKill;
 		friend class CommandNotice;
 		friend class CommandNjoin;
+		friend class CommandTopic;
 
 		/* so that clients have a reference to the server they're on */
 		friend class ClientInfo;

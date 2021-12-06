@@ -151,6 +151,43 @@ bool	getForward(std::string arg, std::string *const host, ushort *const port, st
 	return (true);
 }
 
+void	printUsage(std::string exec_name)
+	{
+	std::cout
+	<< "\033[1;33m**\033[0m \033[1;33m" << exec_name << " help page" << std::endl << "\033[0m\033[1;33m**\033[0m" << std::endl
+	<< "\033[1;37m**\033[0m \033[1;37mUsage:\033[0m" << std::endl
+	<< "\033[1;33m**\033[0m -> " << exec_name << " \033[1;37m[\033[0mnetwork_host\033[1;37m:\033[0mnetwork_port\033[1;37m:\033[0mnetwork_password\033[1;37m]\033[0m <server_port> [server_password] [options]" << std::endl << "\033[1;33m**\033[0m" << std::endl
+	<< "\033[1;33m**\033[0m network_host            Sets the hostname of the irc network you want to connect to." << std::endl
+	<< "\033[1;33m**\033[0m network_port            Sets the port of the irc network you want to connect to." << std::endl
+	<< "\033[1;33m**\033[0m network_password        Sets the password of the irc network you want to connect to." << std::endl
+	<< "\033[1;33m**\033[0m" << std::endl
+	<< "\033[1;33m**\033[0m server_port             Sets the port on which this server will accept new connections." << std::endl
+	<< "\033[1;33m**\033[0m server_password         Sets the password that will be asked to clients and server" << std::endl
+	<< "\033[1;33m**\033[0m                         trying to connect on this server." << std::endl
+	<< "\033[1;33m**\033[0m " << std::endl
+	<< "\033[1;37m**\033[0m \033[1;37mOptions:\033[0m" << std::endl << "\033[1;33m**\033[0m" << std::endl
+	<< "\033[1;33m**\033[0m --host <hostname>       Sets the host of server." << std::endl << "\033[1;33m**\033[0m"
+	<< std::endl
+	<< "\033[1;33m**\033[0m --servname <name>       Sets the name of the current server." << std::endl << "\033[1;33m**\033[0m"
+	<< std::endl
+	<< "\033[1;33m**\033[0m --token <token>         Sets the token of the server (3 digits max number)." << std::endl << "\033[1;33m**\033[0m"
+	<< std::endl
+	<< "\033[1;33m**\033[0m --info <info>           Sets the info of the current server." << std::endl
+	<< "\033[1;33m**\033[0m                         This info is sent to other servers in the " << std::endl
+	<< "\033[1;33m**\033[0m                         network via SERVER command." << std::endl << "\033[1;33m**\033[0m"
+	<< std::endl
+	<< "\033[1;33m**\033[0m --max-connextions <nb>  Sets the maximum number of connections that the server" << std::endl
+	<< "\033[1;33m**\033[0m                         can handle, which is set to 20 by defaul.t" << std::endl << "\033[1;33m**\033[0m"
+	<< std::endl
+	<< "\033[1;37m**\033[0m \033[1;37mTLS Options:\033[0m" << std::endl << "\033[1;33m**\033[0m" << std::endl
+	<< "\033[1;33m**\033[0m --tls-port              Sets the port on wich the server will listen on tls." << std::endl
+	<< "\033[1;33m**\033[0m                         This is set by default to 6697." << std::endl << "\033[1;33m**\033[0m"
+	<< std::endl
+	<< "\033[1;33m**\033[0m --ssl-cert              Sets the SSL certificate to use for encrypted communications" << std::endl << "\033[1;33m**\033[0m"
+	<< std::endl
+	<< "\033[1;33m**\033[0m --ssl-key               Sets the SSL private key to use for authentification to the server" << std::endl;
+}
+
 
 
 
@@ -290,6 +327,13 @@ int		main(int ac, char **av)
 		else if (arg_code == ARG_ERROR)
 			return (EXIT_FAILURE);
 
+		/* help */
+		if (std::strcmp(av[argn], "--help") == 0)
+		{
+			printUsage(av[0]);
+			return (EXIT_SUCCESS);
+		}
+
 		/* unknown argument */
 		if (std::strncmp(av[argn], "--", 2) == 0)
 		{
@@ -358,7 +402,7 @@ int		main(int ac, char **av)
 	if (has_network_connection)
 		server.connectToNetwork(network_host, network_port, network_pass);
 	else
-		Logger::warning("No forward connection set: running server as root");
+		Logger::info("No forward connection set: running server as root");
 	server.run();
 	return (EXIT_SUCCESS);
 }

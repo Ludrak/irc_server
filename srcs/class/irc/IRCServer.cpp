@@ -298,8 +298,6 @@ void							IRCServer::_sendMessage(AEntity & target, const std::string &message,
 		{
 			Logger::debug("Sending Client message: " + message);
 			Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<Client*>(&target)->getStream());
-
-			std::cout << "sendpkg " << package << "  " << &reinterpret_cast<Client*>(&target)->getStream() << std::endl;
 			this->sendPackage(package, reinterpret_cast<Client*>(&target)->getStream());
 			break;
 		}	
@@ -745,6 +743,7 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandKill>("KILL");
 	this->_handler.addCommand<CommandNotice>("NOTICE");
 	this->_handler.addCommand<CommandNjoin>("NJOIN");
+	this->_handler.addCommand<CommandTopic>("TOPIC");
 }
 
 

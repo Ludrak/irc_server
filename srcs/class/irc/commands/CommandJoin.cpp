@@ -84,6 +84,7 @@ uint					CommandJoin::operator()(NetworkEntity & executor, std::string params)
 
 
 			Channel* new_chan =  new Channel(*itc);
+			new_chan->setCreator(this->getEmitter());
 			Logger::info("Creating a new channel: " + new_chan->getUID());
 			//REVIEW should only be gived to safer channel
 			if (client_info->joinChannel(*new_chan))
@@ -106,7 +107,11 @@ uint					CommandJoin::operator()(NetworkEntity & executor, std::string params)
 
 			this->getServer()._sendMessage(*new_chan, this->getEmitter().getPrefix() + "JOIN " + new_chan->getUID());
 			this->getServer()._sendAllServers(this->getEmitter().getPrefix() + "JOIN " + new_chan->getUID(), &executor);
-			this->getServer()._sendMessage(this->getEmitter(), this->getServer().getPrefix() + RPL_NOTOPIC(this->getEmitter().getUID(), new_chan->getUID()));
+			if (this->getEmitter().getType() & NetworkEntity::value_type)
+			{
+				this->getServer()._sendMessage(this->getEmitter(), this->getServer().getPrefix() +
+													RPL_NOTOPIC(this->getEmitter().getUID(), new_chan->getUID()));
+			}
 			continue ;
 		}
 		//Channel Exist

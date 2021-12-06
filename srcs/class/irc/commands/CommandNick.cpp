@@ -156,7 +156,8 @@ uint				CommandNick::_nickFromServer(Server & executor, std::string & params)
 	std::string realname = Parser::getParam(params, 6);
 	RelayedClient *rClient = new RelayedClient(this->getServer(), executor, hopcount, nick, username, realname, 0, serverToken, host );
 	this->getServer()._addClient(*rClient, NULL);
-	Logger::info("New relayed client added: " + nick + " hop +" + ntos(hopcount));
+	Logger::info("new relayed client registered: " + rClient->getName() + " (" + rClient->getUID() + "!" + rClient->getName() + "@"
+													 + rClient->getHostname() + " is " + ntos(hopcount) + " hop(s) away)");
 	//Forward and backward this info
 	std::stringstream reply_msg;
 	reply_msg << "NICK " << rClient->getUID() << " " << rClient->getHopCount() + 1 << " " << rClient->getName() << " " << rClient->getHostname() << " " << rClient->getServerToken() << " " << rClient->getModeString() << " :" << rClient->getRealname();
