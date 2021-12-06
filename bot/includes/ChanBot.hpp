@@ -13,7 +13,7 @@ class ChanBot : public AClient
 
 	public:
 
-		ChanBot(const std::string & host, ushort port, std::string & password, const bool useTLS=false);
+		ChanBot(const std::string & name="tony", const std::string & host="localhost", ushort port=6667, const std::string & password="", const bool useTLS=false);
 		ChanBot( ChanBot const & src );
 		~ChanBot();
 

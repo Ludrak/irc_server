@@ -4,21 +4,22 @@
 ** --------------------------------- STATIC ----------------------------------
 */
 
-
 std::string 				Parser::getParam(std::string command, size_t idx)
 {
 	size_t nbParam = Parser::nbParam(command);
 	if (nbParam == 0 || idx >= nbParam)
 		return "";
 	size_t specialEnd = command.find(" :");
-	if (specialEnd != std::string::npos && idx == nbParam - 1)
+	if (specialEnd + 2 == command.size())
+		specialEnd = std::string::npos;
+	else if (specialEnd != std::string::npos && idx == nbParam - 1)
 		return command.substr(specialEnd + 2);
 	size_t start = 0;
 	size_t end = command.find(' ');
 	while (idx > 0)
 	{
 		--idx;
-		start = end + 1;
+		start = command.find_first_not_of(' ', end + 1);
 		end = command.find(' ', start);
 	}
 	if (end == std::string::npos)
@@ -50,17 +51,20 @@ std::list<std::string>	Parser::paramToList(std::string param)
 
 size_t		 			Parser::nbParam(std::string command)
 {
-	if (command.empty())
+	if (command.empty() || command.find_first_not_of(' ') == std::string::npos)
 		return 0;
 	size_t nbParam = 1;
 	size_t specialParam = command.find(" :");
-	size_t param = command.find(' ');
-	while (param != std::string::npos && param + 1 < command.size())
+	if (specialParam + 2 == command.size())
+		specialParam = std::string::npos;
+	size_t paramEnd = command.find(' ');
+	while (paramEnd != std::string::npos && paramEnd + 1 < command.size())
 	{
 		nbParam++;
-		if (!(param < specialParam ))
+		if (paramEnd >= specialParam )
 			break ;
-		param = command.find(' ', param + 1);
+		paramEnd = command.find(' ', paramEnd + 1);
+		paramEnd = command.find_first_not_of(' ', paramEnd);
 	}
 	return nbParam;
 }

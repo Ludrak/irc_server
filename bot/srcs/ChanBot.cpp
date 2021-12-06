@@ -4,8 +4,8 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-ChanBot::ChanBot(const std::string & host, ushort port, std::string & password, const bool useTLS)
-: _name("tony"), _host(host), _password(password), _port(port), _currentStream(NULL)
+ChanBot::ChanBot(const std::string & name, const std::string & host, ushort port, const std::string & password, const bool useTLS)
+: _name(name), _host(host), _password(password), _port(port), _currentStream(NULL)
 {
 	Logger::debug("ChanBot contructor");
 	this->_useTLS = useTLS;
@@ -17,7 +17,7 @@ ChanBot::ChanBot(const std::string & host, ushort port, std::string & password, 
 
 ChanBot::ChanBot( const ChanBot & src )
 {
-	(void) src;
+	this->operator=(src);
 }
 
 
@@ -37,11 +37,18 @@ ChanBot::~ChanBot()
 
 ChanBot &				ChanBot::operator=( ChanBot const & rhs )
 {
-	//if ( this != &rhs )
-	//{
-		//this->_value = rhs.getValue();
-	//}
-	(void) rhs;
+	if ( this != &rhs )
+	{
+		this->_dict = rhs._dict;
+		this->_channels = rhs._channels;
+		this->_pendingChan.clear();
+		this->_name = rhs._name;
+		this->_host = rhs._host;
+		this->_password = rhs._password;
+		this->_port = rhs._port;
+		this->_currentStream = NULL;
+		this->_currentPrefix = "";
+	}
 	return *this;
 }
 

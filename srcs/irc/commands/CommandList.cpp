@@ -22,9 +22,8 @@ CommandList::~CommandList()
 */
 
 /*
-
-Command: KILL
-	Parameters: <nickname> <comment>
+Command: LIST
+   Parameters: [ <channel> *( "," <channel> ) [ <target> ] ]
 */
 uint					CommandList::operator()(NetworkEntity & executor, std::string params)
 {

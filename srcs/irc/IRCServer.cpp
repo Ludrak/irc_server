@@ -746,6 +746,7 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandNotice>("NOTICE");
 	this->_handler.addCommand<CommandNjoin>("NJOIN");
 	this->_handler.addCommand<CommandList>("LIST");
+	this->_handler.addCommand<CommandKick>("KICK");
 }
 
 
@@ -832,7 +833,7 @@ bool								IRCServer::parsePrefix(NetworkEntity & executor, const std::string &
 		{
 			if (this->_clients.count(uid) == 0)
 			{
-				Logger::critical("Unknown server/client in prefix: " + uid);
+				Logger::warning("Unknown server/client in prefix: <" + uid + "> (normal if coming from forward's first message)");
 				*emitter = &executor;
 				return (false);
 			}

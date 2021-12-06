@@ -18,7 +18,7 @@ int main(int ac, char **av)
 		Logger::error("Invalid port: " + std::string(av[2]));
 		return 1;
 	}
-	ChanBot tony(network_host, network_port, network_pass);
+	ChanBot tony("tony", network_host, network_port, network_pass);
 	if (!tony.connect())
 		return 1;
 	tony.run();

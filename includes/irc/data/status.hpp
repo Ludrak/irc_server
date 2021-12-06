@@ -129,7 +129,7 @@ already exists by another server).
 /* Returned by the server to indicate that the target
 user of the command is not on the given channel.
 */
-# define ERR_USERNOTINCHANNEL(A, B) "441 " + A + " " + B + " :They aren't on that channel"
+# define ERR_USERNOTINCHANNEL(exec, A, B) "441 " + exec + " " + A + " " + B + " :They aren't on that channel"
 
 
 /* Returned by the server whenever a client tries to
@@ -230,7 +230,7 @@ MODE messages) must return this error if the client
 making the attempt is not a chanop on the specified
 channel.
 */
-# define ERR_CHANOPRIVSNEEDED(A) "482 " + A + " :You're not channel operator"
+# define ERR_CHANOPRIVSNEEDED(exec, A) "482 " + exec + " " + A + " :You're not channel operator"
 
 
 /* Any attempts to use the KILL command on a server
