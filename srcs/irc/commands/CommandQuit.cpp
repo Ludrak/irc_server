@@ -42,7 +42,12 @@ uint					CommandQuit::operator()(NetworkEntity & executor, std::string params)
 		this->getServer()._entities.erase(emitter.getUID());
 		this->getServer()._clients.erase(emitter.getUID());
 		Logger::info(emitter.getUID() + " is quitting");
+		//Forward this information
+		this->getServer()._sendAllServers(prefix + " QUIT " + quitMessage, except);
+		this->getServer()._entities.erase(emitter.getUID());
+		this->getServer()._clients.erase(emitter.getUID());
 		delete &emitter;
+		return SUCCESS;
 	}
 	else
 	{
@@ -52,12 +57,11 @@ uint					CommandQuit::operator()(NetworkEntity & executor, std::string params)
 			quitMessage = executor.getUID();
 		prefix = executor.getPrefix();
 		Logger::info(executor.getUID() + " is quitting");
+		executor.setCleanDisconnection(true);
 		this->getServer().disconnect(executor.getStream());
-		
+		//Forward this information
+		this->getServer()._sendAllServers(prefix + " QUIT " + quitMessage, except);
 	}
-
-	//Forward this information
-	this->getServer()._sendAllServers(prefix + " QUIT " + quitMessage, except);
 	return SUCCESS;
 }
 

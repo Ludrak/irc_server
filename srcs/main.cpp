@@ -346,6 +346,7 @@ int		main(int ac, char **av)
 	Logger::info("* - info:            " + server_info);
 	Logger::info("*************************************************");
 
+//TODO add timestamp
 	Logger::setLogLevel(CORE);
 	IRCServer server(server_port, server_pass, server_host, ssl_cert, ssl_key, tls_port);
 

@@ -506,6 +506,8 @@ void							IRCServer::_onClientQuit(SockStream &s)
 	else if (nEntity->getType() & Client::value_type)
 	{
 		reinterpret_cast<Client*>(nEntity)->leaveAllChannels("disconnected");
+		if (reinterpret_cast<Client*>(nEntity)->isCleanDisconnection() == false)
+			this->_sendAllServers(reinterpret_cast<Client*>(nEntity)->getPrefix() + " QUIT :connection lost");
 	}
 	else if (nEntity->getType() & RelayedClient::value_type)
 	{
