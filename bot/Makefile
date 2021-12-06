@@ -41,10 +41,12 @@ HEADCORE	=	SockStream.hpp \
 				AServer.hpp \
 				Package.hpp
 
-SRCSUTILS	=	Logger.cpp 
+SRCSUTILS	=	Logger.cpp \
+				Parser.cpp
 
 HEADUTILS	=	ntos.hpp \
-				Logger.hpp
+				Logger.hpp \
+				Parser.hpp
 
 # Librarys (only for local archives in project folder)
 LIBRARYS	= 

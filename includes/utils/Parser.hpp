@@ -5,24 +5,15 @@
 # include <string>
 # include <list>
 # include "Logger.hpp"
+# include <sys/stat.h>
 
-# include "AEntity.hpp"
-# include "NetworkEntity.hpp"
-# include "RelayedEntity.hpp"
-
-# include "Client.hpp"
-# include "RelayedClient.hpp"
-# include "ClientInfo.hpp"
-
-# include "Server.hpp"
-# include "RelayedServer.hpp"
-# include "ServerInfo.hpp"
 
 namespace Parser
 {
 	std::string				getParam(std::string command, size_t idx);
 	std::list<std::string>	paramToList(std::string param);
 	size_t				 	nbParam(std::string command);
+	std::string				extractFirst(std::string & message);
 	bool					validNickname(std::string nick);
 	bool					validUser(std::string username);
 	bool					validChannelName(std::string channelName);

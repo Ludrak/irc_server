@@ -14,12 +14,12 @@ std::string 				Parser::getParam(std::string command, size_t idx)
 	if (specialEnd != std::string::npos && idx == nbParam - 1)
 		return command.substr(specialEnd + 2);
 	size_t start = 0;
-	size_t end = command.find(" ");
+	size_t end = command.find(' ');
 	while (idx > 0)
 	{
 		--idx;
 		start = end + 1;
-		end = command.find(" ", start);
+		end = command.find(' ', start);
 	}
 	if (end == std::string::npos)
 		return command.substr(start);
@@ -37,7 +37,7 @@ std::list<std::string>	Parser::paramToList(std::string param)
 	std::list<std::string> param_list;
 	while (end != std::string::npos)
 	{
-		end = param.find(",", start);
+		end = param.find(',', start);
 		if (end == std::string::npos)
 			param_list.push_back(param.substr(start));
 		else
@@ -54,15 +54,25 @@ size_t		 			Parser::nbParam(std::string command)
 		return 0;
 	size_t nbParam = 1;
 	size_t specialParam = command.find(" :");
-	size_t param = command.find(" ");
+	size_t param = command.find(' ');
 	while (param != std::string::npos && param + 1 < command.size())
 	{
 		nbParam++;
 		if (!(param < specialParam ))
 			break ;
-		param = command.find(" ", param + 1);
+		param = command.find(' ', param + 1);
 	}
 	return nbParam;
+}
+
+std::string				Parser::extractFirst(std::string & message)
+{
+	std::string extracted = Parser::getParam(message, 0);
+	size_t pos = message.find(' ');
+	message = message.substr(pos);
+	pos = message.find_first_not_of(' ');
+	message = message.substr(pos);
+	return extracted;
 }
 
 bool					Parser::validUser(std::string username)
@@ -130,7 +140,7 @@ bool					Parser::validPASSflags(std::string flags)
 {
 	if (flags.size() > 100)
 		return false;
-	size_t pos = flags.find("|");
+	size_t pos = flags.find('|');
 	if (pos == std::string::npos)
 		return false;
 	if (pos != 0 && flags.compare(0, pos, "IRC") != 0)

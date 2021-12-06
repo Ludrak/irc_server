@@ -4,6 +4,7 @@
 # include <iostream>
 # include <string>
 # include "AClient.hpp"
+# include "Parser.hpp"
 # include "IRCProtocol.hpp"
 
 class ChanBot : public AClient
@@ -19,19 +20,31 @@ class ChanBot : public AClient
 
 		bool			connect( void );
 
-
 		void			_onConnect ( SockStream &server);
         void			_onRecv( SockStream &server,  Package &pkg);
 	    void			_onQuit( SockStream &server);
+
+		void			parseMessage(std::string & message, uint nbParam);
+		void			parseNumericMessage(std::string & message, uint val);
+		void			addNewChannel(std::string & message);
+		void			validNewChannel(std::string & message);
+		void			handleMessage(std::string & message);
+
+		bool			inappropriateCheck(std::string & message);
 	
 	private:
-		std::list<std::string>		_dict;
+		std::vector<std::string>	_dict;
+		std::vector<std::string>	_channels;
+		std::list<std::string>		_pendingChan;
 
 		std::string					_name;
 		std::string					_host;
 		std::string					_password;
 		ushort						_port;
 		IRCProtocol					_protocol;
+
+		SockStream*					_currentStream;
+		std::string					_currentPrefix;		
 		
 
 
