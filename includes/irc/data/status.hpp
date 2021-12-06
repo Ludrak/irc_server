@@ -457,7 +457,7 @@ RPL_ENDOFMOTD (after).
 */
 # define RPL_MOTDSTART(exec, A) "375 " + exec + " :- " + A + " Message of the day - "
 
-# define RPL_MOTD(exec, A) "372 " + exec + ":- " + A 
+# define RPL_MOTD(exec, A) "372 " + exec + " :- " + A 
 
 # define RPL_ENDOFMOTD(exec) "376 " + exec + " :End of /MOTD command"
 

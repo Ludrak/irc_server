@@ -9,7 +9,10 @@ ChanBot::ChanBot(const std::string & host, ushort port, std::string & password, 
 {
 	Logger::debug("ChanBot contructor");
 	this->_useTLS = useTLS;
-	this->_dict.push_back("dick");
+	std::string dictPath("./conf/wordlist.txt");
+	if (this->loadDict(dictPath) == false)
+		Logger::error("failed to load dict file");
+	// printList();
 }
 
 ChanBot::ChanBot( const ChanBot & src )
@@ -219,15 +222,17 @@ void			ChanBot::handleMessage(std::string & message)
 	std::string target(Parser::extractFirst(message));
 	if (target == this->_name)
 		return Logger::warning("Receive a personal message from <" + this->_currentPrefix + ">:" + message);
+	/* Check if we are on this channel */
+	std::vector<std::string>::iterator fd = std::find(this->_channels.begin(), this->_channels.end(), target);
+	if (fd == this->_channels.end())
+		return Logger::info("handleMessage: Not on Channel <" + target + ">");
 	else if (this->inappropriateCheck(message) == true)
 	{
-		/* Message contain some inappropriate content */
 		Logger::warning("handleMessage: message from <" + this->_currentPrefix + "> contain some inappropriate content: reporting");
-		/* Check if we are on this channel */
-		std::vector<std::string>::iterator fd = std::find(this->_channels.begin(), this->_channels.end(), target);
-		if (fd != this->_channels.end())
-			return Logger::info("handleMessage: Not on Channel <" + target + ">");
-		
+		/* Kick user from channel */
+		//TODO
+		/* Send a private message to the abusive client */
+		//TODO
 	}
 	return ;
 }
@@ -242,6 +247,36 @@ bool		ChanBot::inappropriateCheck(std::string & message)
 	return false;
 }
 
+bool		ChanBot::loadDict(std::string & dictPath)
+{
+	std::ifstream ifs(dictPath);
+	if (!ifs.is_open() || !Parser::isRegularFile(dictPath.c_str()))
+	{
+		Logger::error("Cannot open/read file: " + dictPath);
+		return false;
+	}
+	else
+		Logger::debug("Dict file: " + dictPath + " opened.");
+	for (std::string line; std::getline(ifs, line);)
+	{
+		this->_dict.push_back(line);
+	}
+	Logger::info("Dict file loaded.");
+	return true;
+}
+
+void	ChanBot::printList( void )
+{
+	uint i = 0;
+	for (std::vector<std::string>::const_iterator it = this->_dict.begin(); it != this->_dict.end(); ++it)
+	{
+		std::cout << *it << ", ";
+		if (i % 12 == 0)
+			std::cout << std::endl;
+		++i;
+	}
+	std::cout << "Nb entry: " << i << std::endl;
+}
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
 */

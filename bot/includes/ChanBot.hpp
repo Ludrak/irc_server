@@ -3,6 +3,7 @@
 
 # include <iostream>
 # include <string>
+# include <fstream>
 # include "AClient.hpp"
 # include "Parser.hpp"
 # include "IRCProtocol.hpp"
@@ -31,6 +32,9 @@ class ChanBot : public AClient
 		void			handleMessage(std::string & message);
 
 		bool			inappropriateCheck(std::string & message);
+		bool			loadDict(std::string & dictPath);
+		void			printList( void );
+
 	
 	private:
 		std::vector<std::string>	_dict;
