@@ -5,7 +5,12 @@
 */
 
 ChanBot::ChanBot(const std::string & name, const std::string & host, ushort port, const std::string & password, const bool useTLS)
-: _name(name), _host(host), _password(password), _port(port), _currentStream(NULL)
+:	_name(name),
+	_host(host),
+	_password(password),
+	_port(port),
+	_preventingMessage("Hey you little brat!!!! You've been catched using an inappropriate language. You have been reported to the administrator, so don't do it again!"),
+	_currentStream(NULL)
 {
 	Logger::debug("ChanBot contructor");
 	this->_useTLS = useTLS;
@@ -149,8 +154,7 @@ void			ChanBot::parseMessage(std::string & message, uint nbParam)
 	{
 		/* There is a prefix */
 		this->_currentPrefix = Parser::extractFirst(message);
-		Logger::debug("Prefix: " + prefix);
-		Logger::debug("Message: " + message);
+		Logger::debug("Prefix: " + this->_currentPrefix);
 		nbParam--;
 	}
 	else
@@ -177,19 +181,21 @@ void			ChanBot::parseMessage(std::string & message, uint nbParam)
 void			ChanBot::parseNumericMessage(std::string & message, uint val)
 {
 	
-	Logger::warning("Handling value: " + ntos(val));
+	Logger::info("numeric value: " + ntos(val));
 	Logger::debug("Message: " + message);
 	/* Check if message is for us */
 	std::string recipient = Parser::extractFirst(message);
 	Logger::debug("recipient: " + recipient);
 	if (recipient != this->_name)
 		return Logger::debug("Message not for us");
-	if (val == 322)
+	else if (val == 322)
 	{
 		/* add a channel to the watching list */
 		return addNewChannel(message);
 	}
-
+	else{
+		Logger::debug("dropped message");
+	}
 	return ;
 }
 
@@ -228,18 +234,25 @@ void			ChanBot::handleMessage(std::string & message)
 	Logger::debug("msg = (" + message + ")");
 	std::string target(Parser::extractFirst(message));
 	if (target == this->_name)
-		return Logger::warning("Receive a personal message from <" + this->_currentPrefix + ">:" + message);
+		return Logger::warning("Receive a personal message from <" + this->_currentPrefix + ">: " + message);
 	/* Check if we are on this channel */
 	std::vector<std::string>::iterator fd = std::find(this->_channels.begin(), this->_channels.end(), target);
 	if (fd == this->_channels.end())
 		return Logger::info("handleMessage: Not on Channel <" + target + ">");
 	else if (this->inappropriateCheck(message) == true)
 	{
-		Logger::warning("handleMessage: message from <" + this->_currentPrefix + "> contain some inappropriate content: reporting");
+		std::string userName = this->getUsernameFromPrefix(this->_currentPrefix);
+		Logger::warning("handleMessage: message from <" + userName + ">(" + this->_currentPrefix + ") contain some inappropriate content: reporting");
+		
 		/* Kick user from channel */
-		//TODO
+		message = "KICK " + target + " " + userName + " :using an inappropriate language on channels is forbidden";
+		Package* package = new Package(this->_protocol, this->_protocol.format(message), this->_currentStream);
+		this->sendPackage(package, *this->_currentStream);
+
 		/* Send a private message to the abusive client */
-		//TODO
+		message = "PRIVMSG " + userName + " :" + this->_preventingMessage;
+		package = new Package(this->_protocol, this->_protocol.format(message), this->_currentStream);
+		this->sendPackage(package, *this->_currentStream);
 	}
 	return ;
 }
@@ -272,7 +285,7 @@ bool		ChanBot::loadDict(std::string & dictPath)
 	return true;
 }
 
-void	ChanBot::printList( void )
+void		ChanBot::printList( void )
 {
 	uint i = 0;
 	for (std::vector<std::string>::const_iterator it = this->_dict.begin(); it != this->_dict.end(); ++it)
@@ -284,9 +297,30 @@ void	ChanBot::printList( void )
 	}
 	std::cout << "Nb entry: " << i << std::endl;
 }
+
+
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
 */
 
+std::string		ChanBot::getUsernameFromPrefix(const std::string & prefix)
+{
+	size_t fullMark = prefix.find('@');
+	if ( fullMark == std::string::npos)
+	{
+		/* simple prefix */
+		return prefix.substr(1);
+	}
+	/* full prefix */
+	size_t userMark = prefix.find('!');
+	if ( userMark != std::string::npos)
+	{
+		/* full prefix with username */
+		return prefix.substr(1, userMark - 1);
+	}
+	/* full prefix without username */
+		return prefix.substr(1, fullMark - 1);
+	
+}
 
 /* ************************************************************************** */

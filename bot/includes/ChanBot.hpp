@@ -34,6 +34,7 @@ class ChanBot : public AClient
 		bool			inappropriateCheck(std::string & message);
 		bool			loadDict(std::string & dictPath);
 		void			printList( void );
+		std::string		getUsernameFromPrefix(const std::string & prefix);
 
 	
 	private:
@@ -45,6 +46,7 @@ class ChanBot : public AClient
 		std::string					_host;
 		std::string					_password;
 		ushort						_port;
+		std::string					_preventingMessage;
 		IRCProtocol					_protocol;
 
 		SockStream*					_currentStream;
