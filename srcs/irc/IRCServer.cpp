@@ -15,7 +15,7 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 	_handler(*this),
 	_protocol(),
 	_forwardPassword(""),
-	_creationTime(std::time(NULL)),
+	_creationTime(Logger::getInitialTimestamp()),
 	_operName("becomeOper"),
 	_operPassword("becomeOper"),
 	_shortMotdEnabled(true),
@@ -298,8 +298,8 @@ void							IRCServer::_sendMessage(AEntity & target, const std::string &message,
 		{
 			Logger::debug("Sending Client message: " + message);
 			Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<Client*>(&target)->getStream());
-
-			std::cout << "sendpkg " << package << "  " << &reinterpret_cast<Client*>(&target)->getStream() << std::endl;
+			//REVIEW is it persistant debug or can we remove it?
+			// std::cout << "sendpkg " << package << "  " << &reinterpret_cast<Client*>(&target)->getStream() << std::endl;
 			this->sendPackage(package, reinterpret_cast<Client*>(&target)->getStream());
 			break;
 		}	

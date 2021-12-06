@@ -155,6 +155,7 @@ bool	getForward(std::string arg, std::string *const host, ushort *const port, st
 
 int		main(int ac, char **av)
 {
+	Logger::init(INFO);
 	bool		has_network_connection = false;
 	std::string	network_host = "";
 	ushort		network_port = 0;
@@ -346,8 +347,6 @@ int		main(int ac, char **av)
 	Logger::info("* - info:            " + server_info);
 	Logger::info("*************************************************");
 
-//TODO add timestamp
-	Logger::setLogLevel(CORE);
 	IRCServer server(server_port, server_pass, server_host, ssl_cert, ssl_key, tls_port);
 
 	server.setName(server_name);

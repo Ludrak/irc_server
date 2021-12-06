@@ -128,7 +128,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		std::string					_operName;
 		std::string					_operPassword;
 		bool						_shortMotdEnabled;
-		uint						_debugLevel;
+		bool						_debugLevel;
 /*
 ** --------------------------------- EVENTS ---------------------------------
 */

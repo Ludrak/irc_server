@@ -89,10 +89,10 @@ uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 			this->getServer()._sendMessage(*new_serv, reply_msg);
 		}
 		/* Send our data to the new server */
+		Logger::info ("new server joined the network (" + new_serv->getUID() + "@" + new_serv->getStream().getHost() + ")");
 		Logger::info("Sharing local informations with the new server.");
 		this->_sendDataToServer(*new_serv);
 		this->getServer()._addServer(*new_serv, reinterpret_cast<UnRegisteredConnection*>(&executor));
-		Logger::info ("new server joined the network (" + new_serv->getUID() + "@" + new_serv->getStream().getHost() + ")");
 	}
 	else if ((executor.getType() & (Server::value_type | Server::value_type_forward)) && hopcount > 0)
 	{
