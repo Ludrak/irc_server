@@ -20,14 +20,12 @@ time_t		Logger::getInitialTimestamp( void )
 std::string	Logger::getTimestamp( void )
 {
 	char				buffer[80];
-	time_t				rawtime;
 	struct tm*			timeinfo;
     struct timeval		time_now;
 	std::stringstream	ss;
 
     gettimeofday(&time_now, nullptr);
-    rawtime = (time_now.tv_sec * 1000) + (time_now.tv_usec / 1000);
-	timeinfo = localtime(&rawtime);
+	timeinfo = localtime(&time_now.tv_sec);
 	strftime(buffer,sizeof(buffer),"%d-%m-%Y %H:%M:%S",timeinfo);
 	std::string ms(ntos(time_now.tv_usec));
 	ms.resize(3);
