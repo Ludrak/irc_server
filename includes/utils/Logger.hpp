@@ -3,6 +3,12 @@
 
 # include <string>
 # include <iostream>
+# include <ctime>
+# include <iomanip>
+# include <sstream>
+# include <sys/time.h>
+# include "ntos.hpp"
+
 
 # define RESET_ANSI		"\033[0m"		
 # define BOLD_ANSI		"\033[1m"		
@@ -25,19 +31,26 @@ typedef unsigned int uint;
 class Logger
 {
     public:
-        static uint		getLogLevel( void );
-        static void		setLogLevel(uint level);
-		
-		static void 	log (int level, const std::string &message);
-        static void		core( const std::string &message );
-        static void		debug( const std::string &message );
-        static void		info( const std::string &message );
-        static void		warning( const std::string &message );
-        static void		error( const std::string &message );
-        static void		critical( const std::string &message );
+		static void			init( uint level);
+
+		static time_t		getInitialTimestamp( void );
+		static std::string	getTimestamp( void );
+		static std::string	getTimestampOffset( void );
+        static uint			getLogLevel( void );
+        static void			setLogLevel(uint level);
+
+		static void 		log (uint level, const std::string &message);
+        static void			core( const std::string &message );
+        static void			debug( const std::string &message );
+        static void			info( const std::string &message );
+        static void			warning( const std::string &message );
+        static void			error( const std::string &message );
+        static void			critical( const std::string &message );
 
     private:
-		static uint logLevel;
+		static time_t		_initTime;
+		static uint			logLevel;
+
 };
 
 

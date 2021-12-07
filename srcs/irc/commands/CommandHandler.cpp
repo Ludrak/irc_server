@@ -63,15 +63,12 @@ uint			CommandHandler::handle(NetworkEntity & executor, std::string & data)
 	Logger::debug("Raw message: " + data);
 	if (data[0] == ':')
 	{
+		/* Retrieving emitter from prefix */
 		/* now, emitter is always filled with valid data */
 		this->_server.parsePrefix(executor, data.substr(0, data.find(" ")), &clientHost, &emitter, &uname);
 		data = data.substr(data.find(" ") + 1, data.size() - data.find(" ") - 1);
 		data = data.substr(data.find_first_not_of(" "), data.size() - data.find_first_not_of(" "));
-		if (clientHost == NULL)
-		{
-			//REVIEW In the end remove this debug
-			Logger::debug("handler: clientHost is NULL");
-		}
+		//REVIEW clientHost still needed?
 		if (emitter == NULL)
 		{
 			Logger::critical("Handler: Emitter is NULL");

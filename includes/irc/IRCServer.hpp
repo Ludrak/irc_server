@@ -44,6 +44,8 @@ class CommandHandler;
 # include "CommandNotice.hpp"
 # include "CommandNjoin.hpp"
 # include "CommandTopic.hpp"
+# include "CommandList.hpp"
+# include "CommandKick.hpp"
 
 # define SUCCESS				0
 
@@ -127,7 +129,7 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		std::string					_operName;
 		std::string					_operPassword;
 		bool						_shortMotdEnabled;
-		uint						_debugLevel;
+		bool						_debugLevel;
 /*
 ** --------------------------------- EVENTS ---------------------------------
 */
@@ -196,6 +198,8 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		friend class CommandNotice;
 		friend class CommandNjoin;
 		friend class CommandTopic;
+		friend class CommandList;
+		friend class CommandKick;
 
 		/* so that clients have a reference to the server they're on */
 		friend class ClientInfo;

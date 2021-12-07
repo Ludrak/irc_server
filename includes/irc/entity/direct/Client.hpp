@@ -25,10 +25,11 @@ class Client : public NetworkEntity, public ClientInfo
 			const std::string               &real_name
 		);
 
+		~Client();
+	
 		const std::string			getIdent( void ) const;
 		const std::string			getPrefix( void ) const;
 
-		~Client();
 };
 
 #endif /* ********************************************************** CLIENT_H */

@@ -1,7 +1,7 @@
 .PHONY: clean fclean re all os check_sources check_headers
 
 # Name of target executable
-NAME		= ft_irc
+NAME		= ChanBot
 
 # Locations 
 SRC_DIR		= srcs
@@ -9,115 +9,44 @@ INC_DIR		= includes
 BIN_DIR		= bin
 LIB_DIR		= lib
 
+PATH_SCORE	= ../srcs/core
+PATH_SUTIL	= ../srcs/utils
+PATH_HCORE	= ../includes/core
+PATH_HUTIL	= ../includes/utils
+
 # Sources & Headers 
 # - fill only with name of the file
 # - make will check for the file in SRC_DIR
 # - use "-" if empty
-SRCS=				SockStream.cpp \
-					SockHandler.cpp \
-					SockManager.cpp \
-					AClient.cpp \
-					AServer.cpp \
-					ANode.cpp \
-					CommonInfo.cpp \
-					ClientInfo.cpp \
-					ServerInfo.cpp \
-					ChannelInfo.cpp \
-					UnRegisteredConnectionInfo.cpp \
-					AEntity.cpp \
-					NetworkEntity.cpp \
-					RelayedEntity.cpp \
-					UnRegisteredConnection.cpp \
-					Client.cpp \
-					Server.cpp \
-					Channel.cpp \
-					Package.cpp \
-					IRCServer.cpp \
-					Protocol.cpp \
-					IRCProtocol.cpp \
-					Parser.cpp \
-					Logger.cpp \
-					main.cpp	
+SRCS		=	ChanBot.cpp \
+				main.cpp	
+HEAD		=	ChanBot.hpp
 
-HEADERS=			SockStream.hpp \
-					SockHandler.hpp \
-					SockManager.hpp \
-					AServer.hpp \
-					AClient.hpp \
-					ANode.hpp \
-					CommonInfo.hpp \
-					ClientInfo.hpp \
-					ServerInfo.hpp \
-					ChannelInfo.hpp \
-					AEntity.hpp \
-					NetworkEntity.hpp \
-					RelayedEntity.hpp \
-					UnRegisteredConnection.hpp \
-					Client.hpp \
-					Server.hpp \
-					Channel.hpp \
-					IRCServer.hpp \
-					Package.hpp \
-					IProtocol.hpp \
-					Protocol.hpp \
-					IRCProtocol.hpp \
-					Parser.hpp \
-					Logger.hpp \
-					status.hpp \
-					ntos.hpp
+SRCSCORE	=	SockStream.cpp \
+				SockHandler.cpp \
+				SockManager.cpp \
+				AClient.cpp \
+				Package.cpp \
+				Protocol.cpp \
+				IRCProtocol.cpp
 
-COMMANDS_SRCS=		CommandHandler.cpp \
-					ACommand.cpp \
-					CommandPass.cpp \
-					CommandNick.cpp \
-					CommandUser.cpp \
-					CommandPrivmsg.cpp \
-					CommandJoin.cpp \
-					CommandMode.cpp \
-					CommandQuit.cpp \
-					CommandSquit.cpp \
-					CommandOper.cpp \
-					CommandMotd.cpp \
-					CommandConnect.cpp \
-					CommandDie.cpp \
-					CommandPong.cpp \
-					CommandKill.cpp \
-					CommandNotice.cpp \
-					CommandPart.cpp \
-					CommandVersion.cpp \
-					CommandNjoin.cpp \
-					CommandError.cpp \
-					CommandTopic.cpp \
-					CommandList.cpp \
-					CommandKick.cpp \
-					CommandStats.cpp
-					
-COMMANDS_HEADERS=	CommandHandler.hpp \
-					ACommand.hpp \
-					CommandPass.hpp \
-					CommandNick.hpp \
-					CommandUser.hpp \
-					CommandPrivmsg.hpp \
-					CommandJoin.hpp \
-					CommandMode.hpp \
-					CommandQuit.hpp \
-					CommandSquit.hpp \
-					CommandOper.hpp \
-					CommandMotd.hpp \
-					CommandConnect.hpp \
-					CommandDie.hpp \
-					CommandPong.hpp \
-					CommandKill.hpp \
-					CommandNotice.hpp \
-					CommandPart.hpp \
-					CommandVersion.hpp \
-					CommandNjoin.hpp \
-					CommandError.hpp \
-					CommandTopic.hpp \
-					CommandList.hpp \
-					CommandKick.hpp \
-					CommandStats.hpp
 
+
+HEADCORE	=	SockStream.hpp \
+				SockHandler.hpp \
+				SockManager.hpp \
+				AClient.hpp \
+				Protocol.cpp \
+				IRCProtocol.hpp \
+				AServer.hpp \
+				Package.hpp
+
+SRCSUTILS	=	Logger.cpp \
+				Parser.cpp
+
+HEADUTILS	=	ntos.hpp \
+				Logger.hpp \
+				Parser.hpp
 
 # Librarys (only for local archives in project folder)
 LIBRARYS	= 
@@ -168,11 +97,22 @@ PREFIX_CLEAN=[\033[1;31mCLEAN\033[0m]
 ############################################################################################
 
 
-SRC_FILES	=	$(shell find $(SRC_DIR) | grep -E '$(shell echo $(SRCS) $(COMMANDS_SRCS) | tr ' ' '|')')
-HEADER_FILES=	$(shell find $(INC_DIR) | grep -E '$(shell echo $(HEADERS) $(COMMANDS_HEADERS) | tr ' ' '|')')
-OBJS		=	$(addprefix $(BIN_DIR)/, $(SRC_FILES:.cpp=.o))
-CPP_IFLAGS	+=	$(addprefix -I,$(INC_DIR)) $(addprefix -I,$(shell echo $(HEADER_FILES) | tr ' ' '\n' | rev | cut -d'/' -f2- | rev | sort | uniq))
-CPP_LFLAG	+=	$(addprefix -L,$(addprefix $(LIB_DIR), $(LIBRARYS)))
+SRC_FILES		=	$(shell find $(SRC_DIR) | grep -E '$(shell echo $(SRCS) | tr ' ' '|')')
+CORE_S_FILES	=	$(shell find $(PATH_SCORE) | grep -E '$(shell echo $(SRCSCORE) | tr ' ' '|')')
+UTILS_S_FILES	=	$(shell find $(PATH_SUTIL) | grep -E '$(shell echo $(SRCSUTILS) | tr ' ' '|')')
+
+HEADER_FILES	=	$(shell find $(INC_DIR) | grep -E '$(shell echo $(HEAD)  | tr ' ' '|')')
+CORE_H_FILES	=	$(shell find $(PATH_HCORE) | grep -E '$(shell echo $(HEADCORE)  | tr ' ' '|')')
+UTILS_H_FILES	=	$(shell find $(PATH_HUTIL) | grep -E '$(shell echo $(HEADUTILS)  | tr ' ' '|')')
+HEAD_ALL		=	$(HEADER_FILES) $(CORE_H_FILES) $(UTILS_H_FILES)
+
+OBJS			=	$(addprefix $(BIN_DIR)/, $(SRC_FILES:.cpp=.o))
+OBJS_CORE		=	$(addprefix $(BIN_DIR)/core, $(shell echo $(CORE_S_FILES:.cpp=.o) | sed "s|$(PATH_SCORE)||g"))
+OBJS_UTILS		=	$(addprefix $(BIN_DIR)/utils,  $(shell echo $(UTILS_S_FILES:.cpp=.o) | sed "s|$(PATH_SUTIL)||g"))
+
+OBJS_ALL		=	$(OBJS) $(OBJS_CORE) $(OBJS_UTILS)
+CPP_IFLAGS		+=	$(addprefix -I,$(INC_DIR)) $(addprefix -I,$(shell echo $(HEAD_ALL) | tr ' ' '\n' | rev | cut -d'/' -f2- | rev | sort | uniq))
+CPP_LFLAG		+=	$(addprefix -L,$(addprefix $(LIB_DIR), $(LIBRARYS)))
 
 #   Main rule
 all: select
@@ -239,8 +179,8 @@ check_headers:
 	fi
 
 #	Linking rule
-$(NAME): $(BIN_DIR) $(OBJS)
-	@$(CLANG) $(OBJS) -o $(NAME) $(CPP_FLAGS) $(CPP_LFLAGS)
+$(NAME): $(BIN_DIR) $(OBJS_ALL)
+	@$(CLANG) $(OBJS_ALL) -o $(NAME) $(CPP_FLAGS) $(CPP_LFLAGS)
 	@echo "$(PREFIX_PROJECT)$(PREFIX_LINK) Linking done for: $(NAME)"
 
 #	Bin directory
@@ -249,10 +189,25 @@ $(BIN_DIR):
 	@mkdir -p $(BIN_DIR)
 
 # Compilation rule 
-$(BIN_DIR)/$(SRC_DIR)/%.o : $(SRC_DIR)/%.cpp $(HEADER_FILES)
+$(BIN_DIR)/core/%.o : $(PATH_SCORE)/%.cpp $(HEAD_ALL)
+	@mkdir -p $(shell dirname $@)
+	@$(CLANG) -c $< -o $@ $(CPP_FLAGS) $(CPP_IFLAGS)
+	@echo "$(PREFIX_PROJECT)$(PREFIX_COMP) Compiled: $(shell basename $<)"
+
+
+# Compilation rule 
+$(BIN_DIR)/utils/%.o : $(PATH_SUTIL)/%.cpp $(HEAD_ALL)
+	@mkdir -p $(shell dirname $@)
+	@$(CLANG) -c $< -o $@ $(CPP_FLAGS) $(CPP_IFLAGS)
+	@echo "$(PREFIX_PROJECT)$(PREFIX_COMP) Compiled: $(shell basename $<)"
+
+
+# Compilation rule 
+$(BIN_DIR)/$(SRC_DIR)/%.o : $(SRC_DIR)/%.cpp $(HEAD_ALL)
 	@mkdir -p $(BIN_DIR)/$(shell dirname $<)
 	@$(CLANG) -c $< -o $@ $(CPP_FLAGS) $(CPP_IFLAGS)
 	@echo "$(PREFIX_PROJECT)$(PREFIX_COMP) Compiled: $(shell basename $<)"
+
 
 # clean rule
 clean:

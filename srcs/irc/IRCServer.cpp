@@ -15,7 +15,7 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 	_handler(*this),
 	_protocol(),
 	_forwardPassword(""),
-	_creationTime(std::time(NULL)),
+	_creationTime(Logger::getInitialTimestamp()),
 	_operName("becomeOper"),
 	_operPassword("becomeOper"),
 	_shortMotdEnabled(true),
@@ -504,6 +504,8 @@ void							IRCServer::_onClientQuit(SockStream &s)
 	else if (nEntity->getType() & Client::value_type)
 	{
 		reinterpret_cast<Client*>(nEntity)->leaveAllChannels("disconnected");
+		if (reinterpret_cast<Client*>(nEntity)->isCleanDisconnection() == false)
+			this->_sendAllServers(reinterpret_cast<Client*>(nEntity)->getPrefix() + " QUIT :connection lost");
 	}
 	else if (nEntity->getType() & RelayedClient::value_type)
 	{
@@ -744,6 +746,8 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandNotice>("NOTICE");
 	this->_handler.addCommand<CommandNjoin>("NJOIN");
 	this->_handler.addCommand<CommandTopic>("TOPIC");
+	this->_handler.addCommand<CommandList>("LIST");
+	this->_handler.addCommand<CommandKick>("KICK");
 }
 
 
@@ -830,7 +834,7 @@ bool								IRCServer::parsePrefix(NetworkEntity & executor, const std::string &
 		{
 			if (this->_clients.count(uid) == 0)
 			{
-				Logger::critical("Unknown server/client in prefix: " + uid);
+				Logger::warning("Unknown server/client in prefix: <" + uid + "> (normal if coming from forward's first message)");
 				*emitter = &executor;
 				return (false);
 			}

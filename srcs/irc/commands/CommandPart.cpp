@@ -22,14 +22,13 @@ CommandPart::~CommandPart()
 */
 
 /*
-   Command: PASS
-   Parameters: <password> <version> <flags> [<options>]
+   Command: PART
+   Parameters: <channel> *( "," <channel> ) [ <Part Message> ]
 */
 
 uint					CommandPart::operator()(NetworkEntity & executor, std::string params)
 {
 	(void)executor;
-	//Parser::paramToList(params);
 	int nParam = Parser::nbParam(params);
 	if (nParam == 0)
 		this->getServer()._sendMessage(this->getEmitter(), ERR_NEEDMOREPARAMS(this->getEmitter().getPrefix(), "PART"));
