@@ -125,7 +125,8 @@ uint	getArg(const char *const identifier,
 bool	getForward(std::string arg, std::string *const host, ushort *const port, std::string *const pass)
 {
 	std::string tmp;
-
+	if (!host || !port || !pass)
+		return false;
 	// getting host
 	*host = arg.substr(0, arg.find(":"));
 	tmp = arg.substr(arg.find(":") + 1, arg.size() - (arg.find(":") + 1));
@@ -134,13 +135,11 @@ bool	getForward(std::string arg, std::string *const host, ushort *const port, st
 	arg = tmp;
 
 	// getting port
-	try 
-	{
-		std::istringstream is(arg.substr(0, arg.find(":")));
-		is >> *port;
-	}
-	catch(std::invalid_argument e)
-	{ return (false); }
+	*port = 0;
+	std::istringstream is(arg.substr(0, arg.find(":")));
+	is >> *port;
+	if (*port == 0)
+		return false;
 	tmp = arg.substr(arg.find(":") + 1, arg.size() - (arg.find(":") + 1));
 	if (arg == tmp)
 		return (true);
@@ -156,6 +155,7 @@ bool	getForward(std::string arg, std::string *const host, ushort *const port, st
 
 int		main(int ac, char **av)
 {
+	Logger::init(INFO);
 	bool		has_network_connection = false;
 	std::string	network_host = "";
 	ushort		network_port = 0;
@@ -347,7 +347,6 @@ int		main(int ac, char **av)
 	Logger::info("* - info:            " + server_info);
 	Logger::info("*************************************************");
 
-	Logger::setLogLevel(CORE);
 	IRCServer server(server_port, server_pass, server_host, ssl_cert, ssl_key, tls_port);
 
 	server.setName(server_name);

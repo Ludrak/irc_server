@@ -16,9 +16,13 @@ class NetworkEntity : public AEntity
 
         const SockStream    &getStream() const;
         SockStream          &getStream();
+		bool				isCleanDisconnection( void ) const;
+		void				setCleanDisconnection( const bool clean );
 
     private:
         SockStream          &_stream;
+		bool				_cleanDisconnection;
+
 };
 
 #endif // NETWORK_ENTITY

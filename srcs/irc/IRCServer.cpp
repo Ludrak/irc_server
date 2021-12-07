@@ -15,7 +15,7 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 	_handler(*this),
 	_protocol(),
 	_forwardPassword(""),
-	_creationTime(std::time(NULL)),
+	_creationTime(Logger::getInitialTimestamp()),
 	_operName("becomeOper"),
 	_operPassword("becomeOper"),
 	_shortMotdEnabled(true),
@@ -298,8 +298,8 @@ void							IRCServer::_sendMessage(AEntity & target, const std::string &message,
 		{
 			Logger::debug("Sending Client message: " + message);
 			Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<Client*>(&target)->getStream());
-
-			std::cout << "sendpkg " << package << "  " << &reinterpret_cast<Client*>(&target)->getStream() << std::endl;
+			//REVIEW is it persistant debug or can we remove it?
+			// std::cout << "sendpkg " << package << "  " << &reinterpret_cast<Client*>(&target)->getStream() << std::endl;
 			this->sendPackage(package, reinterpret_cast<Client*>(&target)->getStream());
 			break;
 		}	
@@ -506,6 +506,8 @@ void							IRCServer::_onClientQuit(SockStream &s)
 	else if (nEntity->getType() & Client::value_type)
 	{
 		reinterpret_cast<Client*>(nEntity)->leaveAllChannels("disconnected");
+		if (reinterpret_cast<Client*>(nEntity)->isCleanDisconnection() == false)
+			this->_sendAllServers(reinterpret_cast<Client*>(nEntity)->getPrefix() + " QUIT :connection lost");
 	}
 	else if (nEntity->getType() & RelayedClient::value_type)
 	{
@@ -745,6 +747,8 @@ void							IRCServer::_initCommands( void )
 	this->_handler.addCommand<CommandKill>("KILL");
 	this->_handler.addCommand<CommandNotice>("NOTICE");
 	this->_handler.addCommand<CommandNjoin>("NJOIN");
+	this->_handler.addCommand<CommandList>("LIST");
+	this->_handler.addCommand<CommandKick>("KICK");
 }
 
 
@@ -831,7 +835,7 @@ bool								IRCServer::parsePrefix(NetworkEntity & executor, const std::string &
 		{
 			if (this->_clients.count(uid) == 0)
 			{
-				Logger::critical("Unknown server/client in prefix: " + uid);
+				Logger::warning("Unknown server/client in prefix: <" + uid + "> (normal if coming from forward's first message)");
 				*emitter = &executor;
 				return (false);
 			}

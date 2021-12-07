@@ -5,36 +5,23 @@
 # include <string>
 # include <list>
 # include "Logger.hpp"
+# include <sys/stat.h>
 
-# include "AEntity.hpp"
-# include "NetworkEntity.hpp"
-# include "RelayedEntity.hpp"
 
-# include "Client.hpp"
-# include "RelayedClient.hpp"
-# include "ClientInfo.hpp"
-
-# include "Server.hpp"
-# include "RelayedServer.hpp"
-# include "ServerInfo.hpp"
-
-class Parser
+namespace Parser
 {
-	public:
-		static std::string				getParam(std::string command, size_t idx);
-		static std::list<std::string>	paramToList(std::string param);
-		static std::string				formatReply(std::string message, std::string target = "", std::string target2 = "");
-		static size_t				 	nbParam(std::string command);
-		static bool						validNickname(std::string nick);
-		static bool						validUser(std::string username);
-		static bool						validChannelName(std::string channelName);
-		static bool						validVersionName(std::string version);
-		static bool						validPASSflags(std::string flags);
-		static bool 					isRegularFile(const char *path);
+	std::string				getParam(std::string command, size_t idx);
+	std::list<std::string>	paramToList(std::string param);
+	size_t				 	nbParam(std::string command);
+	std::string				extractFirst(std::string & message);
+	bool					validNickname(std::string nick);
+	bool					validUser(std::string username);
+	bool					validChannelName(std::string channelName);
+	bool					validVersionName(std::string version);
+	bool					validPASSflags(std::string flags);
+	bool 					isRegularFile(const char *path);
 
-		static bool						_isSpecial(char c);
-	private:
-
+	bool					_isSpecial(char c);
 };
 
 #endif /* ********************************************************** PARSER_H */
