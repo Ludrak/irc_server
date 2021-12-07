@@ -6,6 +6,9 @@
 # include <ctime>
 # include <iomanip>
 # include <sstream>
+# include <sys/time.h>
+# include "ntos.hpp"
+
 
 # define RESET_ANSI		"\033[0m"		
 # define BOLD_ANSI		"\033[1m"		
@@ -32,6 +35,7 @@ class Logger
 
 		static time_t		getInitialTimestamp( void );
 		static std::string	getTimestamp( void );
+		static std::string	getTimestampOffset( void );
         static uint			getLogLevel( void );
         static void			setLogLevel(uint level);
 

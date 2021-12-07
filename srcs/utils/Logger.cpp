@@ -19,6 +19,26 @@ time_t		Logger::getInitialTimestamp( void )
 
 std::string	Logger::getTimestamp( void )
 {
+	char				buffer[80];
+	time_t				rawtime;
+	struct tm*			timeinfo;
+    struct timeval		time_now;
+	std::stringstream	ss;
+
+    gettimeofday(&time_now, nullptr);
+    rawtime = (time_now.tv_sec * 1000) + (time_now.tv_usec / 1000);
+	timeinfo = localtime(&rawtime);
+	strftime(buffer,sizeof(buffer),"%d-%m-%Y %H:%M:%S",timeinfo);
+	std::string ms(ntos(time_now.tv_usec));
+	ms.resize(3);
+	ss << "[" << buffer << ":" << ms << "]";
+	return ss.str();
+
+}
+
+
+std::string	Logger::getTimestampOffset( void )
+{
 	//REVIEW optimisable par sauvegarde de valeur (par exemple recalculer la string des heures seulement lorsque les minutes reviennent à 0) (à creuser)
 	double	time = std::difftime(std::time(NULL), Logger::_initTime);
 	uint	seconds = static_cast<uint>(time);
@@ -70,31 +90,31 @@ void	Logger::setLogLevel(uint level)
 void    Logger::core( const std::string &message )
 {
 	if (Logger::logLevel >= CORE )
-	    std::cout << Logger::getTimestamp() << "[" << DBLUE_ANSI << "CORE" << RESET_ANSI << "]   | " << message << std::endl;
+	    std::cout << Logger::getTimestamp() << "[" << DBLUE_ANSI << "CORE" << RESET_ANSI << "] | " << message << std::endl;
 }
 
 void    Logger::debug( const std::string &message )
 {
 	if (Logger::logLevel >= DEBUG )
-	    std::cout << Logger::getTimestamp() << "[" << LGREY_ANSI << "DEBUG" << RESET_ANSI << "]  | " << message << std::endl;
+	    std::cout << Logger::getTimestamp() << "[" << LGREY_ANSI << "DEBUG" << RESET_ANSI << "]| " << message << std::endl;
 }
 
 void    Logger::info( const std::string &message )
 {
 	if (Logger::logLevel >= INFO )
-    	std::cout << Logger::getTimestamp() << "[" << GREEN_ANSI << "INFO" << RESET_ANSI << "]   | " << message << std::endl;
+    	std::cout << Logger::getTimestamp() << "[" << GREEN_ANSI << "INFO" << RESET_ANSI << "] | " << message << std::endl;
 }
 
 void    Logger::warning( const std::string &message )
 {
 	if (Logger::logLevel >= WARNING )
- 	   std::cerr << Logger::getTimestamp() << "[" << YELLOW_ANSI << "WARNING" << RESET_ANSI << "]| " << YELLOW_ANSI << message << RESET_ANSI << std::endl;
+ 	   std::cerr << Logger::getTimestamp() << "[" << YELLOW_ANSI << "WARN" << RESET_ANSI << "] | " << YELLOW_ANSI << message << RESET_ANSI << std::endl;
 }
 
 void    Logger::error( const std::string &message )
 {
 	if (Logger::logLevel >= ERROR )
-    	std::cerr << Logger::getTimestamp() << "[" << RED_ANSI << "ERROR" << RESET_ANSI << "]  | " << RED_ANSI << message << RESET_ANSI << std::endl;
+    	std::cerr << Logger::getTimestamp() << "[" << RED_ANSI << "ERROR" << RESET_ANSI << "]| " << RED_ANSI << message << RESET_ANSI << std::endl;
 }
 
 void    Logger::critical( const std::string &message )
