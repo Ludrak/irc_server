@@ -63,7 +63,7 @@ uint					CommandTopic::operator()(NetworkEntity & executor, std::string params)
 				this->getServer()._sendMessage(this->getEmitter(), ERR_NOTONCHANNEL(this->getEmitter().getUID(), chan_name));
 				return (SUCCESS);
 			}
-			else if (chan->getCreator()->getUID() != client.getUID())
+			else if (chan->getCreator()->getUID() != client.getUID() && nb != 1)
 			{
 				this->getServer()._sendMessage(this->getEmitter(), ERR_CHANOPRIVSNEEDED(this->getEmitter().getUID(), chan_name));
 				return (SUCCESS);
