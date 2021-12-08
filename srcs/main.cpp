@@ -192,7 +192,7 @@ void	printUsage(std::string exec_name)
 
 int		main(int ac, char **av)
 {
-	Logger::init(INFO);
+	Logger::init(CORE);
 	bool		has_network_connection = false;
 	std::string	network_host = "";
 	ushort		network_port = 0;

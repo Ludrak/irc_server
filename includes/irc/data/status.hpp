@@ -563,7 +563,7 @@ being displayed anyway.
 /* To answer a query about a client's own mode,
 RPL_UMODEIS is sent back.
 */
-# define RPL_UMODEIS(A) "221 " + A
+# define RPL_UMODEIS(exec, A) "221 " + exec + " " + A
 
 /* In processing an LUSERS message, the server
 sends a set of replies from RPL_LUSERCLIENT,

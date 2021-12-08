@@ -10,6 +10,14 @@ class IRCServer;
 
 # define NB_CLIENT_REGISTRATION_MAX 12
 
+
+/* User Modes */
+/* ! currently only MODE_OPERATOR is implemented ! */
+# define MODE_INVISIBLE 		(1 << 0)
+# define MODE_RECVSERVNOTICE	(1 << 1)
+# define MODE_WALLOPS			(1 << 2)
+# define MODE_OPERATOR			(1 << 3)
+
 //need Channel
 class Channel;
 
@@ -37,7 +45,7 @@ class ClientInfo
 		uint						getMode( void ) const;
 		std::string					getModeString( void );
 		bool						isEnable( uint modeMask ) const;
-		void						toogleMode( uint modeMask );
+		void						toggleMode( uint modeMask );
 		void						enableMode( uint modeMask );
 		void						disableMode( uint modeMask );
 
@@ -51,7 +59,6 @@ class ClientInfo
 		void						setHostname( const std::string &host );
 
 		bool						isServerOP( void ) const;
-		void						setServerOP( const bool op );
 
 		IRCServer					&getServerReference(void);
 
@@ -69,7 +76,6 @@ class ClientInfo
 		std::string					_realname;
 		std::string					_serverToken;
 		std::string					_host;
-		uint						_serverOp;
 		uint						_concurrentChannels;
 		uint						_concurrentChannelsMax;
 		std::list<Channel*>			_channels;

@@ -89,9 +89,8 @@ COMMANDS_SRCS=		CommandHandler.cpp \
 					CommandError.cpp \
 					CommandTopic.cpp \
 					CommandList.cpp \
-					CommandKick.cpp \
-					CommandStats.cpp
-					
+					CommandKick.cpp 
+
 COMMANDS_HEADERS=	CommandHandler.hpp \
 					ACommand.hpp \
 					CommandPass.hpp \
@@ -115,9 +114,7 @@ COMMANDS_HEADERS=	CommandHandler.hpp \
 					CommandError.hpp \
 					CommandTopic.hpp \
 					CommandList.hpp \
-					CommandKick.hpp \
-					CommandStats.hpp
-
+					CommandKick.hpp
 
 # Librarys (only for local archives in project folder)
 LIBRARYS	= 

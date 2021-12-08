@@ -51,7 +51,7 @@ std::list<std::string>	Parser::paramToList(std::string param)
 
 size_t		 			Parser::nbParam(std::string command)
 {
-	if (command.empty() || command.find_first_not_of(' ') == std::string::npos)
+	if (command.empty() || command.find_first_not_of(' ') == std::string::npos || command == ":")
 		return 0;
 	size_t nbParam = 1;
 	size_t specialParam = command.find(" :");

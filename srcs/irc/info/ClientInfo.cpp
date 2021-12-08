@@ -12,8 +12,7 @@ ClientInfo::ClientInfo(
 	_realname(real_name),
 	_serverToken(server_token),
 	_host(server_host),
-	_serverOp(false),
-	_concurrentChannels(0),
+ 	_concurrentChannels(0),
 	_concurrentChannelsMax(NB_CLIENT_REGISTRATION_MAX)
 {
 }
@@ -56,7 +55,7 @@ bool						ClientInfo::decrementJoinedChannels( void )
 }
 
 /* mode */
-void						ClientInfo::toogleMode(uint modeMask)
+void						ClientInfo::toggleMode(uint modeMask)
 {
 	this->_mode ^= modeMask;
 }
@@ -83,14 +82,34 @@ uint						ClientInfo::getMode() const
 
 std::string					ClientInfo::getModeString( void )
 {
-	//TODO return a string like (+iw) from mode mask
-	return std::string("+i");
+	std::string mode_str;
+	/*
+	i - marks a users as invisible;
+	s - marks a user for receipt of server notices;
+	w - user receives wallops;
+	o - operator flag.
+	*/
+	if (this->_mode & MODE_INVISIBLE)
+		mode_str += "i ";
+	if (this->_mode & MODE_RECVSERVNOTICE)
+		mode_str += "s ";
+	if (this->_mode & MODE_WALLOPS)
+		mode_str += "w ";
+	if (this->_mode & MODE_OPERATOR)
+		mode_str += "o ";
+	return mode_str;
 }
+
+
+
 
 const std::string&			ClientInfo::getRealname( void ) const
 {
 	return this->_realname;
 }
+
+
+
 
 void						ClientInfo::setRealname( const std::string &realname )
 {
@@ -119,12 +138,7 @@ void						ClientInfo::setHostname( const std::string &host )
 
 bool						ClientInfo::isServerOP( void ) const
 {
-	return (this->_serverOp > 0);
-}
-
-void						ClientInfo::setServerOP( const bool op )
-{
-	this->_serverOp = op;
+	return (this->_mode & MODE_OPERATOR);
 }
 
 IRCServer					&ClientInfo::getServerReference(void)
@@ -147,6 +161,9 @@ int 						ClientInfo::joinChannel(Channel &channel)
 	return SUCCESS;
 }
 
+
+
+
 void                        ClientInfo::leaveAllChannels(const std::string &info)
 {
     for (std::list<Channel*>::iterator it = this->_channels.begin(); it != this->_channels.end(); )
@@ -157,6 +174,9 @@ void                        ClientInfo::leaveAllChannels(const std::string &info
     this->_concurrentChannels = 0;
     this->_channels = std::list<Channel*>();
 }
+
+
+
 
 void                        ClientInfo::leaveChannel(Channel &channel, const std::string &info)
 {

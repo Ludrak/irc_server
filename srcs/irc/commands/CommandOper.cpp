@@ -49,7 +49,7 @@ uint					CommandOper::operator()(NetworkEntity & executor, std::string params)
 			return SUCCESS;
 		}
 		/* Successfully becoming an IRC operator */
-		static_cast<Client&>(executor).setServerOP(true);
+		static_cast<Client&>(executor).enableMode(MODE_OPERATOR);
 		Logger::info(executor.getUID() + " became an IRC operator.");
 		this->getServer()._sendMessage(executor, this->getServer().getPrefix() + RPL_YOUREOPER(executor.getUID()));
 		//TODO send mode +o message to other servers

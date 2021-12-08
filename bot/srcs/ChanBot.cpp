@@ -222,7 +222,13 @@ void			ChanBot::validNewChannel(std::string & message)
 	/* Receiving the server validation for joining a channel */
 	std::list<std::string>::iterator fd = std::find(this->_pendingChan.begin(), this->_pendingChan.end(), message);
 	if (fd == this->_pendingChan.end())
+	{
+		Logger::info("Request to join: " + message);
+		message = "JOIN " + message;
+		Package* package = new Package(this->_protocol, this->_protocol.format(message), this->_currentStream);
+		this->sendPackage(package, *this->_currentStream);
 		return Logger::error("validChan: Not pending");	
+	}
 	this->_pendingChan.remove(message);
 	this->_channels.push_back(message);
 	Logger::info("validChan: new channel <" + message + "> registered");

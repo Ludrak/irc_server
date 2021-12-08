@@ -48,7 +48,8 @@ uint					CommandMode::operator()(NetworkEntity & executor, std::string params)
 	{
 		if (nbParam < 2)
 		{
-			this->getServer()._sendMessage(executor, ERR_NEEDMOREPARAMS(executor.getUID(), std::string("MODE")));
+			//this->getServer()._sendMessage(executor, ERR_NEEDMOREPARAMS(executor.getUID(), std::string("MODE")));
+			this->getServer()._sendMessage(executor, RPL_UMODEIS(this->getEmitter().getUID(), static_cast<Client &>(this->getEmitter()).getModeString()));
 			return SUCCESS;
 		}		
 		this->modeForChannel(nbParam, executor, params);
@@ -88,7 +89,7 @@ void				CommandMode::modeForUser(NetworkEntity & executor, std::string uid, std:
 	{
 		//Query about mode of client
 		if (executor.getType() & Client::value_type)
-			this->getServer()._sendMessage(executor, RPL_UMODEIS(static_cast<Client &>(executor).getModeString()));
+			this->getServer()._sendMessage(executor, RPL_UMODEIS(this->getEmitter().getUID(), static_cast<Client &>(this->getEmitter()).getModeString()));
 		else
 			Logger::critical("Mode: unhandled type");
 		return ;
