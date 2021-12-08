@@ -13,10 +13,13 @@ class IRCServer;
 
 /* User Modes */
 /* ! currently only MODE_OPERATOR is implemented ! */
+// TODO update masks to fit USER mask
 # define MODE_INVISIBLE 		(1 << 0)
 # define MODE_RECVSERVNOTICE	(1 << 1)
 # define MODE_WALLOPS			(1 << 2)
 # define MODE_OPERATOR			(1 << 3)
+# define MODE_AWAY				(1 << 4)
+# define MODE_RESTRICTED		(1 << 5)
 
 //need Channel
 class Channel;
@@ -42,9 +45,12 @@ class ClientInfo
 		bool						decrementJoinedChannels( void );
 
 		/* mode */
+		uint						getModeBit( char c ) const;
 		uint						getMode( void ) const;
 		std::string					getModeString( void );
-		bool						isEnable( uint modeMask ) const;
+		bool						hasMode( uint modeMask ) const;
+		// 1 is on 0 or < is off
+		void						setMode( uint modeMask, int value);
 		void						toggleMode( uint modeMask );
 		void						enableMode( uint modeMask );
 		void						disableMode( uint modeMask );
@@ -79,6 +85,7 @@ class ClientInfo
 		uint						_concurrentChannels;
 		uint						_concurrentChannelsMax;
 		std::list<Channel*>			_channels;
+
 
 	private:
 		ClientInfo();

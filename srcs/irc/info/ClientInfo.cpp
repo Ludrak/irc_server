@@ -55,6 +55,14 @@ bool						ClientInfo::decrementJoinedChannels( void )
 }
 
 /* mode */
+void						ClientInfo::setMode(uint modeMask, int set)
+{
+	if (set > 0)
+		this->enableMode(modeMask);
+	else
+		this->disableMode(modeMask);
+}
+
 void						ClientInfo::toggleMode(uint modeMask)
 {
 	this->_mode ^= modeMask;
@@ -70,9 +78,31 @@ void						ClientInfo::disableMode(uint modeMask)
 	this->_mode &= ~modeMask;
 }
 
-bool						ClientInfo::isEnable(uint modeMask) const
+bool						ClientInfo::hasMode(uint modeMask) const
 {
 	return (this->_mode & modeMask);	
+}
+
+uint						ClientInfo::getModeBit(const char c) const
+{
+	switch (c)
+	{
+		case 'i':
+			return (MODE_INVISIBLE);
+		case 's':
+			return (MODE_RECVSERVNOTICE);
+		case 'w':
+			return (MODE_WALLOPS);
+		case 'o':
+			return (MODE_OPERATOR);
+		case 'a':
+			return (MODE_AWAY);
+		case 'r':
+			return (MODE_RESTRICTED);
+		default:
+			return (0);
+	}
+	return (0);
 }
 
 uint						ClientInfo::getMode() const
@@ -83,12 +113,6 @@ uint						ClientInfo::getMode() const
 std::string					ClientInfo::getModeString( void )
 {
 	std::string mode_str;
-	/*
-	i - marks a users as invisible;
-	s - marks a user for receipt of server notices;
-	w - user receives wallops;
-	o - operator flag.
-	*/
 	if (this->_mode & MODE_INVISIBLE)
 		mode_str += "i ";
 	if (this->_mode & MODE_RECVSERVNOTICE)
@@ -97,6 +121,10 @@ std::string					ClientInfo::getModeString( void )
 		mode_str += "w ";
 	if (this->_mode & MODE_OPERATOR)
 		mode_str += "o ";
+	if (this->_mode & MODE_AWAY)
+		mode_str += "a ";
+	if (this->_mode & MODE_RESTRICTED)
+		mode_str += "r ";
 	return mode_str;
 }
 
@@ -215,3 +243,4 @@ void                        ClientInfo::leaveChannel(Channel &channel, const std
 		delete &channel;
 	}
 }
+

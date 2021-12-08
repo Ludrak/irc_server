@@ -211,7 +211,7 @@ explicitly deny connections to you.
 
 # define ERR_CHANNELISFULL(A) "471 " + A + " :Cannot join channel (+l)"
 
-# define ERR_UNKNOWNMODE(A) "472 " + A + " :is unknown mode char to me"
+# define ERR_UNKNOWNMODE(exec, A) "472 " + exec + " " + A + " :is unknown mode char to me"
 
 # define ERR_INVITEONLYCHAN(A) "473 " + A + " :Cannot join channel (+i)"
 
@@ -252,7 +252,7 @@ returned.
 message was sent with a nickname parameter and that
 the a mode flag sent was not recognized.
 */
-# define ERR_UMODEUNKNOWNFLAG() "501 :Unknown MODE flag"
+# define ERR_UMODEUNKNOWNFLAG(exec) "501 " + exec + " :Unknown MODE flag"
 
 
 /* Error sent to any user trying to view or change the
@@ -357,7 +357,7 @@ Do not use RPL_LISTSTART: deprecated
 
 
 
-# define RPL_CHANNELMODEIS(A, B, C) "324 " + A + " " + B + " " + C
+# define RPL_CHANNELMODEIS(exec, A, B, C) "324 " + exec + " " +  A + " " + B + " " + C
 
 /* When sending a TOPIC message to determine the
 channel topic, one of two replies is sent.  If
