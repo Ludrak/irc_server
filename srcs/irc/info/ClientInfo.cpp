@@ -82,7 +82,7 @@ uint						ClientInfo::getMode() const
 
 std::string					ClientInfo::getModeString( void )
 {
-	std::string mode_str;
+	std::string mode_str = "+";
 	/*
 	i - marks a users as invisible;
 	s - marks a user for receipt of server notices;
