@@ -1,11 +1,37 @@
 #include "CommandMode.hpp"
 
+
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
 CommandMode::CommandMode(CommandHandler & handler) : ACommand(handler)
 {
+	this->chanOperations[CHANOP_CREATOR] = &CommandMode::_chanModeCreator;
+	this->chanOperations[CHANOP_OPERATOR] = &CommandMode::_chanModeOperator;
+	this->chanOperations[CHANOP_VOICEON] = &CommandMode::_chanModeVoiceOn;
+	this->chanOperations[CHANOP_ANONYMOUS] = &CommandMode::_chanModeAnonymous;
+	this->chanOperations[CHANOP_INVITEONLY] = &CommandMode::_chanModeInviteOnly;
+	this->chanOperations[CHANOP_MODERATED] = &CommandMode::_chanModeModerated;
+	this->chanOperations[CHANOP_LOCALONLY] = &CommandMode::_chanModeLocalOnly;
+	this->chanOperations[CHANOP_QUIET] = &CommandMode::_chanModeQuiet;
+	this->chanOperations[CHANOP_PRIVATE] = &CommandMode::_chanModePrivate;
+	this->chanOperations[CHANOP_SECRET] = &CommandMode::_chanModeSecret;
+	this->chanOperations[CHANOP_SERVERREOP] = &CommandMode::_chanModeServerReOP;
+	this->chanOperations[CHANOP_TOPICOPONLY] = &CommandMode::_chanModeTopicOPOnly;
+	this->chanOperations[CHANOP_HASKEY] = &CommandMode::_chanModeHasKey;
+	this->chanOperations[CHANOP_HASLIMIT] = &CommandMode::_chanModeHasLimit;
+	this->chanOperations[CHANOP_HASBANMASK] = &CommandMode::_chanModeHasBanMask;
+	this->chanOperations[CHANOP_HASBANEXCEPTIONS] = &CommandMode::_chanModeHasBanExceptions;
+	this->chanOperations[CHANOP_HASINVITATIONMASK] = &CommandMode::_chanModeHasInvitationMask;
+
+	this->userOperations[USEROP_AWAY] = &CommandMode::_usrModeAway;
+	this->userOperations[USEROP_INVISIBLE] = &CommandMode::_usrModeInvisible;
+	this->userOperations[USEROP_WALLOPS] = &CommandMode::_usrModeWallops;
+	this->userOperations[USEROP_RESTRICTED] = &CommandMode::_usrModeRestricted;
+	this->userOperations[USEROP_OPERATOR] = &CommandMode::_usrModeOperator;
+	this->userOperations[USEROP_LOCALOPER] = &CommandMode::_usrModeLocalOperator;
+	this->userOperations[USEROP_RECVSERVNOTICE] = &CommandMode::_usrModeRecvServNotice; // deprecated
 }
 
 /*
@@ -364,17 +390,12 @@ Channel:
 
 
 
-void					CommandMode::userMode(uint nb_params, std::string params, NetworkEntity& executor)
+void					CommandMode::_userMode(uint nb_params, std::string params, NetworkEntity& executor)
 {
 	(void) executor;
 	if (this->getEmitter().getFamily() != CLIENT_ENTITY_FAMILY)
 			return ;
 	ClientInfo *info = dynamic_cast<ClientInfo*>(&this->getEmitter());;
-	/*if (this->getEmitter().getType() & Client::value_type)
-		info = static_cast<ClientInfo*>(reinterpret_cast<Client*>(&this->getEmitter()));
-	else
-		info = static_cast<ClientInfo*>(reinterpret_cast<RelayedClient*>(&this->getEmitter()));
-	*/	
 	if (nb_params == 1)
 	{	
 		this->getServer()._sendMessage(this->getEmitter(), RPL_UMODEIS(this->getEmitter().getUID(), info->getModeString()));
@@ -459,7 +480,7 @@ void					CommandMode::userMode(uint nb_params, std::string params, NetworkEntity
 
 
 
-void					CommandMode::channelMode(uint nb_params, std::string params, NetworkEntity& executor)
+void					CommandMode::_channelMode(uint nb_params, std::string params, NetworkEntity& executor)
 {
 	(void) executor;
 	std::string chan_name = Parser::getParam(params, 0);
@@ -468,18 +489,25 @@ void					CommandMode::channelMode(uint nb_params, std::string params, NetworkEnt
 		Logger::critical("Channel in _enitites not in _channels list");
 		return;
 	}
-	ClientInfo *cli_info = dynamic_cast<ClientInfo*>(&this->getEmitter());
+
+	// OPERATIONS TO DO
+	std::vector<t_oper>	to_do;
+
+	//INFOS
+	ClientInfo			*cli_info = dynamic_cast<ClientInfo*>(&this->getEmitter());
+	AEntity				*client = static_cast<AEntity*>(&this->getEmitter());
+	ChannelInfo			*chan_info;
+	Channel				*chan;
+
 
 	// TODO IMPL -> bool ClientInfo::isRegisteredOn(const std::string &channel_name) const
 	int found = 0;
-	ChannelInfo *info;
-	Channel		*chan;
 	for (std::list<Channel*>::const_iterator it = cli_info->getChannels().begin(); it != cli_info->getChannels().end(); ++it)
 	{
 		if ((*it)->getUID() == chan_name)
 		{
 			chan = *it;
-			info = dynamic_cast<ChannelInfo*>(chan);
+			chan_info = dynamic_cast<ChannelInfo*>(chan);
 			found = 1;
 			break;
 		}
@@ -488,6 +516,7 @@ void					CommandMode::channelMode(uint nb_params, std::string params, NetworkEnt
 
 	if (!found)
 	{
+		//REVIEW notinchanel params
 		this->getServer()._sendMessage(this->getEmitter(), ERR_USERNOTINCHANNEL(this->getEmitter().getUID(), this->getEmitter().getUID(), this->getEmitter().getUID()));
 		return ;
 	}
@@ -495,30 +524,35 @@ void					CommandMode::channelMode(uint nb_params, std::string params, NetworkEnt
 	if (nb_params == 1)
 	{	
 		// TODO set mode args when implemented (key value, banmask value, etc...)
-		this->getServer()._sendMessage(this->getEmitter(), RPL_CHANNELMODEIS(this->getEmitter().getUID(), chan->getUID(), info->getModeString(), ""));
+		this->getServer()._sendMessage(this->getEmitter(), RPL_CHANNELMODEIS(this->getEmitter().getUID(), chan->getUID(), chan_info->getModeString(), ""));
 		return ;	
 	}
 
-	uint i = 1;
-	for (; i < nb_params; i++)
-	{
-		std::string param = Parser::getParam(params, i);
-		int			operation = 0;
+	// PARSING ACTIONS
+	uint	i = 1;
+	int		n_keys = 0;
+	for (; i < nb_params - n_keys; ++i)
+	{	
+		std::string 				param;
+		int							operation = 0;
+
+
+		param = Parser::getParam(params, i);
 		if (param[0] == '+')
 			operation = +1;
 		else if (param[0] == '-')
 			operation = -1;
+		
 		for (std::string::iterator mode_id = param.begin(); mode_id != param.end(); ++mode_id)
 		{
 			if (operation == 0)
 			{
-				if (info->getModeBit(*mode_id) == 0 && *mode_id != '+' && *mode_id != '-')
+				if (chan_info->getModeBit(*mode_id) == 0 && *mode_id != '+' && *mode_id != '-')
 				{
 					this->getServer()._sendMessage(this->getEmitter(), ERR_UNKNOWNMODE(this->getEmitter().getUID(), *mode_id));
 					continue;
 				}
-				// TODO set mode args when implemented (key value, banmask value, etc...)
-				std::string mode_str = info->getMode() & info->getModeBit(*mode_id) ? "+" : "-";
+				std::string mode_str = chan_info->getMode() & chan_info->getModeBit(*mode_id) ? "+" : "-";
 				mode_str.push_back(*mode_id);
 				this->getServer()._sendMessage(this->getEmitter(), RPL_CHANNELMODEIS(this->getEmitter().getUID(), chan->getUID(), mode_str, ""));
 				continue;
@@ -526,71 +560,134 @@ void					CommandMode::channelMode(uint nb_params, std::string params, NetworkEnt
 
 			switch (*mode_id)
 			{
-			
-			case 'O':
-				//REVIEW complex mode needs flagged variable
-				//info->setMode(, operation);				
-				break;
-			/*case 'o':
-				//REVIEW complex mode needs flagged variable
-				//info->setMode(, operation);				
-				break;
-			case 'v':
-				//REVIEW complex mode needs flagged variable
-				//info->setMode(, operation);
-				break;
-			case 'a':
-				info->setMode(MODE_CHAN_ANONYMOUS, operation);
-				break;
-			case 'i':
-				info->setMode(MODE_CHAN_INVITEONLY, operation);
-				break;
-			case 'm':
-				info->setMode(MODE_CHAN_MODERATED, operation);
-				break;
-			case 'n':
-				info->setMode(MODE_CHAN_LOCALONLY, operation);
-				break;
-			case 'q':
-				info->setMode(MODE_CHAN_QUIET, operation);
-				break;
-			case 'p':
-				info->setMode(MODE_CHAN_PRIVATE, operation);
-				break;
-			case 's':
-				info->setMode(MODE_CHAN_SECRET, operation);
-				break;
-			case 'r':
-				info->setMode(MODE_CHAN_SERVREOP, operation);
-				break;*/
-			case 't':
-				info->setMode(MODE_CHAN_TOPICOPONLY, operation);
-				break;
-			/*case 'k':
-				//REVIEW complex mode needs flagged variable
-				info->setMode(MODE_CHAN_HASKEY, operation);
-				break;
-			case 'l':
-				//REVIEW complex mode needs flagged variable
-				info->setMode(MODE_CHAN_HASLIMIT, operation);
-				break;
-			case 'b':
-				//REVIEW complex mode needs flagged variable
-				info->setMode(MODE_CHAN_HASBANMASK, operation);
-				break;
-			case 'e':
-				//REVIEW complex mode needs flagged variable
-				info->setMode(MODE_CHAN_HASBANEXCEPTIONS, operation);
-				break;
-			case 'I':
-				//REVIEW complex mode needs flagged variable
-				info->setMode(MODE_CHAN_HASINVITATIONSMASK, operation);
-				break;*/
-			default:
-				this->getServer()._sendMessage(this->getEmitter(), ERR_UNKNOWNMODE(this->getEmitter().getUID(), *mode_id));
-				break;
+				case 'O':
+				{
+					// exception here, client MUST have a reference to the requested channel
+					t_oper op = (t_oper){CHANOP_CREATOR, operation, "k", client, chan};
+					to_do.push_back(op);
+					++n_keys;
+					break;
+				}
+				case 'o':
+				{
+					// exception here, client MUST have a reference to the requested channel
+					t_oper op = (t_oper){CHANOP_OPERATOR, operation, "k", client, chan};
+					to_do.push_back(op);
+					++n_keys;
+					break;
+				}
+				case 'v':
+				{
+					// exception here, client MUST have a reference to the requested channel
+					t_oper op = (t_oper){CHANOP_VOICEON, operation, "k", client, chan};
+					to_do.push_back(op);
+					++n_keys;
+					break;
+				}
+				case 'a':
+				{
+					t_oper op = (t_oper){CHANOP_ANONYMOUS, operation, "", chan, NULL};
+					to_do.push_back(op);
+					break;
+				}
+				case 'i':
+				{
+					t_oper op = (t_oper){CHANOP_INVITEONLY, operation, "", chan, NULL};
+					to_do.push_back(op);
+					break;
+				}
+				case 'm':
+				{
+					t_oper op = (t_oper){CHANOP_MODERATED, operation, "", chan, NULL};
+					to_do.push_back(op);
+					break;
+				}
+				case 'n':
+				{
+					t_oper op = (t_oper){CHANOP_LOCALONLY, operation, "", chan, NULL};
+					to_do.push_back(op);
+					break;
+				}
+				case 'q':
+				{
+					t_oper op = (t_oper){CHANOP_QUIET, operation, "", chan, NULL};
+					to_do.push_back(op);
+					break;
+				}
+				case 'p':
+				{
+					t_oper op = (t_oper){CHANOP_PRIVATE, operation, "", chan, NULL};
+					to_do.push_back(op);
+					break;
+				}
+				case 's':
+				{
+					t_oper op = (t_oper){CHANOP_SECRET, operation, "", chan, NULL};
+					to_do.push_back(op);
+					break;
+				}
+				case 'r':
+				{
+					t_oper op = (t_oper){CHANOP_SERVERREOP, operation, "", chan, NULL};
+					to_do.push_back(op);
+					break;
+				}
+				case 't':
+				{
+					t_oper op = (t_oper){CHANOP_TOPICOPONLY, operation, "", chan, NULL};
+					to_do.push_back(op);
+					break;
+				}
+				case 'k':
+				{
+					t_oper op = (t_oper){CHANOP_HASKEY, operation, "k", chan, NULL};
+					to_do.push_back(op);
+					++n_keys;
+					break;
+				}
+				case 'l':
+				{
+					t_oper op = (t_oper){CHANOP_HASLIMIT, operation, "k", chan, NULL};
+					to_do.push_back(op);
+					++n_keys;
+					break;
+				}
+				case 'b':
+				{
+					t_oper op = (t_oper){CHANOP_HASBANMASK, operation, "k", chan, NULL};
+					to_do.push_back(op);
+					++n_keys;
+					break;
+				}
+				case 'e':
+				{
+					t_oper op = (t_oper){CHANOP_HASBANEXCEPTIONS, operation, "k", chan, NULL};
+					to_do.push_back(op);
+					++n_keys;
+					break;
+				}
+				case 'I':
+				{
+					t_oper op = (t_oper){CHANOP_HASINVITATIONMASK, operation, "k", chan, NULL};
+					to_do.push_back(op);
+					++n_keys;
+					break;
+				}
+				default:
+					this->getServer()._sendMessage(this->getEmitter(), ERR_UNKNOWNMODE(this->getEmitter().getUID(), *mode_id));
+					break;
 			}
 		}
+	}
+
+	uint k = nb_params - n_keys - 1;
+	i = 0;
+	for (; i < to_do.size(); ++i)
+	{
+		if (*to_do[i].key.begin() == 'k')
+			(this->*chanOperations[to_do[i].operation])(to_do[i].action, *cli_info, Parser::getParam(params, k++), to_do[i].option);
+		else
+			(this->*chanOperations[to_do[i].operation])(to_do[i].action, *cli_info, "", to_do[i].option);
 	}
 }
 
@@ -624,44 +721,279 @@ uint					CommandMode::operator()(NetworkEntity & executor, std::string params)
 	}
 
 	if (e->getType() & Channel::value_type)
-		this->channelMode(nbParam, params, executor);
+		this->_channelMode(nbParam, params, executor);
 	else
-		this->userMode(nbParam, params, executor);
+		this->_userMode(nbParam, params, executor);
 	
 	return (SUCCESS);
-
-
-
-
-	/* OLD */
-	/*
-	uint nbParam = Parser::nbParam(params);
-	if (nbParam == 0)
-	{
-		this->getServer()._sendMessage(executor, ERR_NEEDMOREPARAMS(executor.getUID(), std::string("MODE")));
-		return SUCCESS;
-	}
-	std::string uid = Parser::getParam(params, 0);
-	if (this->getServer()._entities.count(uid) == 0)
-	{
-		this->getServer()._sendMessage(executor, ERR_NOSUCHNICK(executor.getUID(), uid));
-		return SUCCESS;
-	}
-	else if (this->getServer()._channels.count(uid) == 1)
-	{
-		if (nbParam < 2)
-		{
-			//this->getServer()._sendMessage(executor, ERR_NEEDMOREPARAMS(executor.getUID(), std::string("MODE")));
-			this->getServer()._sendMessage(executor, RPL_UMODEIS(this->getEmitter().getUID(), static_cast<Client &>(this->getEmitter()).getModeString()));
-			return SUCCESS;
-		}		
-		this->modeForChannel(nbParam, executor, params);
-	}
-	else
-		this->modeForUser(executor, uid, Parser::getParam(params, 1));
-	return SUCCESS;
-	*/
 }
+
+
+
+
+void				CommandMode::_usrModeAway(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_usrModeInvisible(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_usrModeWallops(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_usrModeRestricted(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_usrModeOperator(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_usrModeLocalOperator(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_usrModeRecvServNotice(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_chanModeCreator(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_chanModeOperator(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_chanModeVoiceOn(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_chanModeAnonymous(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_chanModeInviteOnly(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_chanModeModerated(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_chanModeLocalOnly(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_chanModeQuiet(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_chanModePrivate(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_chanModeSecret(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_chanModeServerReOP(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_chanModeTopicOPOnly(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_chanModeHasKey(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_chanModeHasLimit(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_chanModeHasBanMask(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_chanModeHasBanExceptions(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
+
+void				CommandMode::_chanModeHasInvitationMask(int operation, ClientInfo& info, const std::string& key, const AEntity *option)
+{
+	(void)operation;
+	(void)info;
+	(void)key;
+	(void)option;
+}
+
+
+
 
 
 
@@ -679,46 +1011,4 @@ bool				CommandMode::hasPermissions(AEntity & executor)
 		return false;
 	}
 	return true;
-}
-
-void				CommandMode::modeForUser(NetworkEntity & executor, std::string uid, std::string mode)
-{
-	if (this->getEmitter().getUID() != uid)
-	{
-		Logger::debug("Njoin: " + this->getEmitter().getUID() + " Change mode for the other user: " + uid);
-		this->getServer()._sendMessage(executor, this->getServer().getPrefix() + ERR_USERSDONTMATCH(this->getEmitter().getUID()));
-		return ;
-	}
-	else if (mode.empty())
-	{
-		//Query about mode of client
-		if (executor.getType() & Client::value_type)
-			this->getServer()._sendMessage(executor, RPL_UMODEIS(this->getEmitter().getUID(), static_cast<Client &>(this->getEmitter()).getModeString()));
-		else
-			Logger::critical("Mode: unhandled type");
-		return ;
-	}
-	else
-	{
-		Logger::warning("TODO handle adding a user mode");
-	}
-	return ;
-}
-
-void				CommandMode::modeForChannel(uint nbParam, NetworkEntity & executor, std::string params)
-{
-	Logger::warning("TODO mode for channel");
-	//TODO Check if mode is valid
-	
-	std::string uid = Parser::getParam(params, 0);
-	if (this->getServer()._channels.count(uid) == 0)
-	{
-		this->getServer()._sendMessage(executor, ERR_NOSUCHCHANNEL(executor.getUID(), uid));
-		return ;
-	}
-	std::string mode = Parser::getParam(params, 2);
-	Channel *chan = this->getServer()._channels[uid];
-	if (mode.find("O") != std::string::npos && nbParam >= 3)
-		chan->setCreator(this->getEmitter());
-	return ;
 }
