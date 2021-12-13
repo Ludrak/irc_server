@@ -58,6 +58,14 @@ class CommandHandler;
 class IRCServer : public ANode, public AEntity, public ServerInfo
 {
 	public:
+		class InitialisationException : public std::exception
+		{
+			virtual const char*	what(void ) const throw ()
+			{
+				return "IRCserver initialisation failed. (see log for more informations)";	
+			}
+		};
+
 		static const uint	value_type;
 
 		IRCServer(ushort port = IRC_DEFAULT_PORT,
@@ -124,12 +132,16 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 /*
 ** ------------------------------- STATE -------------------------------
 */
+		void						_forgetLocalServer(Server & srv);
+
+
 		std::string					_forwardPassword;
 		time_t						_creationTime;
 		std::string					_operName;
 		std::string					_operPassword;
 		bool						_shortMotdEnabled;
 		bool						_debugLevel;
+
 /*
 ** --------------------------------- EVENTS ---------------------------------
 */
@@ -147,8 +159,8 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 
 		void				_addClient(AEntity &client, UnRegisteredConnection * executor);
 		void				_addServer(AEntity &server, UnRegisteredConnection * executor);
-		void				_deleteClient(const std::string &nick);
-		void				_deleteServer(const std::string &token);
+		// void				_deleteClient(const std::string &nick);
+		// void				_deleteServer(const std::string &token);
 
 		AEntity				*_registerClient(AEntity & client, int type);
 		void				_registerServer(AEntity & server, int type);

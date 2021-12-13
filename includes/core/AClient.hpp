@@ -16,6 +16,7 @@ class AClient : public virtual ASockManager
     public:
     class ConnectionException : std::exception
     {
+		//REVIEW remove usage of this exception? (no exceptions used in AServer)
         public:
             virtual const char  *what() const throw()
             {

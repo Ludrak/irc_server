@@ -10,15 +10,17 @@
 
 namespace Parser
 {
-	std::string				getParam(std::string command, size_t idx);
-	std::list<std::string>	paramToList(std::string param);
-	size_t				 	nbParam(std::string command);
-	std::string				extractFirst(std::string & message);
-	bool					validNickname(std::string nick);
-	bool					validUser(std::string username);
-	bool					validChannelName(std::string channelName);
-	bool					validVersionName(std::string version);
-	bool					validPASSflags(std::string flags);
+	std::string				getParam(const std::string &command, size_t idx, const std::string sep = " ");
+	size_t				 	nbParam(const std::string & command, const std::string sep = " ");
+	std::list<std::string>	paramToList(const std::string & param, const std::string sep = ",");
+	std::string				extractFirst(std::string & message, const std::string sep = " ");
+	bool					validNickname(const std::string & nick);
+	bool					validUser(const std::string & username);
+	bool					validChannelName(const std::string &channelName);
+	bool					validHostname(const std::string & hostname);
+	bool					validShortname(const std::string & hostname);
+	bool					validVersionName(const std::string & version);
+	bool					validPASSflags(const std::string & flags);
 	bool 					isRegularFile(const char *path);
 
 	bool					_isSpecial(char c);

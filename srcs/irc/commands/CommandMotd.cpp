@@ -29,16 +29,7 @@ uint					CommandMotd::operator()(NetworkEntity & executor, std::string params)
 {
 	(void) executor;
 	AEntity &emitter = this->getEmitter();
-	if (emitter.getFamily() == SERVER_ENTITY_FAMILY)
-	{
-		Logger::error("MOTD: Command requested by a server");
-		return SUCCESS;
-	}
-	else if ((emitter.getType() & (Client::value_type | RelayedClient::value_type)) == false)
-	{
-		Logger::critical("MOTD: unsupported type given: " + ntos(emitter.getType()));
-		return ERROR;
-	}
+
 	uint		nbParam = Parser::nbParam(params);
 	if (nbParam > 0)
 	{
@@ -51,11 +42,6 @@ uint					CommandMotd::operator()(NetworkEntity & executor, std::string params)
 			return SUCCESS;
 		}
 		AEntity *fwdServ = this->getServer()._servers[serverId];
-		if (fwdServ == NULL)
-		{
-			Logger::critical("MOTD: fwdServ should never be NULL");
-			return ERROR;
-		}
 		this->getServer()._sendMessage(*fwdServ, emitter.getPrefix() + " MOTD " + serverId);
 		return SUCCESS;
 	}
@@ -109,6 +95,10 @@ uint				CommandMotd::operator()(NetworkEntity & executor, std::string params, bo
 bool				CommandMotd::hasPermissions(AEntity & executor)
 {
 	if (executor.getType() & UnRegisteredConnection::value_type)
+		return false;
+	else if (this->getEmitter().getFamily() == SERVER_ENTITY_FAMILY)
+		return false;
+	else if ((this->getEmitter().getType() & (Client::value_type | RelayedClient::value_type)) == false)
 		return false;
 	return true;
 }

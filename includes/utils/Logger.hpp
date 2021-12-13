@@ -47,11 +47,11 @@
 # define CRITICAL_MSG_COLOR "\033[38;2;250;190;80m"
 
 // define prefix structure here
-# define CORE_LOG		"["CORE_COLOR"CORE"RESET_ANSI"]    | "CORE_MSG_COLOR"\033[3m"
-# define DEBUG_LOG      "["DEBUG_COLOR"DEBUG"RESET_ANSI"]   | "DEBUG_MSG_COLOR"\033[3m"
-# define INFO_LOG       "["INFO_COLOR"INFO"RESET_ANSI"]    | "INFO_MSG_COLOR
-# define WARNING_LOG    "["WARNING_COLOR"WARN"RESET_ANSI"]    | "WARNING_MSG_COLOR"\033[3m"
-# define ERROR_LOG      "["ERROR_COLOR"ERROR"RESET_ANSI"]   | "ERROR_MSG_COLOR
+# define CORE_LOG		"["CORE_COLOR"CORE"RESET_ANSI"] | "CORE_MSG_COLOR"\033[3m"
+# define DEBUG_LOG      "["DEBUG_COLOR"DEBUG"RESET_ANSI"]| "DEBUG_MSG_COLOR"\033[3m"
+# define INFO_LOG       "["INFO_COLOR"INFO"RESET_ANSI"] | "INFO_MSG_COLOR
+# define WARNING_LOG    "["WARNING_COLOR"WARN"RESET_ANSI"] | "WARNING_MSG_COLOR"\033[3m"
+# define ERROR_LOG      "["ERROR_COLOR"ERROR"RESET_ANSI"]| "ERROR_MSG_COLOR
 # define CRITICAL_LOG	"["CRITICAL_COLOR"CRITICAL"RESET_ANSI"]| "CRITICAL_MSG_COLOR
 
 typedef unsigned int uint;
@@ -66,7 +66,7 @@ class Logger
         static uint			getLogLevel( void );
         static void			setLogLevel(uint level);
 
-		static void 		log (uint level, const std::string &message);
+		static void			log(uint level, const std::string &message);
         static void			core( const std::string &message );
         static void			debug( const std::string &message );
         static void			info( const std::string &message );

@@ -40,15 +40,6 @@ CommandHandler &				CommandHandler::operator=( CommandHandler const & rhs )
 	return *this;
 }
 
-std::ostream &			operator<<( std::ostream & o, CommandHandler const & i )
-{
-	//REVIEW 
-	( void ) i;
-	o << "Handler = TODO";
-	return o;
-}
-
-
 /*
 ** --------------------------------- METHODS ----------------------------------
 */

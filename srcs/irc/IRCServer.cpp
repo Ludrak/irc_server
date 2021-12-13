@@ -5,7 +5,6 @@ const uint				IRCServer::value_type = Server::value_type;
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
-//REVIEW Server name maximum 63 character
 // TODO set server token, name & info 
 IRCServer::IRCServer(ushort port, const std::string & password, const std::string &host, const std::string &ssl_cert_path, const std::string &ssl_key_path, const ushort tls_port)
 :	ASockManager(ssl_cert_path, ssl_key_path),
@@ -29,11 +28,13 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 	Logger::info("- password : " + ntos(password));
 	this->setPassword(password);
 
-	this->listenOn(port, this->_protocol);
+	if (this->listenOn(port, this->_protocol) == false)
+		throw IRCServer::InitialisationException();
 
 	/* if key and cert are specified, listen on tls port */
 	if (!ssl_cert_path.empty() && !ssl_key_path.empty())
-		this->listenOn(tls_port, this->_protocol, true);
+		if (this->listenOn(tls_port, this->_protocol, true) == false)
+			throw IRCServer::InitialisationException();
 	
 	for (std::map<ushort, SockStream *>::iterator it = this->_sockets.begin(); it != this->_sockets.end(); ++it)
 	{
@@ -212,7 +213,7 @@ void							IRCServer::_addClient(AEntity &client, UnRegisteredConnection * execu
 	if (!this->_entities.insert(std::make_pair(client.getUID(), &client)).second)
 		Logger::critical("double insertion in _entities: trying to add a new client to an already used nickname");
 	else if (!this->_clients.insert(std::make_pair(client.getUID(), &client)).second)
-		Logger::critical("double insertion in _clients: trying to add a new client to an already used nickname");// TODO ~ error
+		Logger::critical("double insertion in _clients: trying to add a new client to an already used nickname");
 	else if (!(client.getType() & RelayedEntity::value_type) && !this->_connections.insert(std::make_pair(&static_cast<Client &>(client).getStream(), reinterpret_cast<NetworkEntity *>(&client))).second)
 		Logger::critical("double insertion in _connections: trying to add a new client to an already used nickname");
 	return ;
@@ -244,101 +245,30 @@ void							IRCServer::_addServer(AEntity &server, UnRegisteredConnection * execu
 
 
 
-void							IRCServer::_deleteClient(const std::string &nick)
-{
-	if (this->_entities.count(nick) == 1)
-	{
-		delete this->_entities[nick];
-		this->_entities.erase(nick);
-		if (this->_clients.erase(nick) != 1)
-		{
-			Logger::critical("bad deletion in _clients: trying to delete a new client which does not exist");
-			return;
-		}
-		return ;
-	}
-	Logger::critical("bad deletion in _entity: trying to delete a new client which does not exist");
-}
-
-
-
-void							IRCServer::_deleteServer(const std::string &nick)
-{
-	if (this->_entities.count(nick) == 1)
-	{
-		delete this->_entities[nick];
-		this->_entities.erase(nick);
-		if (this->_servers.erase(nick) != 1)
-		{
-			Logger::critical("bad deletion in _servers: trying to delete a new server which does not exist");
-			return;
-		}
-		return ;
-	}
-	Logger::critical("bad deletion in _entity: trying to delete a new server which does not exist");
-}
-
-
-
-
 
 void							IRCServer::_sendMessage(AEntity & target, const std::string &message, AEntity *except)
 {
-	int type = target.getType() & ~AEntity::value_type & ~NetworkEntity::value_type & ~RelayedEntity::value_type;// TODO ~ error
-	switch (type)
+	int			type = target.getType();
+	SockStream*	socketTarget;
+
+	Logger::debug("Sending to (" + target.getUID() + ") : (" + message + ")");
+	if (type & Channel::value_type)
 	{
-		case Channel::value_type :
-		{
-			Logger::debug("Sending channel message: " + message);
-			Package package(this->_protocol, this->_protocol.format(message));
-			reinterpret_cast<Channel*>(&target)->broadcastPackage(package, except ? except->getUID() : "");
-			break;
-		}
-		case Client::value_type :
-		{
-			Logger::debug("Sending Client message: " + message);
-			Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<Client*>(&target)->getStream());
-			this->sendPackage(package, reinterpret_cast<Client*>(&target)->getStream());
-			break;
-		}	
-		case RelayedClient::value_type :
-		{
-			Logger::debug("Sending RelayedClient message: " + message);
-			Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<RelayedClient*>(&target)->getServer().getStream());
-			this->sendPackage(package, reinterpret_cast<RelayedClient*>(&target)->getServer().getStream());
-			break;
-		}
-		case Server::value_type :
-		{
-			Logger::debug("Sending Server message: " + message);
-			Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<Server*>(&target)->getStream());
-			this->sendPackage(package, reinterpret_cast<Server*>(&target)->getStream());
-			break;
-		}
-		case Server::value_type_forward :
-		{
-			Logger::debug("Sending Forward Server message: " + message);
-			Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<Server*>(&target)->getStream());
-			this->sendServerPackage(package, reinterpret_cast<Server*>(&target)->getStream());
-			break;
-		}
-		case RelayedServer::value_type :
-		{
-			Logger::debug("Sending RelayedServer message: " + message);
-			Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<RelayedServer*>(&target)->getServer().getStream());
-			this->sendPackage(package, reinterpret_cast<RelayedServer*>(&target)->getServer().getStream());
-			break;
-		}
-		case UnRegisteredConnection::value_type :
-		{
-			Logger::debug("Sending UnregisteredConnection message: " + message);
-			Package *package = new Package(this->_protocol, this->_protocol.format(message), &reinterpret_cast<UnRegisteredConnection*>(&target)->getStream());
-			this->sendPackage(package, reinterpret_cast<UnRegisteredConnection*>(&target)->getStream());
-			break;
-		}
-		default:
-			Logger::critical("Unknown entity type to send message: " + message);
+		Package package(this->_protocol, this->_protocol.format(message));
+		reinterpret_cast<Channel*>(&target)->broadcastPackage(package, except ? except->getUID() : "");	
+		return ;
 	}
+	else if (type & NetworkEntity::value_type)
+		socketTarget = &static_cast<NetworkEntity&>(target).getStream();
+	else if (type & RelayedEntity::value_type)
+		socketTarget = &static_cast<RelayedEntity&>(target).getServer().getStream();
+	else
+	{
+		Logger::critical("Unknown entity type to send message: " + message);
+		return ;
+	}
+	Package *package = new Package(this->_protocol, this->_protocol.format(message), socketTarget);
+	this->sendPackage(package, *socketTarget);
 }
 
 
@@ -637,12 +567,7 @@ void				IRCServer::_onQuit( SockStream &server)
 		}
 		else ++it;
 	}
-	this->_entities.erase(nEntity->getUID());
-	this->_servers.erase(nEntity->getUID());
-	this->_connections.erase(&nEntity->getStream());
-	//REVIEW for a server we don't need to erase from unregisteredConnection right?
-	this->_unregistered_connections.erase(&nEntity->getStream());
-	delete nEntity;
+	this->_forgetLocalServer(*srv);
 	if (this->getDebugLevel())
 	{
 		Logger::debug("after onQuit: ");
@@ -861,6 +786,19 @@ bool								IRCServer::parsePrefix(NetworkEntity & executor, const std::string &
 		}
 	}
 	return (true);
+}
+
+/*
+** --------------------------------- STATE ---------------------------------
+*/
+
+
+void		IRCServer::_forgetLocalServer(Server & srv)
+{
+	this->_entities.erase(srv.getUID());
+	this->_servers.erase(srv.getUID());
+	this->_connections.erase(&srv.getStream());
+	delete &srv;
 }
 
 /* ************************************************************************** */

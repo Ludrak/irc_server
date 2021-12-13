@@ -8,6 +8,7 @@ AClient::AClient(const std::string &ssl_cert_path, const std::string &ssl_key_pa
 
 AClient::~AClient(void)
 {
+	Logger::core("AClient destructor");
 }
 
 

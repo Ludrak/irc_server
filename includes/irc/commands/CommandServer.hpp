@@ -4,6 +4,7 @@
 
 # include <iostream>
 # include <string>
+# include <iomanip>
 # include "ACommand.hpp"
 
 class CommandServer : public ACommand

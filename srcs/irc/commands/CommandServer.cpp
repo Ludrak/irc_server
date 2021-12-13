@@ -26,7 +26,6 @@ CommandServer::~CommandServer()
    Parameters: <servname> <hopcount> <token> [:<info>]
 */
 
-# include <iomanip>
 uint				CommandServer::operator()(NetworkEntity & executor, std::string params)
 {
 	if (!this->getServer()._password.empty() && executor.getPassword() != this->getServer()._password)

@@ -14,50 +14,6 @@ class AServer;
 class AServer : public virtual ASockManager
 {
 	public:
-		class AddressBindException : public std::exception
-		{
-			public:
-				virtual const char	*what() const throw()
-				{
-					return ("socket binding failed: ");
-				}
-		};
-		
-		class ListenException : public std::exception
-		{
-			public:
-				virtual const char	*what() const throw()
-				{
-					return ("server cannot listen: ");
-				}
-		};
-
-		class PollException : public std::exception
-		{
-			public:
-				virtual const char	*what() const throw()
-				{
-					return ("failed to poll on fds: ");
-				}
-		};
-
-		class IncomingConnectionException : public std::exception
-		{
-			public:
-				virtual const char	*what() const throw()
-				{
-					return ("Incoming connection failed: ");
-				}
-		};
-
-		class PacketReadingException : public std::exception
-		{
-			public:
-				virtual const char	*what() const throw()
-				{
-					return ("failed to read incoming data: ");
-				}
-		};
 		
 		AServer( const std::string &host="127.0.0.1", const std::string &ssl_cert_path="", const std::string &ssl_key_path="" );
 		virtual ~AServer();

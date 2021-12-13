@@ -67,13 +67,6 @@ bool	isValidServerMaxConnections(const std::string &param)
 	return (true);
 }
 
-bool	isValidServerHost(const std::string &str)
-{
-	// TODO check host validity
-	(void)str;
-	return (true);
-}
-
 bool    isValidSSLCert(const std::string &str)
 {
 	(void)str;
@@ -237,7 +230,7 @@ int		main(int ac, char **av)
 			return (EXIT_FAILURE);
 
 		/* server host */
-		arg_code = getArg("--host", argn, ac, av, isValidServerHost);
+		arg_code = getArg("--host", argn, ac, av, Parser::validHostname);
 		if (arg_code == ARG_OK)
 		{
 			server_host = std::string(av[argn + 1]);
@@ -391,17 +384,22 @@ int		main(int ac, char **av)
 	Logger::info("* - info:            " + server_info);
 	Logger::info("*************************************************");
 
-	IRCServer server(server_port, server_pass, server_host, ssl_cert, ssl_key, tls_port);
-
-	server.setName(server_name);
-	server.setUID(ss.str());
-	server.setInfo(server_info);
-	server.setDebugLevel(false);
-	server.setMaxConnection(server_max_connections);
-	if (has_network_connection)
-		server.connectToNetwork(network_host, network_port, network_pass);
-	else
-		Logger::info("No forward connection set: running server as root");
-	server.run();
+	try {
+		IRCServer server(server_port, server_pass, server_host, ssl_cert, ssl_key, tls_port);
+		server.setName(server_name);
+		server.setUID(ss.str());
+		server.setInfo(server_info);
+		server.setDebugLevel(false);
+		server.setMaxConnection(server_max_connections);
+		if (has_network_connection)
+			server.connectToNetwork(network_host, network_port, network_pass);
+		else
+			Logger::info("No forward connection set: running server as root");
+		server.run();
+	}
+	catch (const std::exception & e)
+	{
+		Logger::critical(e.what());
+	}
 	return (EXIT_SUCCESS);
 }

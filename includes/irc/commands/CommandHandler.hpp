@@ -26,7 +26,10 @@ class CommandHandler
 		void			addCommand( const std::string name)	
 		{
 			if (this->_commands.count(name) == 0)
+			{
+				Logger::debug("Handler: add command '" + name + "'");
 				this->_commands.insert(std::make_pair(name, new T(*this)));
+			}
 			else
 				Logger::critical("Handler: Command " + name + " is inserted twice.");
 		}
@@ -51,8 +54,5 @@ class CommandHandler
 
 # include "IRCServer.hpp"
 # include "ACommand.hpp"
-
-//TODO implement it for log in full debug
-std::ostream &			operator<<( std::ostream & o, CommandHandler const & i );
 
 #endif /* ************************************************** COMMANDHANDLER_HPP */

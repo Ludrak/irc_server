@@ -1,10 +1,6 @@
 #include "Parser.hpp"
 
-/*
-** --------------------------------- STATIC ----------------------------------
-*/
-
-std::string 				Parser::getParam(std::string command, size_t idx)
+std::string 				Parser::getParam(const std::string & command, size_t idx, const std::string sep)
 {
 	size_t nbParam = Parser::nbParam(command);
 	if (nbParam == 0 || idx >= nbParam)
@@ -15,12 +11,12 @@ std::string 				Parser::getParam(std::string command, size_t idx)
 	else if (specialEnd != std::string::npos && idx == nbParam - 1)
 		return command.substr(specialEnd + 2);
 	size_t start = 0;
-	size_t end = command.find(' ');
+	size_t end = command.find(sep);
 	while (idx > 0)
 	{
 		--idx;
-		start = command.find_first_not_of(' ', end + 1);
-		end = command.find(' ', start);
+		start = command.find_first_not_of(sep, end + 1);
+		end = command.find(sep, start);
 	}
 	if (end == std::string::npos)
 		return command.substr(start);
@@ -29,7 +25,30 @@ std::string 				Parser::getParam(std::string command, size_t idx)
 }
 
 
-std::list<std::string>	Parser::paramToList(std::string param)
+
+
+size_t		 			Parser::nbParam(const std::string & command, const std::string sep)
+{
+	if (command.empty() || command.find_first_not_of(sep) == std::string::npos || command == ":")
+		return 0;
+	size_t nbParam = 1;
+	size_t specialParam = command.find(" :");
+	if (specialParam + 2 == command.size())
+		specialParam = std::string::npos;
+	size_t paramEnd = command.find(sep);
+	while (paramEnd != std::string::npos && paramEnd + 1 < command.size())
+	{
+		nbParam++;
+		if (paramEnd >= specialParam )
+			break ;
+		paramEnd = command.find(sep, paramEnd + 1);
+		paramEnd = command.find_first_not_of(sep, paramEnd);
+	}
+	return nbParam;
+}
+
+
+std::list<std::string>	Parser::paramToList(const std::string & param, const std::string sep)
 {
 	if (param.empty())
 		return std::list<std::string>();
@@ -38,7 +57,7 @@ std::list<std::string>	Parser::paramToList(std::string param)
 	std::list<std::string> param_list;
 	while (end != std::string::npos)
 	{
-		end = param.find(',', start);
+		end = param.find(sep, start);
 		if (end == std::string::npos)
 			param_list.push_back(param.substr(start));
 		else
@@ -49,37 +68,17 @@ std::list<std::string>	Parser::paramToList(std::string param)
 }
 
 
-size_t		 			Parser::nbParam(std::string command)
-{
-	if (command.empty() || command.find_first_not_of(' ') == std::string::npos || command == ":")
-		return 0;
-	size_t nbParam = 1;
-	size_t specialParam = command.find(" :");
-	if (specialParam + 2 == command.size())
-		specialParam = std::string::npos;
-	size_t paramEnd = command.find(' ');
-	while (paramEnd != std::string::npos && paramEnd + 1 < command.size())
-	{
-		nbParam++;
-		if (paramEnd >= specialParam )
-			break ;
-		paramEnd = command.find(' ', paramEnd + 1);
-		paramEnd = command.find_first_not_of(' ', paramEnd);
-	}
-	return nbParam;
-}
-
-std::string				Parser::extractFirst(std::string & message)
+std::string				Parser::extractFirst(std::string & message, const std::string sep)
 {
 	std::string extracted = Parser::getParam(message, 0);
-	size_t pos = message.find(' ');
+	size_t pos = message.find(sep);
 	message = message.substr(pos);
-	pos = message.find_first_not_of(' ');
+	pos = message.find_first_not_of(sep);
 	message = message.substr(pos);
 	return extracted;
 }
 
-bool					Parser::validUser(std::string username)
+bool					Parser::validUser(const std::string & username)
 {
 	if (username.empty() || username.size() > 100)
 		return false;
@@ -94,7 +93,7 @@ bool					Parser::validUser(std::string username)
 }
 
 
-bool					Parser::validNickname(std::string nick)
+bool					Parser::validNickname(const std::string & nick)
 {
 	if (nick.empty() || nick.size() > 9)
 		return false;
@@ -108,7 +107,7 @@ bool					Parser::validNickname(std::string nick)
 	return true;
 }
 
-bool					Parser::validChannelName(std::string channelName)
+bool					Parser::validChannelName(const std::string & channelName)
 {
 	//REVIEW see for more correct parsing
 	if (channelName.size() < 2 || channelName.size() > 50)
@@ -128,7 +127,35 @@ bool					Parser::validChannelName(std::string channelName)
 	return true;
 }
 
-bool					Parser::validVersionName(std::string version)
+bool					Parser::validHostname(const std::string & hostname)
+{
+	if (hostname.empty() || hostname.size() > 63)
+		return false;
+	std::list<std::string> sNames = paramToList(hostname, ".");
+	for (std::list<std::string>::const_iterator it = sNames.begin(); it != sNames.end(); ++it)
+	{
+		if (validShortname(*it) == false)
+			return false;
+	}
+	return true;
+}
+
+bool					Parser::validShortname(const std::string & shortName)
+{
+	if (shortName.empty())
+		return false;
+	else if (isalnum(shortName[0]) == 0)
+		return false;
+	std::string::const_iterator it = shortName.begin();
+	for (; it != --(shortName.end()); ++it)
+	{
+		if (!isalnum(*it) && *it != '-')
+			return false;
+	}
+	return (isalnum(*it));
+}
+
+bool					Parser::validVersionName(const std::string & version)
 {
 	if (version.size() < 4 || version.size() > 14)
 		return false;
@@ -140,7 +167,7 @@ bool					Parser::validVersionName(std::string version)
 	return true;
 }
 
-bool					Parser::validPASSflags(std::string flags)
+bool					Parser::validPASSflags(const std::string & flags)
 {
 	if (flags.size() > 100)
 		return false;

@@ -19,6 +19,7 @@ AServer::AServer( const std::string &host, const std::string &ssl_cert_path, con
 
 AServer::~AServer()
 {
+	Logger::core("AServer destructor");
 }
 
 /*
@@ -273,6 +274,7 @@ bool						AServer::listenOn( ushort port, IProtocol &protocol , const bool useTL
 	if (bind(new_sock->getSocket(), reinterpret_cast<const sockaddr *>(&new_sock->getAddress()), sizeof(new_sock->getAddress())) != 0)
 	{
 		Logger::error(ntos("Can't bind on ") + new_sock->getIP() + ": " + ntos(strerror(errno)));
+		//TODO print also the adress used instead
 		return (false);
 	}
 	this->_sockets.insert(std::make_pair(new_sock->getSocket(), new_sock));

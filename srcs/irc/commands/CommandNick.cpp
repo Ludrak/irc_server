@@ -21,6 +21,8 @@ CommandNick::~CommandNick()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
+//TODO Improve by adding an except list to the possible nicknames (ex: RFC forbid `anonymous` as a valid nickname)
+
 /*
 User:
 	Command: NICK
@@ -137,17 +139,20 @@ uint				CommandNick::_nickFromServer(Server & executor, std::string & params)
 	is >> hopcount;
 	if (hopcount == 0)
 	{
-		Logger::error("Invalid hopcount argument: " + Parser::getParam(params, 1));
+		Logger::debug("Nick: Invalid hopcount. Command ignored");
 		return SUCCESS;
 	}
 	std::string username = Parser::getParam(params, 2);
 	if (Parser::validUser(username) == false)
 	{
-		Logger::debug("Invalid username, NICK command ignored");
+		Logger::debug("Nick: Invalid username. Command ignored");
 		return SUCCESS;
 	}
 	std::string host = Parser::getParam(params, 3);
-	//TODO check if valid hostname ?
+	if (Parser::validHostname(host) == 0)
+	{
+		Logger::debug("Nick: Invalid hostname. Command ignored");
+	}
 	std::string serverToken = Parser::getParam(params, 4);
 	//TODO check if valid severToken ?
 	std::string umode = Parser::getParam(params, 5);
