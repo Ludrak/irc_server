@@ -134,7 +134,6 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 */
 		void						_forgetLocalServer(Server & srv);
 
-
 		std::string					_forwardPassword;
 		time_t						_creationTime;
 		std::string					_operName;
@@ -159,8 +158,6 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 
 		void				_addClient(AEntity &client, UnRegisteredConnection * executor);
 		void				_addServer(AEntity &server, UnRegisteredConnection * executor);
-		// void				_deleteClient(const std::string &nick);
-		// void				_deleteServer(const std::string &token);
 
 		AEntity				*_registerClient(AEntity & client, int type);
 		void				_registerServer(AEntity & server, int type);

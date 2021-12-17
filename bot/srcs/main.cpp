@@ -1,6 +1,7 @@
 # include "ChanBot.hpp"
 
 //TODO add periodicaly check for new available channelq
+//TODO when receiving message about an unknow channel :> request to join this channel
 int main(int ac, char **av)
 {
 	if (ac < 4)

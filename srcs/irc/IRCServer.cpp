@@ -6,6 +6,7 @@ const uint				IRCServer::value_type = Server::value_type;
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 // TODO set server token, name & info 
+//REVIEW super idée: une fonction: executeAfterTimeout() qui permettrait de lancer un thread qui executera une fonction après un certain temps (genre setTimeout de js mais en cpp)
 IRCServer::IRCServer(ushort port, const std::string & password, const std::string &host, const std::string &ssl_cert_path, const std::string &ssl_key_path, const ushort tls_port)
 :	ASockManager(ssl_cert_path, ssl_key_path),
 	ANode(host),
@@ -249,7 +250,7 @@ void							IRCServer::_addServer(AEntity &server, UnRegisteredConnection * execu
 void							IRCServer::_sendMessage(AEntity & target, const std::string &message, AEntity *except)
 {
 	int			type = target.getType();
-	SockStream*	socketTarget;
+	SockStream*	socketTarget = NULL;
 
 	Logger::debug("Sending to (" + target.getUID() + ") : (" + message + ")");
 	if (type & Channel::value_type)
@@ -298,39 +299,34 @@ void							IRCServer::_sendMessage(SockStream & target, const std::string &messa
 
 void							IRCServer::_sendAllClients(const std::string &message, AEntity *except)
 {
+	SockStream* sock = NULL;
 	for (std::map<std::string, AEntity *>::iterator it = this->_clients.begin(); 
 	it != this->_clients.end(); 
 	++it)
 	{
+		
 		if (except && except->getUID() == it->second->getUID())
 			continue ;
-		Package *pkg;
 		if (it->second->getType() & Client::value_type)
-		{
-			SockStream& sock = static_cast<SockStream&>(reinterpret_cast<Client*>(it->second)->getStream());
-			pkg = new Package(this->_protocol, this->_protocol.format(message), &sock);
-			this->sendPackage(pkg, sock);
-		}
+			sock = &reinterpret_cast<Client*>(it->second)->getStream();
 		else if (it->second->getType() & RelayedClient::value_type)
-		{
-			SockStream& sock = static_cast<SockStream&>(reinterpret_cast<RelayedClient*>(it->second)->getServer().getStream());
-			pkg = new Package(this->_protocol, this->_protocol.format(message), &sock);
-			this->sendPackage(pkg, sock);
-		}
+			sock = &reinterpret_cast<RelayedClient*>(it->second)->getServer().getStream();
 		else
 			Logger::critical("non client family entity in server list");
+		Package *pkg = new Package(this->_protocol, this->_protocol.format(message), sock);
+		this->sendPackage(pkg, *sock);
 	}
 }
 
 void							IRCServer::_sendAllServers(const std::string &message, AEntity *except)
 {
+	Package *pkg = NULL;
 	for (std::map<std::string, AEntity *>::iterator it = this->_servers.begin();
 	it != this->_servers.end(); 
 	++it)
 	{
 		if (except && except->getUID() == it->second->getUID())
 			continue ;
-		Package *pkg;
 		if (it->second->getType() & (Server::value_type | Server::value_type_forward))
 		{
 			SockStream& sock = static_cast<SockStream&>(reinterpret_cast<Server*>(it->second)->getStream());
@@ -349,7 +345,7 @@ void							IRCServer::_sendAllServers(const std::string &message, AEntity *excep
 
 void						IRCServer::_onClientJoin(SockStream & s)
 {
-	UnRegisteredConnection *connection(new UnRegisteredConnection(s));
+	UnRegisteredConnection *connection = new UnRegisteredConnection(s);
 	this->_unregistered_connections.insert(std::make_pair(&s, connection));
 	this->_connections.insert(std::make_pair(&s, connection));
 	Logger::info("new incomming connection from " + s.getHost());
@@ -366,11 +362,15 @@ void						IRCServer::_onClientJoin(SockStream & s)
 void							IRCServer::_onClientRecv(SockStream & s, Package & pkg)
 {
 	NetworkEntity *entity = getEntityByStream(s);
-	if (!entity || pkg.getData().empty())
+	if (!entity)
+	{
+		Logger::critical("IRC: receive from an unknown entity");
+		return ;
+	}
+	if (pkg.getData().empty())
 		return ;
 	std::string payload = pkg.getData();
-	uint ret = this->_handler.handle(*entity, payload);
-	if (ret)
+	if (this->_handler.handle(*entity, payload))
 		Logger::error("onClientRecv: Something bad happened in handler");
 }
 
@@ -464,11 +464,15 @@ void							IRCServer::_onClientQuit(SockStream &s)
 void						IRCServer::_onRecv(SockStream &server, Package &pkg)
 {
 	NetworkEntity *entity = getEntityByStream(server);
-	if (!entity || pkg.getData().empty())
+	if (!entity) 
+	{
+		Logger::critical("IRC: receive from an unknown entity");
+		return ;
+	}
+	else if (pkg.getData().empty())
 		return ;
 	std::string payload = pkg.getData();
-	uint ret = this->_handler.handle(*entity, payload);
-	if (ret)
+	if (this->_handler.handle(*entity, payload))
 		Logger::error("onRecv: Something bad happened in handler");
 }
 
@@ -625,6 +629,7 @@ std::string					IRCServer::getCreationDate( void ) const
 
 std::string					IRCServer::getMotdsPath( void ) const
 {
+	//TODO add slash to the end and remove it where in use
 	return "./conf";
 }
 

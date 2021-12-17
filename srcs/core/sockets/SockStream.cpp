@@ -12,6 +12,7 @@ throw (InvalidHostException, SSLException)
 	_poll_events(POLLIN),
 #elif	defined(EPOLL)
 #elif	defined(SELECT)
+	_selectedIO(SELECT_IO_READ),
 #elif	defined(KQUEUE)
 	_kqueue_events(EVFILT_READ),
 #endif
@@ -32,6 +33,8 @@ throw (InvalidHostException, SSLException)
 #ifdef	POLL
 	_poll_events(POLLIN),
 #elif	defined(EPOLL)
+#elif	defined(SELECT)
+	_selectedIO(SELECT_IO_READ),
 #elif	defined(KQUEUE)
 	_kqueue_events(EVFILT_READ),
 #endif
@@ -45,13 +48,15 @@ throw (InvalidHostException, SSLException)
 	this->_createSocket(host, port);
 }
 
-SockStream::SockStream(ushort socket, const sockaddr_in &address, const IProtocol & protocol, const bool useTLS, SSL_CTX * const ctx)
+SockStream::SockStream(ushort socket, const sockaddr_in &address, const IProtocol & protocol, const bool useTLS, SSL_CTX *const ctx)
 throw (SSLException)
 :	_socket(socket),
 	_type(UNKNOWN),
 #ifdef	POLL
 	_poll_events(POLLIN),
 #elif	defined(EPOLL)
+#elif	defined(SELECT)
+	_selectedIO(SELECT_IO_READ),
 #elif	defined(KQUEUE)
 	_kqueue_events(EVFILT_READ),
 #endif

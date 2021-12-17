@@ -130,8 +130,8 @@ void            ASockManager::run( void )
 /* respectivy should be the best options performance-wise                   */
 void            ASockManager::run( void )
 {
-    fd_set  read_efds;
-    fd_set  write_efds;
+    fd_set  read_efds = {0};
+    fd_set  write_efds = {0};
     int     big_fd = 0;
 
     Logger::info("Manager running using select()");
@@ -160,7 +160,6 @@ void            ASockManager::run( void )
             Logger::critical("select() failed: " + ntos(strerror(errno)));
             return ;
         }
-
         /* getting io events from sets */
         for (std::map<ushort, SockStream*>::iterator it = this->_sockets.begin(); it != this->_sockets.end(); ++it)
         {
@@ -177,7 +176,7 @@ void            ASockManager::run( void )
             }
             if (events > 0)
             {
-                size_t sz = this->_sockets.size();
+                size_t oldSize = this->_sockets.size();
 				try {
                 	this->_onPollEvent(it->second->getSocket(), events);
 				}
@@ -186,7 +185,7 @@ void            ASockManager::run( void )
 					Logger::warning(e.what());
 				}
 				/* Check if a socket has been removed */
-                if (this->_sockets.size() != sz)
+                if (this->_sockets.size() != oldSize)
                     break;
             }
         }

@@ -32,12 +32,15 @@ void						AServer::run()
 	this->_running = true;
 	for (std::map<ushort, SockStream *>::iterator it = this->_sockets.begin(); it != this->_sockets.end(); it++)
 	{
-		/* TODO maybe set a by port default max connection as std::map<ushort port, uint max_connections> */
-		if (it->second->getType() == SERVER && listen(it->first, this->_defaultMaxConnections) != 0)
+		if (it->second->getType() != SERVER)
+			continue;
+		else if (listen(it->first, this->_defaultMaxConnections) != 0)
 		{
 			Logger::error(ntos("can't listen on ") + it->second->getIP() + " : " + strerror(errno));
 			return ;
 		}
+		else
+			Logger::core("listening on socket <" + ntos(it->first) + ">");
 	}
 	ASockManager::run();
 }
@@ -67,6 +70,7 @@ t_pollevent					AServer::_pollFromServer(int socket, int event)
 		Logger::error(ntos("accept() returned a negative value: ") + strerror(errno));
 		return (POLL_NOACCEPT);
 	}
+	Logger::core("AServer: socket <" + ntos(client_sock) + "> accepted");
 	
 	SockStream	*client_ss = new SockStream(client_sock, client_addr, *it->second->getProtocol(), this->_sockets[socket]->hasTLS(), this->_ssl_ctx);
 	int ret = 1;
@@ -247,6 +251,7 @@ t_pollevent					AServer::_pollOutClients(SockStream & sock)
 t_pollevent					AServer::_onPollEvent(int socket, int event)
 {
 #ifdef KQUEUE
+//REVIEW bad use of map[]
 	if (this->_sockets[socket] && event == EV_EOF)
 		return POLL_DELETE;
 #endif
@@ -277,7 +282,7 @@ bool						AServer::listenOn( ushort port, IProtocol &protocol , const bool useTL
 		//TODO print also the adress used instead
 		return (false);
 	}
-	this->_sockets.insert(std::make_pair(new_sock->getSocket(), new_sock));
+	this->addSocket(*new_sock);
 	if (this->_running && listen(new_sock->getSocket(), this->_maxConnections) != 0)
 	{
 		Logger::error(ntos("Can't listen on ")  + new_sock->getIP() + ": " + ntos(strerror(errno)));

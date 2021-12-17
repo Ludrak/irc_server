@@ -145,7 +145,8 @@ OPENSSL_VERSION=1.1
 OPENSSL_PATH= $(shell brew --prefix openssl@$(OPENSSL_VERSION))
 
 CLANG		=	clang++
-CPP_FLAGS	=	-Wextra -Wall -Werror -std=c++98 -g3 -fsanitize=address
+CPP_FLAGS	=	-Wextra -Wall -Werror -std=c++98
+#-g3 -fsanitize=address
 CPP_IFLAGS	=	-I $(OPENSSL_PATH)/include
 
 CPP_LFLAGS	= -lssl -lcrypto \

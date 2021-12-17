@@ -181,9 +181,9 @@ t_pollevent		AClient::_pollFromServers(SockStream & sock, int event)
 
 t_pollevent     AClient::_onPollEvent(int socket, int event)
 {
-	SockStream  *sock = this->_sockets[socket];
-	if (!sock)
+	if (!this->_sockets.count(socket))
 		return (POLL_NOTFOUND);
+	SockStream  *sock = this->_sockets[socket];
 	if (sock->getType() == CLIENT)
 		return (this->_pollFromServers(*sock, event));
 	return (POLL_NOTFOUND);
