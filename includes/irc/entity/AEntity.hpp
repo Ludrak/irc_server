@@ -31,17 +31,17 @@ class	AEntity : public CommonInfo
 		static const uint	value_type = ENTITY_TYPE;
 
 		virtual ~AEntity();
-		uint				getType() const;
-		uint				getFamily() const;
-		time_t				getCreationTime() const;
+		uint					getType() const;
+		uint					getFamily() const;
+		const struct timeval	&getCreationTime() const;
 
 		virtual const std::string		getPrefix( void ) const;
 	protected:
-		AEntity( const int type, const std::string &uid );
+		AEntity( const int type, const std::string &uid, const struct timeval * time = NULL);
 
 		uint				_type;
 		uint				_family;
-		time_t				_creationTime;
+		struct timeval		_creationTime;
 };
 
 #endif /* ******************************************************** AENTITY_HPP */

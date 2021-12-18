@@ -186,6 +186,7 @@ bool					Parser::_isSpecial(char c)
 	return false;
 }
 
+//REVIEW secure stat() return ;
 bool 					Parser::isRegularFile(const char *path)
 {
     struct stat path_stat;
@@ -193,4 +194,10 @@ bool 					Parser::isRegularFile(const char *path)
     return S_ISREG(path_stat.st_mode);
 }
 
+bool					Parser::isDirectory(const char *path)
+{
+	struct stat s;
+	stat(path,&s);
+	return ( s.st_mode & S_IFDIR );
+}
 /* ************************************************************************** */

@@ -98,7 +98,7 @@ void		CommandUser::_sendWelcomeInfos(Client & new_client)
 	Logger::debug("pref = " + pref);
 	this->getServer()._sendMessage(new_client, this->getServer().getPrefix() + RPL_WELCOME(new_client.getUID(), pref));
 	this->getServer()._sendMessage(new_client, this->getServer().getPrefix() + RPL_YOURHOST(new_client.getUID(), this->getServer().getUID(), this->getServer().getVersion()));
-	this->getServer()._sendMessage(new_client, this->getServer().getPrefix() + RPL_CREATED(new_client.getUID(), this->getServer().getCreationDate()));
+	this->getServer()._sendMessage(new_client, this->getServer().getPrefix() + RPL_CREATED(new_client.getUID(), Logger::timeToString(this->getServer().getCreationTime())));
 	// this->getServer()._sendMessage(executor, RPL_MYINFO());
 	//TODO do RPL_MYINFO
 	std::string cmdName("MOTD");

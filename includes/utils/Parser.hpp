@@ -22,6 +22,7 @@ namespace Parser
 	bool					validVersionName(const std::string & version);
 	bool					validPASSflags(const std::string & flags);
 	bool 					isRegularFile(const char *path);
+	bool					isDirectory(const char *path);
 
 	bool					_isSpecial(char c);
 };

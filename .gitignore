@@ -7,7 +7,7 @@ inspircd
 .vscode
 .gitignore
 certificates/*
-
+*.irclog
 # nlecaill
 random
 

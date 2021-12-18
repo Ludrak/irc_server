@@ -5,12 +5,16 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-AEntity::AEntity(const int type, const std::string &uid) 
+AEntity::AEntity(const int type, const std::string &uid, const struct timeval *creation)
 :	CommonInfo(uid),
 	_type(type | AEntity::value_type),
-	_family(ENTITY_FAMILY),
-	_creationTime(time(NULL))
+	_family(ENTITY_FAMILY)
 {
+	if (creation)
+		_creationTime = *creation;
+	else
+		gettimeofday(&_creationTime, NULL);
+	
 }
 
 /*
@@ -36,7 +40,7 @@ const std::string	AEntity::getPrefix( void ) const
 	return ":" + this->_uid + " ";
 }
 
-time_t				AEntity::getCreationTime() const
+const struct timeval	&AEntity::getCreationTime( void ) const
 {
 	return (this->_creationTime);
 }

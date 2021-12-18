@@ -1,35 +1,57 @@
 #include "Logger.hpp"
 
-uint		Logger::logLevel = DEBUG;
-time_t 		Logger::_initTime;
+uint			Logger::_logLevel = DEBUG;
+struct timeval 	Logger::_initTime;
+std::ofstream	Logger::_logfile;
 
 
-void		Logger::init(uint level)
+void		Logger::init(uint level, const std::string & filename)
 {
 	setLogLevel(level);
-	std::time(&Logger::_initTime);
+    gettimeofday(&_initTime, nullptr);
+	initLogfile(filename);
 	info("Logger initialisation done.");
 }
 
-
-time_t		Logger::getInitialTimestamp( void )
+void		Logger::initLogfile(const std::string & filename )
+{
+	if (!filename.empty())
+	{
+		/* set a log file */
+		_logfile.open(filename, std::ofstream::out | std::ofstream::app);
+		if (_logfile.is_open() == false)
+			throw Logger::logFileException();
+		info("logfile (" + filename + ") initialisation done");
+	}
+}
+const struct timeval	&Logger::getInitialTimestamp( void )
 {
 	return Logger::_initTime;
 }
 
-std::string	Logger::getTimestamp( void )
+std::string		Logger::timeToString( const struct timeval & time )
 {
-	char				buffer[80];
-	struct tm*			timeinfo;
+	char		buffer[80];
+	struct tm*	timeinfo;
+
+	timeinfo = localtime(&time.tv_sec);
+	buffer[strftime(buffer, sizeof(buffer), "%d-%m-%Y %H:%M:%S", timeinfo)] = '\0';
+	return buffer;
+}
+
+std::string	Logger::getTimestamp( bool color )
+{
     struct timeval		time_now;
 	std::stringstream	ss;
 
     gettimeofday(&time_now, nullptr);
-	timeinfo = localtime(&time_now.tv_sec);
-	strftime(buffer,sizeof(buffer), "%d-%m-%Y %H:%M:%S", timeinfo);
+
 	std::string ms(ntos(time_now.tv_usec));
 	ms.resize(3);
-	ss << "["TIMESTAMP_COLOR << buffer << ":" << ms << RESET_ANSI"]";
+	if (color)
+		ss << "["TIMESTAMP_COLOR << timeToString(time_now) << ":" << ms << RESET_ANSI"]";
+	else
+		ss << "[" << timeToString(time_now) << ":" << ms << "]";
 	return ss.str();
 
 }
@@ -63,46 +85,58 @@ void		Logger::log( uint level, const std::string &message )
 
 uint	Logger::getLogLevel( void )
 {
-	return Logger::logLevel;
+	return Logger::_logLevel;
 }
 
 void	Logger::setLogLevel(uint level)
 {
-	Logger::logLevel = level;
+	Logger::_logLevel = level;
 }
 
 void	Logger::core( const std::string &message )
 {
-	if (Logger::logLevel >= CORE )
+	Logger::logToFile(message);
+	if (Logger::_logLevel >= CORE )
 	    std::cout << Logger::getTimestamp() << CORE_LOG << message << RESET_ANSI"\033[23m" << std::endl;
 }
 
 void	Logger::debug( const std::string &message )
 {
-	if (Logger::logLevel >= DEBUG )
+	Logger::logToFile(message);
+	if (Logger::_logLevel >= DEBUG )
 	    std::cout << Logger::getTimestamp() << DEBUG_LOG << message << RESET_ANSI"\033[23m" << std::endl;
 }
 
 void	Logger::info( const std::string &message )
 {
-	if (Logger::logLevel >= INFO )
+	Logger::logToFile(message);
+	if (Logger::_logLevel >= INFO )
     	std::cout << Logger::getTimestamp() << INFO_LOG << message  << RESET_ANSI << std::endl;
 }
 
 void	Logger::warning( const std::string &message )
 {
-	if (Logger::logLevel >= WARNING )
+	Logger::logToFile(message);
+	if (Logger::_logLevel >= WARNING )
  	   std::cerr << Logger::getTimestamp() << WARNING_LOG << message << RESET_ANSI"\033[23m" << std::endl;
 }
 
 void	Logger::error( const std::string &message )
 {
-	if (Logger::logLevel >= ERROR )
+	Logger::logToFile(message);
+	if (Logger::_logLevel >= ERROR )
     	std::cerr << Logger::getTimestamp() << ERROR_LOG << message << RESET_ANSI << std::endl;
 }
 
 void    Logger::critical( const std::string &message )
 {
-	if (Logger::logLevel >= CRITICAL )
+	Logger::logToFile(message);
+	if (Logger::_logLevel >= CRITICAL )
 	    std::cerr << Logger::getTimestamp() << CRITICAL_LOG << message << RESET_ANSI << std::endl;
+}
+
+
+inline void	Logger::logToFile(const std::string & message)
+{
+	Logger::_logfile << Logger::getTimestamp(false) << " " << message << std::endl;
 }

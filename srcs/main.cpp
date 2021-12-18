@@ -19,22 +19,6 @@
 **	--ssl-key <key>			: specifies ssl key for incomming connections and data encryption
 */
 
-int		printUsage(void)
-{
-	Logger::info("ft_irc by Nlecaill and Lrobino.");
-	Logger::info("Usage:");
-	Logger::info("--servname <name>     : specifies a name for the server, usefull for server-server connections");
-	Logger::info("--token <token>       : specifies a token which is the SUID for the server, must be unique through all network  !");
-	Logger::info("--info <info>         : specifies some additional infos for the server");
-	Logger::info("--max-connections <n> : specifies a number of maxium connection for that server");
-	Logger::info("--crlf                : use plain text crlf for data transmission (! default !) ");
-	// Logger::info("--ssl                 : uses ssl for data transmission");
-	Logger::info("--tls-port <port>     : specifies ssl port for incomming connections and data encryption");
-	Logger::info("--ssl-cert <cert>     : specifies ssl certificate for incomming connections and data encryption");
-	Logger::info("--ssl-key <key>       : specifies ssl key for incomming connections and data encryption");
-	exit(SUCCESS);
-	return SUCCESS;
-}
 
 /* param checker */
 //REVIEW replace by Parser::validServerName (and implement it)
@@ -86,30 +70,39 @@ bool	isValidPort(const std::string &str)
 # define ARG_NOTFOUND	0
 # define ARG_ERROR		1
 # define ARG_OK			2
+# define ARG_OPTIONAL	3
 uint	getArg(const char *const identifier,
 				const int n,
 				const int ac,
 				const char *const *const argv,
 				bool (*validityChecker)(const std::string &)=NULL,
-				bool asArgument=true)
+				bool asArgument=true,
+				bool isOptional=false)
 {
-	if (n < ac && std::strcmp(argv[n], identifier) == 0)
+	if (!(n < ac && std::strcmp(argv[n], identifier) == 0))
+		return (ARG_NOTFOUND);
+	if (asArgument == false)
+		return (ARG_OK);
+	else if (n + 1 < ac)
 	{
-		if (asArgument == false)
-			return (ARG_OK);
-		if (n + 1 < ac)
+		if (!validityChecker)
 		{
-			if (!validityChecker(argv[n + 1]))
-			{
-				Logger::error("arument " + std::string(identifier) + " is invalid: " + argv[n + 1]);
-				return (ARG_ERROR);
-			}
-			return (ARG_OK);
+			if (isOptional && strncmp(argv[n + 1], "--", 2) == 0)
+				return (ARG_OPTIONAL);
+			else
+				return (ARG_OK);
 		}
-		Logger::error("arument " + std::string(identifier) + " has no value after it");
-		return (ARG_ERROR);
+		else if (!validityChecker(argv[n + 1]))
+		{
+			Logger::error("arument " + std::string(identifier) + " is invalid: " + argv[n + 1]);
+			return (ARG_ERROR);
+		}
+		return (ARG_OK);
 	}
-	return (ARG_NOTFOUND);
+	else if (isOptional)
+		return (ARG_OPTIONAL);
+	Logger::error("arument " + std::string(identifier) + " has no value after it");
+	return (ARG_ERROR);
 }
 
 
@@ -143,41 +136,44 @@ bool	getForward(std::string arg, std::string *const host, ushort *const port, st
 	return (true);
 }
 
-void	printUsage(std::string exec_name)
-	{
+int		printUsage(const std::string &exec_name)
+{
 	std::cout
-	<< "\033[1;33m**\033[0m \033[1;33m" << exec_name << " help page" << std::endl << "\033[0m\033[1;33m**\033[0m" << std::endl
+	<< "\033[1;33m**\033[0m \033[1;33m" << exec_name << " by Nlecaill and Lrobino, help page" << std::endl << "\033[0m\033[1;33m**\033[0m" << std::endl
 	<< "\033[1;37m**\033[0m \033[1;37mUsage:\033[0m" << std::endl
 	<< "\033[1;33m**\033[0m -> " << exec_name << " \033[1;37m[\033[0mnetwork_host\033[1;37m:\033[0mnetwork_port\033[1;37m:\033[0mnetwork_password\033[1;37m]\033[0m <server_port> [server_password] [options]" << std::endl << "\033[1;33m**\033[0m" << std::endl
-	<< "\033[1;33m**\033[0m network_host            Sets the hostname of the irc network you want to connect to." << std::endl
-	<< "\033[1;33m**\033[0m network_port            Sets the port of the irc network you want to connect to." << std::endl
-	<< "\033[1;33m**\033[0m network_password        Sets the password of the irc network you want to connect to." << std::endl
+	<< "\033[1;33m**\033[0m network_host                      Sets the hostname of the irc network you want to connect to." << std::endl
+	<< "\033[1;33m**\033[0m network_port                      Sets the port of the irc network you want to connect to." << std::endl
+	<< "\033[1;33m**\033[0m network_password                  Sets the password of the irc network you want to connect to." << std::endl
 	<< "\033[1;33m**\033[0m" << std::endl
-	<< "\033[1;33m**\033[0m server_port             Sets the port on which this server will accept new connections." << std::endl
-	<< "\033[1;33m**\033[0m server_password         Sets the password that will be asked to clients and server" << std::endl
-	<< "\033[1;33m**\033[0m                         trying to connect on this server." << std::endl
+	<< "\033[1;33m**\033[0m server_port                       Sets the port on which this server will accept new connections." << std::endl
+	<< "\033[1;33m**\033[0m server_password                   Sets the password that will be asked to clients and server" << std::endl
+	<< "\033[1;33m**\033[0m                                   trying to connect on this server." << std::endl
 	<< "\033[1;33m**\033[0m " << std::endl
 	<< "\033[1;37m**\033[0m \033[1;37mOptions:\033[0m" << std::endl << "\033[1;33m**\033[0m" << std::endl
-	<< "\033[1;33m**\033[0m --host <hostname>       Sets the host of server." << std::endl << "\033[1;33m**\033[0m"
+	<< "\033[1;33m**\033[0m --host <hostname>                 Set the server hostname." << std::endl << "\033[1;33m**\033[0m"
 	<< std::endl
-	<< "\033[1;33m**\033[0m --servname <name>       Sets the name of the current server." << std::endl << "\033[1;33m**\033[0m"
+	<< "\033[1;33m**\033[0m --servname <name>                 Sets the name of the current server." << std::endl << "\033[1;33m**\033[0m"
 	<< std::endl
-	<< "\033[1;33m**\033[0m --token <token>         Sets the token of the server (3 digits max number)." << std::endl << "\033[1;33m**\033[0m"
+	<< "\033[1;33m**\033[0m --token <token>                   Sets the token of the server (3 digits max number)." << std::endl << "\033[1;33m**\033[0m"
 	<< std::endl
-	<< "\033[1;33m**\033[0m --info <info>           Sets the info of the current server." << std::endl
-	<< "\033[1;33m**\033[0m                         This info is sent to other servers in the " << std::endl
-	<< "\033[1;33m**\033[0m                         network via SERVER command." << std::endl << "\033[1;33m**\033[0m"
+	<< "\033[1;33m**\033[0m --info <info>                     Sets the info of the current server." << std::endl
+	<< "\033[1;33m**\033[0m                                   This info is sent to other servers in the " << std::endl
+	<< "\033[1;33m**\033[0m                                   network via SERVER command." << std::endl << "\033[1;33m**\033[0m"
 	<< std::endl
-	<< "\033[1;33m**\033[0m --max-connextions <nb>  Sets the maximum number of connections that the server" << std::endl
-	<< "\033[1;33m**\033[0m                         can handle, which is set to 20 by defaul.t" << std::endl << "\033[1;33m**\033[0m"
+	<< "\033[1;33m**\033[0m --logfile [<directory|filename>]  Record all logs into a file which path can be specified." << std::endl << "\033[1;33m**\033[0m"
+	<< std::endl
+	<< "\033[1;33m**\033[0m --max-connections <nb>            Sets the maximum number of connections that the server" << std::endl
+	<< "\033[1;33m**\033[0m                                   can handle, which is set to 20 by defaul.t" << std::endl << "\033[1;33m**\033[0m"
 	<< std::endl
 	<< "\033[1;37m**\033[0m \033[1;37mTLS Options:\033[0m" << std::endl << "\033[1;33m**\033[0m" << std::endl
-	<< "\033[1;33m**\033[0m --tls-port              Sets the port on wich the server will listen on tls." << std::endl
-	<< "\033[1;33m**\033[0m                         This is set by default to 6697." << std::endl << "\033[1;33m**\033[0m"
+	<< "\033[1;33m**\033[0m --tls-port                        Sets the port on wich the server will listen on tls." << std::endl
+	<< "\033[1;33m**\033[0m                                   This is set by default to 6697." << std::endl << "\033[1;33m**\033[0m"
 	<< std::endl
-	<< "\033[1;33m**\033[0m --ssl-cert              Sets the SSL certificate to use for encrypted communications" << std::endl << "\033[1;33m**\033[0m"
+	<< "\033[1;33m**\033[0m --ssl-cert                        Sets the SSL certificate to use for encrypted communications" << std::endl << "\033[1;33m**\033[0m"
 	<< std::endl
-	<< "\033[1;33m**\033[0m --ssl-key               Sets the SSL private key to use for authentification to the server" << std::endl;
+	<< "\033[1;33m**\033[0m --ssl-key                         Sets the SSL private key to use for authentification to the server" << std::endl;
+	return 0;
 }
 
 
@@ -201,18 +197,19 @@ int		main(int ac, char **av)
 	std::string ssl_cert;
 	std::string ssl_key;
 	ushort		tls_port;
+	std::string logfile = "";
 //	bool		use_crlf = true; // unimpemented ssl
 
 	// get forward server arg
 	int	argn = 1;
 	if (ac <= 1)
-		return printUsage();
+		return printUsage(av[0]);
 	else if (ac > 1) {
 		has_network_connection = getForward(av[1], &network_host, &network_port, &network_pass);
 		if (has_network_connection)
 			argn = 2;
 	}
-	int arg_code;;
+	int arg_code;
 	// get last arguments 
 	while (argn < ac)
 	{
@@ -222,9 +219,8 @@ int		main(int ac, char **av)
 		arg_code = getArg("--help", argn, ac, av, NULL, false);
 		if (arg_code == ARG_OK)
 		{
-			printUsage();	
-			argn += 2;
-			continue;
+			printUsage(av[0]);
+			return (EXIT_SUCCESS);	
 		}
 		else if (arg_code == ARG_ERROR)
 			return (EXIT_FAILURE);
@@ -320,19 +316,35 @@ int		main(int ac, char **av)
 		else if (arg_code == ARG_ERROR)
 			return (EXIT_FAILURE);
 
-		/* help */
-		if (std::strcmp(av[argn], "--help") == 0)
+		arg_code = getArg("--logfile", argn, ac, av, NULL, true, true);
+		if (arg_code == ARG_OK)
 		{
-			printUsage(av[0]);
-			return (EXIT_SUCCESS);
+			std::istringstream is(av[argn + 1]);
+			is >> logfile;
+			if (Parser::isDirectory(logfile.c_str()))
+			{
+				if (logfile.at(logfile.size() - 1) != '/')
+					logfile += "/";
+				logfile += Logger::timeToString(Logger::getInitialTimestamp());
+			}
+			logfile += ".irclog";
+			argn += 2;
+			continue;
 		}
+		else if (arg_code == ARG_OPTIONAL)
+		{
+			logfile = Logger::timeToString(Logger::getInitialTimestamp()) + ".irclog";
+			argn += 1;
+			continue;
+		}
+		else if (arg_code == ARG_ERROR)
+			return (EXIT_FAILURE);
 
 		/* unknown argument */
 		if (std::strncmp(av[argn], "--", 2) == 0)
 		{
 			Logger::error("unknown argument: " + ntos(av[argn]));
-			printUsage();
-			return (EXIT_FAILURE);
+			return (printUsage(av[0]));
 		}
 		/* port */
 		else if (isNumber(av[argn]) && server_port == 0)
@@ -345,7 +357,7 @@ int		main(int ac, char **av)
 			server_pass = std::string(av[argn++]);
 		else 
 		{
-			Logger::error("too many unspecified agruments");
+			Logger::error("too many unspecified arguments");
 			return (EXIT_FAILURE);
 		}
 	}
@@ -356,7 +368,7 @@ int		main(int ac, char **av)
 		return (EXIT_FAILURE);
 	}
 
-
+	Logger::initLogfile(logfile);
 	std::stringstream ss;
 	ss << std::setfill('0') << std::setw(3) << server_token;
 	

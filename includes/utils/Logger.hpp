@@ -3,9 +3,11 @@
 
 # include <string>
 # include <iostream>
-# include <ctime>
 # include <iomanip>
+# include <fstream>
 # include <sstream>
+# include <exception>
+# include <ctime>
 # include <sys/time.h>
 # include "ntos.hpp"
 
@@ -59,10 +61,20 @@ typedef unsigned int uint;
 class Logger
 {
     public:
-		static void			init( uint level);
+		class	logFileException : std::exception
+		{
+			virtual const char *what(void ) const throw()
+			{
+				return "Unable to open logfile";
+			}
+		};
 
-		static time_t		getInitialTimestamp( void );
-		static std::string	getTimestamp( void );
+		static void			init( uint level, const std::string & filename = "");
+		static void			initLogfile(const std::string & filename );
+
+		static const struct timeval &getInitialTimestamp( void );
+		static std::string	timeToString( const struct timeval & time );
+		static std::string	getTimestamp( bool color = true );
         static uint			getLogLevel( void );
         static void			setLogLevel(uint level);
 
@@ -74,10 +86,11 @@ class Logger
         static void			error( const std::string &message );
         static void			critical( const std::string &message );
 
+		static inline void	logToFile(const std::string & message);
     private:
-		static time_t		_initTime;
-		static uint			logLevel;
-
+		static struct timeval	_initTime;
+		static uint				_logLevel;
+		static std::ofstream	_logfile;
 };
 
 

@@ -79,7 +79,6 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		bool						connectToNetwork(const std::string & host, ushort port, std::string & password, const bool useTLS=false);
 		const IProtocol&			getProtocol( void ) const;
 		NetworkEntity*				getEntityByStream(SockStream & s);
-		std::string					getCreationDate( void ) const;
 		UnRegisteredConnection*		getUnRegisteredConnectionByUID(const std::string UID);
 		std::string					getMotdsPath( void ) const;
 
@@ -135,7 +134,6 @@ class IRCServer : public ANode, public AEntity, public ServerInfo
 		void						_forgetLocalServer(Server & srv);
 
 		std::string					_forwardPassword;
-		time_t						_creationTime;
 		std::string					_operName;
 		std::string					_operPassword;
 		bool						_shortMotdEnabled;

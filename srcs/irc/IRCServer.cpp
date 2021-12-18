@@ -10,12 +10,11 @@ const uint				IRCServer::value_type = Server::value_type;
 IRCServer::IRCServer(ushort port, const std::string & password, const std::string &host, const std::string &ssl_cert_path, const std::string &ssl_key_path, const ushort tls_port)
 :	ASockManager(ssl_cert_path, ssl_key_path),
 	ANode(host),
-	AEntity(IRCServer::value_type, "token"),
+	AEntity(IRCServer::value_type, "token", &Logger::getInitialTimestamp()),
 	ServerInfo("name", ntos(IRC_CURRENT_VERSION), "default hostname", "IRC|amazircd"),
 	_handler(*this),
 	_protocol(),
 	_forwardPassword(""),
-	_creationTime(Logger::getInitialTimestamp()),
 	_operName("becomeOper"),
 	_operPassword("becomeOper"),
 	_shortMotdEnabled(true),
@@ -304,7 +303,6 @@ void							IRCServer::_sendAllClients(const std::string &message, AEntity *excep
 	it != this->_clients.end(); 
 	++it)
 	{
-		
 		if (except && except->getUID() == it->second->getUID())
 			continue ;
 		if (it->second->getType() & Client::value_type)
@@ -619,12 +617,6 @@ UnRegisteredConnection*		IRCServer::getUnRegisteredConnectionByUID(std::string U
 	return NULL;
 }
 
-
-
-std::string					IRCServer::getCreationDate( void ) const
-{
-	return std::ctime(&this->_creationTime);
-}
 
 
 std::string					IRCServer::getMotdsPath( void ) const
