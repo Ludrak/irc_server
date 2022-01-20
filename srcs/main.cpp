@@ -2,6 +2,27 @@
 #include <exception>
 #include <iomanip>
 
+struct ircInit 
+{
+	bool		has_network_connection;
+	ushort		network_port;
+	std::string	network_host;;
+	std::string	network_pass;;
+
+	ushort		server_token;
+	ushort		server_max_connections;;
+	ushort		server_port;
+	std::string	server_host;
+	std::string	server_pass;
+	std::string	server_name;
+	std::string server_info;
+
+	ushort		tls_port;
+	std::string ssl_cert;
+	std::string ssl_key	;
+	std::string logFileName;
+};
+
 /*
 **	Subject specified:
 **	ft_irc [host:port_network:password_network] <port> <password>
@@ -31,13 +52,6 @@ bool	isValidServerName(const std::string &name)
 bool	isValidServerInfo(const std::string &info)
 {
 	(void)info;
-	return (true);
-}
-
-bool	isValidServerToken(const std::string &tok)
-{
-	if (tok.size() > 3 || tok.find_first_not_of("0123456789") != std::string::npos)
-		return (false);
 	return (true);
 }
 
@@ -139,74 +153,106 @@ bool	getForward(std::string arg, std::string *const host, ushort *const port, st
 int		printUsage(const std::string &exec_name)
 {
 	std::cout
-	<< "\033[1;33m**\033[0m \033[1;33m" << exec_name << " by Nlecaill and Lrobino, help page" << std::endl << "\033[0m\033[1;33m**\033[0m" << std::endl
-	<< "\033[1;37m**\033[0m \033[1;37mUsage:\033[0m" << std::endl
-	<< "\033[1;33m**\033[0m -> " << exec_name << " \033[1;37m[\033[0mnetwork_host\033[1;37m:\033[0mnetwork_port\033[1;37m:\033[0mnetwork_password\033[1;37m]\033[0m <server_port> [server_password] [options]" << std::endl << "\033[1;33m**\033[0m" << std::endl
-	<< "\033[1;33m**\033[0m network_host                      Sets the hostname of the irc network you want to connect to." << std::endl
-	<< "\033[1;33m**\033[0m network_port                      Sets the port of the irc network you want to connect to." << std::endl
-	<< "\033[1;33m**\033[0m network_password                  Sets the password of the irc network you want to connect to." << std::endl
-	<< "\033[1;33m**\033[0m" << std::endl
-	<< "\033[1;33m**\033[0m server_port                       Sets the port on which this server will accept new connections." << std::endl
-	<< "\033[1;33m**\033[0m server_password                   Sets the password that will be asked to clients and server" << std::endl
-	<< "\033[1;33m**\033[0m                                   trying to connect on this server." << std::endl
-	<< "\033[1;33m**\033[0m " << std::endl
-	<< "\033[1;37m**\033[0m \033[1;37mOptions:\033[0m" << std::endl << "\033[1;33m**\033[0m" << std::endl
-	<< "\033[1;33m**\033[0m --host <hostname>                 Set the server hostname." << std::endl << "\033[1;33m**\033[0m"
-	<< std::endl
-	<< "\033[1;33m**\033[0m --servname <name>                 Sets the name of the current server." << std::endl << "\033[1;33m**\033[0m"
-	<< std::endl
-	<< "\033[1;33m**\033[0m --token <token>                   Sets the token of the server (3 digits max number)." << std::endl << "\033[1;33m**\033[0m"
-	<< std::endl
-	<< "\033[1;33m**\033[0m --info <info>                     Sets the info of the current server." << std::endl
-	<< "\033[1;33m**\033[0m                                   This info is sent to other servers in the " << std::endl
-	<< "\033[1;33m**\033[0m                                   network via SERVER command." << std::endl << "\033[1;33m**\033[0m"
-	<< std::endl
-	<< "\033[1;33m**\033[0m --logfile [<directory|filename>]  Record all logs into a file which path can be specified." << std::endl << "\033[1;33m**\033[0m"
-	<< std::endl
-	<< "\033[1;33m**\033[0m --max-connections <nb>            Sets the maximum number of connections that the server" << std::endl
-	<< "\033[1;33m**\033[0m                                   can handle, which is set to 20 by defaul.t" << std::endl << "\033[1;33m**\033[0m"
-	<< std::endl
-	<< "\033[1;37m**\033[0m \033[1;37mTLS Options:\033[0m" << std::endl << "\033[1;33m**\033[0m" << std::endl
-	<< "\033[1;33m**\033[0m --tls-port                        Sets the port on wich the server will listen on tls." << std::endl
-	<< "\033[1;33m**\033[0m                                   This is set by default to 6697." << std::endl << "\033[1;33m**\033[0m"
-	<< std::endl
-	<< "\033[1;33m**\033[0m --ssl-cert                        Sets the SSL certificate to use for encrypted communications" << std::endl << "\033[1;33m**\033[0m"
-	<< std::endl
-	<< "\033[1;33m**\033[0m --ssl-key                         Sets the SSL private key to use for authentification to the server" << std::endl;
+	<< "\033[1;33m**\033[0m \033[1;33m" << exec_name << " by Nlecaill and Lrobino, help page\n" << 
+	"\033[0m\033[1;33m**\033[0m\n" << 
+	"\033[1;37m**\033[0m \033[1;37mUsage:\033[0m\n" << 
+	"\033[1;33m**\033[0m -> " << exec_name << " \033[1;37m[\033[0mnetwork_host\033[1;37m:\033[0mnetwork_port\033[1;37m:\033[0mnetwork_password\033[1;37m]\033[0m <server_port> [server_password] [options]\n" << 
+	"\033[1;33m**\033[0m\n" << 
+	"\033[1;33m**\033[0m network_host                      Sets the hostname of the irc network you want to connect to.\n" << 
+	"\033[1;33m**\033[0m network_port                      Sets the port of the irc network you want to connect to.\n" << 
+	"\033[1;33m**\033[0m network_password                  Sets the password of the irc network you want to connect to.\n" << 
+	"\033[1;33m**\033[0m\n" << 
+	"\033[1;33m**\033[0m server_port                       Sets the port on which this server will accept new connections.\n" << 
+	"\033[1;33m**\033[0m server_password                   Sets the password that will be asked to clients and server\n" << 
+	"\033[1;33m**\033[0m                                   trying to connect on this server.\n" << 
+	"\033[1;33m**\033[0m \n" << 
+	"\033[1;37m**\033[0m \033[1;37mOptions:\033[0m\n" << 
+	"\033[1;33m**\033[0m\n" << 
+	"\033[1;33m**\033[0m --host <hostname>                 Set the server hostname.\n" << 
+	"\033[1;33m**\033[0m\n" << 
+	"\033[1;33m**\033[0m --servname <name>                 Sets the name of the current server.\n" << 
+	"\033[1;33m**\033[0m\n" << 
+	"\033[1;33m**\033[0m --token <token>                   Sets the token of the server (3 digits max number).\n" << 
+	"\033[1;33m**\033[0m\n" << 
+	"\033[1;33m**\033[0m --info <info>                     Sets the info of the current server.\n" << 
+	"\033[1;33m**\033[0m                                   This info is sent to other servers in the \n" << 
+	"\033[1;33m**\033[0m                                   network via SERVER command.\n" << 
+	"\033[1;33m**\033[0m\n" << 
+	"\033[1;33m**\033[0m --logfile [<directory|filename>]  Record all logs into a file which path can be specified.\n" << 
+	"\033[1;33m**\033[0m\n" << 
+	"\033[1;33m**\033[0m --max-connections <nb>            Sets the maximum number of connections that the server\n" << 
+	"\033[1;33m**\033[0m                                   can handle. Default: 20\n" << 
+	"\033[1;33m**\033[0m\n" << 
+	"\033[1;37m**\033[0m \033[1;37mTLS Options:\033[0m\n" << 
+	"\033[1;33m**\033[0m\n" << 
+	"\033[1;33m**\033[0m --tls-port                        Sets the port on wich the server will listen on tls.\n" << 
+	"\033[1;33m**\033[0m                                   This is set by default to 6697.\n" << 
+	"\033[1;33m**\033[0m\n" << 
+	"\033[1;33m**\033[0m --ssl-cert                        Sets the SSL certificate to use for encrypted communications\n" << 
+	"\033[1;33m**\033[0m\n" << 
+	"\033[1;33m**\033[0m --ssl-key                         Sets the SSL private key to use for authentification to the server" << std::endl;
 	return 0;
 }
 
 
+void	displayHeadMessage(const struct ircInit & init, const std::stringstream & formatedToken)
+{
+	Logger::info("*************************************************");
+	Logger::info("* IRC Server (" + init.server_name + "@" +  init.server_host + ")");
+	Logger::info("*");
+	if (init.has_network_connection)
+	{
+		Logger::info("* Network:");
+		Logger::info("* - host:            " + init.network_host);
+		Logger::info("* - port:            " + ntos(init.network_port));
+		Logger::info("* - pass:            " + init.network_pass);
+		Logger::info("*");
+	}
+	Logger::info("* Server:");
+	Logger::info("* - host:            " + init.server_host);
+	Logger::info("* - port:            " + ntos(init.server_port));
+	Logger::info("* - password:        " + init.server_pass);
+	Logger::info("*");
 
+	Logger::info("* Server infos:");
+	Logger::info("* - name:            " + init.server_name);
+	Logger::info("* - token:           " + formatedToken.str());
+	Logger::info("* - max connections: " + ntos(init.server_max_connections));
+	Logger::info("* - info:            " + init.server_info);
+	Logger::info("*************************************************");
+
+}
 
 int		main(int ac, char **av)
 {
-	Logger::init(CORE);
-	bool		has_network_connection = false;
-	std::string	network_host = "";
-	ushort		network_port = 0;
-	std::string	network_pass = "";
-
-	std::string	server_host = "127.0.0.1";
-	ushort		server_port = 0;
-	std::string	server_pass = "";
-	std::string	server_name = "irc";
-	int			server_token = 0;
-	std::string server_info = "Default server informations;";
-	uint		server_max_connections = 20;
-	std::string ssl_cert;
-	std::string ssl_key;
-	ushort		tls_port;
-	std::string logfile = "";
+;
 //	bool		use_crlf = true; // unimpemented ssl
+	struct ircInit init;
+	init.has_network_connection = false;
+	init.network_host	= "";
+	init.network_port	= 0;
+	init.network_pass	= "";
+	init.server_host	= "127.0.0.1";
+	init.server_name	= "irc";
+	init.server_pass	= "";
+	init.server_port	= 0;
+	init.server_token	= 0;
+	init.server_info	= "Default server informations;";
+	init.server_max_connections = 20;
+	init.ssl_cert		= "";
+	init.ssl_key		= "";
+	init.tls_port		= 0;
+	init.logFileName	= "";
+
+	Logger::init(CORE);
 
 	// get forward server arg
 	int	argn = 1;
 	if (ac <= 1)
 		return printUsage(av[0]);
 	else if (ac > 1) {
-		has_network_connection = getForward(av[1], &network_host, &network_port, &network_pass);
-		if (has_network_connection)
+		init.has_network_connection = getForward(av[1], &init.network_host, &init.network_port, &init.network_pass);
+		if (init.has_network_connection)
 			argn = 2;
 	}
 	int arg_code;
@@ -229,7 +275,7 @@ int		main(int ac, char **av)
 		arg_code = getArg("--host", argn, ac, av, Parser::validHostname);
 		if (arg_code == ARG_OK)
 		{
-			server_host = std::string(av[argn + 1]);
+			init.server_host = std::string(av[argn + 1]);
 			argn += 2;
 			continue;
 		}
@@ -240,7 +286,7 @@ int		main(int ac, char **av)
 		arg_code = getArg("--servname", argn, ac, av, isValidServerName);
 		if (arg_code == ARG_OK)
 		{
-			server_name = std::string(av[argn + 1]);
+			init.server_name = std::string(av[argn + 1]);
 			argn += 2;
 			continue;
 		}
@@ -248,11 +294,11 @@ int		main(int ac, char **av)
 			return (EXIT_FAILURE);
 		
 		/* server token */
-		arg_code = getArg("--token", argn, ac, av, isValidServerToken);
+		arg_code = getArg("--token", argn, ac, av, Parser::validServerToken);
 		if (arg_code == ARG_OK)
 		{
 			std::istringstream is(av[argn + 1]);
-			is >> server_token;
+			is >> init.server_token;
 			argn += 2;
 			continue;
 		}
@@ -263,7 +309,7 @@ int		main(int ac, char **av)
 		arg_code = getArg("--info", argn, ac, av, isValidServerInfo);
 		if (arg_code == ARG_OK)
 		{
-			server_info = std::string(av[argn + 1]);
+			init.server_info = std::string(av[argn + 1]);
 			argn += 2;
 			continue;
 		}
@@ -277,7 +323,7 @@ int		main(int ac, char **av)
 		{
 			std::istringstream is(av[argn + 1]);
 
-			is >> server_max_connections;
+			is >> init.server_max_connections;
 			argn += 2;
 			continue;
 		}
@@ -288,7 +334,7 @@ int		main(int ac, char **av)
 		arg_code = getArg("--ssl-cert", argn, ac, av, isValidSSLCert);
 		if (arg_code == ARG_OK)
 		{
-			ssl_cert = std::string(av[argn + 1]);
+			init.ssl_cert = std::string(av[argn + 1]);
 			argn += 2;
 			continue;
 		}
@@ -298,7 +344,7 @@ int		main(int ac, char **av)
 		arg_code = getArg("--ssl-key", argn, ac, av, isValidSSLCert);
 		if (arg_code == ARG_OK)
 		{
-			ssl_key = std::string(av[argn + 1]);
+			init.ssl_key = std::string(av[argn + 1]);
 			argn += 2;
 			continue;
 		}
@@ -309,7 +355,7 @@ int		main(int ac, char **av)
 		if (arg_code == ARG_OK)
 		{
 			std::istringstream is(av[argn + 1]);
-			is >> tls_port;
+			is >> init.tls_port;
 			argn += 2;
 			continue;
 		}
@@ -320,20 +366,20 @@ int		main(int ac, char **av)
 		if (arg_code == ARG_OK)
 		{
 			std::istringstream is(av[argn + 1]);
-			is >> logfile;
-			if (Parser::isDirectory(logfile.c_str()))
+			is >> init.logFileName;
+			if (Parser::isDirectory(init.logFileName.c_str()))
 			{
-				if (logfile.at(logfile.size() - 1) != '/')
-					logfile += "/";
-				logfile += Logger::timeToString(Logger::getInitialTimestamp());
+				if (init.logFileName.at(init.logFileName.size() - 1) != '/')
+					init.logFileName += "/";
+				init.logFileName += Logger::timeToString(Logger::getInitialTimestamp());
 			}
-			logfile += ".irclog";
+			init.logFileName += ".irclog";
 			argn += 2;
 			continue;
 		}
 		else if (arg_code == ARG_OPTIONAL)
 		{
-			logfile = Logger::timeToString(Logger::getInitialTimestamp()) + ".irclog";
+			init.logFileName = Logger::timeToString(Logger::getInitialTimestamp()) + ".irclog";
 			argn += 1;
 			continue;
 		}
@@ -347,14 +393,14 @@ int		main(int ac, char **av)
 			return (printUsage(av[0]));
 		}
 		/* port */
-		else if (isNumber(av[argn]) && server_port == 0)
+		else if (isNumber(av[argn]) && init.server_port == 0)
 		{
 			std::istringstream is(av[argn++]);
-			is >> server_port;
+			is >> init.server_port;
 		}
 		/* password */
-		else if (server_pass.empty())
-			server_pass = std::string(av[argn++]);
+		else if (init.server_pass.empty())
+			init.server_pass = std::string(av[argn++]);
 		else 
 		{
 			Logger::error("too many unspecified arguments");
@@ -362,49 +408,26 @@ int		main(int ac, char **av)
 		}
 	}
 
-	if (server_port == 0)
+	if (init.server_port == 0)
 	{
 		Logger::error("No port specified");
 		return (EXIT_FAILURE);
 	}
 
-	Logger::initLogfile(logfile);
-	std::stringstream ss;
-	ss << std::setfill('0') << std::setw(3) << server_token;
-	
-	Logger::info("*************************************************");
-	Logger::info("* IRC Server (" + server_name + "@" +  server_host + ")");
-	Logger::info("*");
-	if (has_network_connection)
-	{
-		Logger::info("* Network:");
-		Logger::info("* - host:            " + network_host);
-		Logger::info("* - port:            " + ntos(network_port));
-		Logger::info("* - pass:            " + network_pass);
-		Logger::info("*");
-	}
-	Logger::info("* Server:");
-	Logger::info("* - host:            " + server_host);
-	Logger::info("* - port:            " + ntos(server_port));
-	Logger::info("* - password:        " + server_pass);
-	Logger::info("*");
-
-	Logger::info("* Server infos:");
-	Logger::info("* - name:            " + server_name);
-	Logger::info("* - token:           " + ss.str());
-	Logger::info("* - max connections: " + ntos(server_max_connections));
-	Logger::info("* - info:            " + server_info);
-	Logger::info("*************************************************");
+	Logger::initLogfile(init.logFileName);
+	std::stringstream formatedToken;
+	formatedToken << std::setfill('0') << std::setw(3) << init.server_token;
+	displayHeadMessage(init, formatedToken);
 
 	try {
-		IRCServer server(server_port, server_pass, server_host, ssl_cert, ssl_key, tls_port);
-		server.setName(server_name);
-		server.setUID(ss.str());
-		server.setInfo(server_info);
+		IRCServer server(init.server_port, init.server_pass, init.server_host, init.ssl_cert, init.ssl_key, init.tls_port);
+		server.setName(init.server_name);
+		server.setUID(formatedToken.str());
+		server.setInfo(init.server_info);
 		server.setDebugLevel(false);
-		server.setMaxConnection(server_max_connections);
-		if (has_network_connection)
-			server.connectToNetwork(network_host, network_port, network_pass);
+		server.setMaxConnection(init.server_max_connections);
+		if (init.has_network_connection)
+			server.connectToNetwork(init.network_host, init.network_port, init.network_pass);
 		else
 			Logger::info("No forward connection set: running server as root");
 		server.run();

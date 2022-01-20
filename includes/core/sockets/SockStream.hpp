@@ -164,7 +164,7 @@ class SockStream
 		void						useTLS(const bool use);
 		bool						hasTLS(void) const;
 		void						initTLS(SSL_CTX *ctx) throw (SockStream::SSLException);
-		
+
 		SSL							*getSSL() const;
 		int							acceptSSL();
 		void						connectSSL();

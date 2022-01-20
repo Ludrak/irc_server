@@ -19,6 +19,7 @@ namespace Parser
 	bool					validChannelName(const std::string &channelName);
 	bool					validHostname(const std::string & hostname);
 	bool					validShortname(const std::string & hostname);
+	bool					validServerToken(const std::string & token);
 	bool					validVersionName(const std::string & version);
 	bool					validPASSflags(const std::string & flags);
 	bool 					isRegularFile(const char *path);

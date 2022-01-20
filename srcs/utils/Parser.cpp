@@ -155,6 +155,16 @@ bool					Parser::validShortname(const std::string & shortName)
 	return (isalnum(*it));
 }
 
+bool					Parser::validServerToken(const std::string & token)
+{
+	std::istringstream is(token);
+	u_long max = 0;
+	is >> max;
+	if (token.size() > 3 || token.find_first_not_of("0123456789") != std::string::npos)
+		return (EXIT_FAILURE);
+	return (true);
+}
+
 bool					Parser::validVersionName(const std::string & version)
 {
 	if (version.size() < 4 || version.size() > 14)

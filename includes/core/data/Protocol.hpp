@@ -4,7 +4,7 @@
 
 #include <iostream>
 #include "IProtocol.hpp"
-
+//REVIEW useless in face of IProtocol
 class Protocol : public IProtocol
 {
     public:
