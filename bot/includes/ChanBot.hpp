@@ -27,11 +27,12 @@ class ChanBot : public AClient
 
 		void			parseMessage(std::string & message, uint nbParam);
 		void			parseNumericMessage(std::string & message, uint val);
-		void			addNewChannel(std::string & message);
+		void			joinChannel(const std::string & target);
 		void			validNewChannel(std::string & message);
 		void			handleMessage(std::string & message);
 
-		bool			inappropriateCheck(std::string & message);
+		void			handleInappropriateWord(const std::string & target);
+		bool			inappropriateWordCheck(std::string & message);
 		bool			loadDict(std::string & dictPath);
 		void			printList( void );
 		std::string		getUsernameFromPrefix(const std::string & prefix);

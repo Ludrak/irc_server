@@ -621,8 +621,7 @@ UnRegisteredConnection*		IRCServer::getUnRegisteredConnectionByUID(std::string U
 
 std::string					IRCServer::getMotdsPath( void ) const
 {
-	//TODO add slash to the end and remove it where in use
-	return "./conf";
+	return IRC_DEFAULT_MOTD_PATH;
 }
 
 
@@ -704,12 +703,12 @@ bool								IRCServer::parsePrefix(NetworkEntity & executor, const std::string &
 	/* extended prefix */
 	if (prefix.find("@") != std::string::npos && emitter && host_server) //REVIEW no host_server here (can have @ witout !)
 	{
+		std::string	uname;
+		std::string	firstName;
+		std::string	secondName; 
 		/* parse sender */
 		if (prefix.find("@") == std::string::npos)
 			Logger::debug("@ not found");
-		std::string uname;
-		std::string firstName;
-		std::string secondName; 
 		if (prefix.find("!") != std::string::npos)
 		{
 			Logger::debug("Parse extented prefix");

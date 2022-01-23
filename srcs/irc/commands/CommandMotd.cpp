@@ -54,11 +54,11 @@ uint					CommandMotd::operator()(NetworkEntity & executor, std::string params)
 	else
 		isServerOP = static_cast<Client&>(emitter).isServerOP();
 	if (isServerOP)
-		path = this->getServer().getMotdsPath() + "/oper.motd";
+		path = this->getServer().getMotdsPath() + "oper.motd";
 	else if (this->_shortEnabled && this->getServer()._shortMotdEnabled)
-		path = this->getServer().getMotdsPath() + "/ircd.smotd";
+		path = this->getServer().getMotdsPath() + "ircd.smotd";
 	else
-		path = this->getServer().getMotdsPath() + "/ircd.motd";
+		path = this->getServer().getMotdsPath() + "ircd.motd";
 	Logger::debug("MOTD: Use file: " + path);
 	std::ifstream	mFile(path.c_str());
 	if (!mFile.is_open() || !Parser::isRegularFile(path.c_str()))

@@ -49,6 +49,7 @@ class CommandHandler;
 
 # define SUCCESS				0
 
+# define IRC_DEFAULT_MOTD_PATH	"./conf/"
 # define IRC_DEFAULT_HOST		"127.0.0.1"
 # define IRC_DEFAULT_PORT		6667
 # define IRC_DEFAULT_TLS_PORT	6697

@@ -159,22 +159,19 @@ void			ChanBot::parseMessage(std::string & message, uint nbParam)
 	}
 	else
 		this->_currentPrefix.clear();
-	uint val = 0;
-	std::string cmd(Parser::extractFirst(message));
-	std::istringstream is(cmd);
+	uint				val = 0;
+	std::string			cmd(Parser::extractFirst(message));
+	std::istringstream	is(cmd);
+
 	is >> val;
 	if (val != 0)
-	{
 		return parseNumericMessage(message, val);
-	}
+
 	Logger::info("Not a numeric message");
 	if (cmd == "JOIN")
-	{
 		this->validNewChannel(message);
-	}else if (cmd == "PRIVMSG")
-	{
+	else if (cmd == "PRIVMSG")
 		this->handleMessage(message);
-	}
 	return ;
 }
 
@@ -190,31 +187,15 @@ void			ChanBot::parseNumericMessage(std::string & message, uint val)
 		return Logger::debug("Message not for us");
 	else if (val == 322)
 	{
+		/* Get channel name */
+		std::string chanName = Parser::getParam(message, 0);
 		/* add a channel to the watching list */
-		return addNewChannel(message);
+		return joinChannel(chanName);
 	}
 	else{
-		Logger::debug("dropped message");
+		Logger::debug("message dropped.");
 	}
 	return ;
-}
-
-void			ChanBot::addNewChannel(std::string & message)
-{
-	/* Get channel name */
-	std::string chanName = Parser::getParam(message, 0);
-	Logger::info("ChanName: " + chanName);
-	/* Check if not already in channel */
-	std::vector<std::string>::iterator fd = std::find(this->_channels.begin(), this->_channels.end(), chanName);
-	if (fd != this->_channels.end())
-		return Logger::info("newChan: Already registered");
-	/* Ask to join channel */
-	Logger::info("Request to join: " + chanName);
-	message = "JOIN " + chanName;
-	Package* package = new Package(this->_protocol, this->_protocol.format(message), this->_currentStream);
-	this->sendPackage(package, *this->_currentStream);
-	/* Add it to the list of requested channels */
-	this->_pendingChan.push_back(chanName);
 }
 
 void			ChanBot::validNewChannel(std::string & message)
@@ -235,35 +216,57 @@ void			ChanBot::validNewChannel(std::string & message)
 	return ;
 }
 
+void			ChanBot::handleInappropriateWord(const std::string & target)
+{
+	std::string message;
+	std::string userName = this->getUsernameFromPrefix(this->_currentPrefix);
+	Logger::warning("handleMessage: message from <" + userName + ">(" + this->_currentPrefix + ") contain some inappropriate content: reporting");
+	
+	/* Kick user from channel */
+	message = "KICK " + target + " " + userName + " :the use of inappropriate language is prohibited";
+	Package* package = new Package(this->_protocol, this->_protocol.format(message), this->_currentStream);
+	this->sendPackage(package, *this->_currentStream);
+
+	/* Send a private message to the abusive client */
+	message = "PRIVMSG " + userName + " :" + this->_preventingMessage;
+	package = new Package(this->_protocol, this->_protocol.format(message), this->_currentStream);
+	this->sendPackage(package, *this->_currentStream);
+}
+
 void			ChanBot::handleMessage(std::string & message)
 {
-	Logger::debug("msg = (" + message + ")");
+	Logger::debug("receiving msg = (" + message + ")");
 	std::string target(Parser::extractFirst(message));
 	if (target == this->_name)
 		return Logger::warning("Receive a personal message from <" + this->_currentPrefix + ">: " + message);
 	/* Check if we are on this channel */
 	std::vector<std::string>::iterator fd = std::find(this->_channels.begin(), this->_channels.end(), target);
 	if (fd == this->_channels.end())
-		return Logger::info("handleMessage: Not on Channel <" + target + ">");
-	else if (this->inappropriateCheck(message) == true)
 	{
-		std::string userName = this->getUsernameFromPrefix(this->_currentPrefix);
-		Logger::warning("handleMessage: message from <" + userName + ">(" + this->_currentPrefix + ") contain some inappropriate content: reporting");
-		
-		/* Kick user from channel */
-		message = "KICK " + target + " " + userName + " :using an inappropriate language on channels is forbidden";
-		Package* package = new Package(this->_protocol, this->_protocol.format(message), this->_currentStream);
-		this->sendPackage(package, *this->_currentStream);
-
-		/* Send a private message to the abusive client */
-		message = "PRIVMSG " + userName + " :" + this->_preventingMessage;
-		package = new Package(this->_protocol, this->_protocol.format(message), this->_currentStream);
-		this->sendPackage(package, *this->_currentStream);
+		Logger::info("handleMessage: Not on Channel <" + target + ">");
+		return this->joinChannel(target);
 	}
+	else if (this->inappropriateWordCheck(message) == true)
+		this->handleInappropriateWord(target);
 	return ;
 }
 
-bool		ChanBot::inappropriateCheck(std::string & message)
+void			ChanBot::joinChannel(const std::string & chanName)
+{
+	Logger::info("ChanName: " + chanName);
+	/* Check if not already in channel */
+	std::vector<std::string>::iterator fd = std::find(this->_channels.begin(), this->_channels.end(), chanName);
+	if (fd != this->_channels.end())
+		return Logger::info("newChan: Already registered");
+	/* Ask to join channel */
+	Logger::info("Request to join: " + chanName);
+	Package* package = new Package(this->_protocol, this->_protocol.format("JOIN " + chanName), this->_currentStream);
+	this->sendPackage(package, *this->_currentStream);
+	/* Add it to the list of requested channels */
+	this->_pendingChan.push_back(chanName);
+}
+
+bool		ChanBot::inappropriateWordCheck(std::string & message)
 {
 	for (std::vector<std::string>::const_iterator it = this->_dict.begin(); it != this->_dict.end(); ++it)
 	{
@@ -281,8 +284,7 @@ bool		ChanBot::loadDict(std::string & dictPath)
 		Logger::error("Cannot open/read file: " + dictPath);
 		return false;
 	}
-	else
-		Logger::debug("Dict file: " + dictPath + " opened.");
+	Logger::debug("Dict file: " + dictPath + " opened.");
 	for (std::string line; std::getline(ifs, line);)
 	{
 		this->_dict.push_back(line);
@@ -290,6 +292,11 @@ bool		ChanBot::loadDict(std::string & dictPath)
 	Logger::info("Dict file loaded.");
 	return true;
 }
+
+
+/*
+** --------------------------------- ACCESSOR ---------------------------------
+*/
 
 void		ChanBot::printList( void )
 {
@@ -303,11 +310,6 @@ void		ChanBot::printList( void )
 	}
 	std::cout << "Nb entry: " << i << std::endl;
 }
-
-
-/*
-** --------------------------------- ACCESSOR ---------------------------------
-*/
 
 std::string		ChanBot::getUsernameFromPrefix(const std::string & prefix)
 {

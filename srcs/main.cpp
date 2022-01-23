@@ -71,16 +71,6 @@ bool    isValidSSLCert(const std::string &str)
 	return true;
 }
 
-bool	isNumber(const std::string &str)
-{
-	return (!str.empty() && str.find_first_not_of("0123456789") == std::string::npos);
-}
-
-bool	isValidPort(const std::string &str)
-{
-	return (isNumber(str));
-}
-
 # define ARG_NOTFOUND	0
 # define ARG_ERROR		1
 # define ARG_OK			2
@@ -351,7 +341,7 @@ int		main(int ac, char **av)
 		else if (arg_code == ARG_ERROR)
 			return (EXIT_FAILURE);
 		
-		arg_code = getArg("--tls-port", argn, ac, av, isValidPort);
+		arg_code = getArg("--tls-port", argn, ac, av, Parser::validPortNumber);
 		if (arg_code == ARG_OK)
 		{
 			std::istringstream is(av[argn + 1]);
@@ -393,7 +383,7 @@ int		main(int ac, char **av)
 			return (printUsage(av[0]));
 		}
 		/* port */
-		else if (isNumber(av[argn]) && init.server_port == 0)
+		else if (Parser::isNumber(av[argn]) && init.server_port == 0)
 		{
 			std::istringstream is(av[argn++]);
 			is >> init.server_port;

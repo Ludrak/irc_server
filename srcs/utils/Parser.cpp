@@ -177,6 +177,19 @@ bool					Parser::validVersionName(const std::string & version)
 	return true;
 }
 
+bool					Parser::isNumber(const std::string &str)
+{
+	return (!str.empty() && str.find_first_not_of("0123456789") == std::string::npos);
+}
+
+bool					Parser::validPortNumber(const std::string &str)
+{
+	std::istringstream is(str);
+	u_long max = 0;
+	is >> max;
+	return (Parser::isNumber(str) && max > 0 && max <= UINT16_MAX);
+}
+
 bool					Parser::validPASSflags(const std::string & flags)
 {
 	if (flags.size() > 100)

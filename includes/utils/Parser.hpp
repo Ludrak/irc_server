@@ -21,6 +21,8 @@ namespace Parser
 	bool					validShortname(const std::string & hostname);
 	bool					validServerToken(const std::string & token);
 	bool					validVersionName(const std::string & version);
+	bool					isNumber(const std::string &str);
+	bool					validPortNumber(const std::string &str);
 	bool					validPASSflags(const std::string & flags);
 	bool 					isRegularFile(const char *path);
 	bool					isDirectory(const char *path);
