@@ -82,13 +82,10 @@ t_pollevent					AServer::_pollFromServer(int socket, int event)
 			this->disconnect(*client_ss);
 			return POLL_NOACCEPT; 
 		}
-		//TLS
-		// else if (ret == 0)
-			// return POLL_NOACCEPT;
 	}
 	client_ss->setType(REMOTE_CLIENT);
 	this->addSocket(*client_ss);
-	if (ret != 0) //TLS
+	if (ret != -1) //TLS
 		this->_onClientJoin(*client_ss);
 #ifdef KQUEUE
 	struct kevent new_event;
