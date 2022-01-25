@@ -32,10 +32,6 @@ Channel::~Channel()
 
 Channel &				Channel::operator=( Channel const & rhs )
 {
-	//if ( this != &rhs )
-	//{
-		//this->_value = rhs.getValue();
-	//}
 	(void)rhs;
 	return *this;
 }
@@ -44,7 +40,6 @@ std::ostream &			operator<<( std::ostream & o, Channel const & i )
 {
 	o << "Channel = ";
 	o << "- id	= " << i.getUID();
-	// o << "- usernames	= " << i.getId();
 	return o;
 }
 
@@ -63,7 +58,7 @@ uint				Channel::addClient(AEntity & client)
 	else if (!this->incrementJoinedClients())
 		return 471;//ERR_CHANNELISFULL;
 	this->_clients.push_front(&client);
-	Logger::info("<" + client.getUID() + "> join channel <" + this->getUID() + ">");
+	Logger::info("<" + client.getUID() + "> joined channel <" + this->getUID() + ">");
 	return SUCCESS;
 }
 
@@ -84,7 +79,7 @@ uint					Channel::removeClient(AEntity & client)
 	this->_clients.remove(&client);
 	if (this->_creator == &client)
 		this->_creator = NULL;
-	Logger::info("<" + client.getUID() + "> leave channel <" + this->getUID() + ">");
+	Logger::info("<" + client.getUID() + "> left channel <" + this->getUID() + ">");
 	return SUCCESS;
 }
 
