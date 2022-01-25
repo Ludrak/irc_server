@@ -167,7 +167,7 @@ class SockStream
 
 		SSL							*getSSL() const;
 		int							acceptSSL();
-		void						connectSSL();
+		int							connectSSL();
 
 	protected:
 		ushort						_socket;

@@ -10,14 +10,8 @@ ASockManager::ASockManager(const std::string &ssl_cert_path, const std::string &
         OpenSSL_add_all_algorithms();
         OpenSSL_add_all_ciphers();
 
-        const SSL_METHOD  *method = TLS_server_method();
-		this->_ssl_ctx = SSL_CTX_new(method);
-	    SSL_CTX_set_min_proto_version(this->_ssl_ctx, TLS1_2_VERSION);
-		SSL_CTX_get_read_ahead(this->_ssl_ctx);
-		//TLS
-		//SSL_CTX_set_options(this->_ssl_ctx, SSL_OP_ALL);
-		SSL_CTX_use_certificate_file(this->_ssl_ctx, ssl_cert_path.c_str(), SSL_FILETYPE_PEM);
-		SSL_CTX_use_PrivateKey_file(this->_ssl_ctx, ssl_key_path.c_str(), SSL_FILETYPE_PEM);
+        initSSLContext(CLIENT, ssl_cert_path, ssl_key_path);
+        initSSLContext(SERVER, ssl_cert_path, ssl_key_path);
         this->_useTLS = true;
 		Logger::core("Constructor ASockManager on TLS");
 	}
@@ -27,6 +21,33 @@ ASockManager::ASockManager(const std::string &ssl_cert_path, const std::string &
 		Logger::core("Constructor ASockManager");
         this->_useTLS = false;
 	}
+}
+
+void                 ASockManager::initSSLContext(int type, const std::string &ssl_cert_path, const std::string &ssl_key_path)
+{
+    const SSL_METHOD  *method;
+    SSL_CTX           **ctx;
+    if (type == CLIENT)
+    {
+        method = TLS_method();
+        ctx = &this->_ssl_client_ctx;
+    }
+    else
+    {
+        method = TLS_server_method();
+        ctx = &this->_ssl_serv_ctx;
+    }
+    *ctx = SSL_CTX_new(method);
+    SSL_CTX_set_min_proto_version(*ctx, TLS1_2_VERSION);
+    SSL_CTX_get_read_ahead(*ctx);
+
+    if (SSL_CTX_use_certificate_file(*ctx, ssl_cert_path.c_str(), SSL_FILETYPE_PEM) <= 0
+    || SSL_CTX_use_PrivateKey_file(*ctx, ssl_key_path.c_str(), SSL_FILETYPE_PEM) <= 0)
+    {
+        Logger::error("SSL invalid certificate/key pem files");
+        ERR_print_errors_fp(stderr);
+        throw SSLException(); 
+    }
 }
 
 void				ASockManager::shutdown( void )
@@ -253,3 +274,9 @@ void            ASockManager::run( void )
     }
 }
 #endif
+
+bool				ASockManager::isOnTLS( void ) const
+{
+    return this->_useTLS;
+}
+

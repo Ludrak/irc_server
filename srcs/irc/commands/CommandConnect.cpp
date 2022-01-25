@@ -66,7 +66,7 @@ uint					CommandConnect::operator()(NetworkEntity & executor, std::string params
 	/* try to connect to target server*/
 	Logger::info("Try connecting to server: " + target);
 	try {
-		this->getServer().connectOn(target, port, this->getServer().getProtocol(), this->getServer()._useTLS);
+		this->getServer().connectOn(target, port, this->getServer().getProtocol(), this->getServer().isOnTLS());
 		this->getHandler().setConnectionEmitter(this->getEmitter());
 	}
 	catch (const AClient::ConnectionException & e )

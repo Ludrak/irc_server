@@ -1,18 +1,16 @@
 # irc_server
 42 school ft_irc project ment to make an Internet Relay Chat. Made by lrobino and nlecaill
 
+# Features
 
-## Architecture
-
-        <= NetworkEntity <= 
-AEntity 
-        <= RelayedEntity
-                      <= RelayedClient
+- more than 20 commands supported.
+- Support TLS encryption.
+- Support Server-to-Server communication
+- Support saving log as file.
 
 
-        <= ClientInfo
-CommonInfo
-        <= ServerInfo
+# Support
+- Tested on both macOSX and ubuntu
 
 ## Futures évolution
 

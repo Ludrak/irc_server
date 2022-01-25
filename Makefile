@@ -173,7 +173,7 @@ CPP_IFLAGS	+=	$(addprefix -I,$(INC_DIR)) $(addprefix -I,$(shell echo $(HEADER_FI
 CPP_LFLAG	+=	$(addprefix -L,$(addprefix $(LIB_DIR), $(LIBRARYS)))
 
 #   Main rule
-all: select
+all: kqueue
 	@echo "$(PREFIX_PROJECT)$(PREFIX_INFO) done"
 
 os:
@@ -189,11 +189,11 @@ ifeq ($(OSDETECT), LINUX)
 endif
 
 select: CPP_FLAGS += -DSELECT
-select: check_headers check_sources os $(NAME)
+select: clean check_headers check_sources os $(NAME)
 # select: clean $(NAME)
 
 kqueue: CPP_FLAGS += -DKQUEUE
-kqueue: clean check_headers check_sources os $(NAME)
+kqueue: check_headers check_sources os $(NAME)
 # kqueue: $(NAME)
 
 poll: CPP_FLAGS += -DPOLL

@@ -20,7 +20,8 @@ bool			AClient::connectOn(const std::string host, const ushort port, const IProt
 	s->setType(CLIENT);
 	if (s->hasTLS())
 	{
-		s->initTLS(this->_ssl_ctx);
+		Logger::debug("connectOn: initialise TLS");
+		s->initTLS(this->_ssl_client_ctx);
 		s->connectSSL();
 	}
 	this->addSocket(*s);

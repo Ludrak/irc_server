@@ -19,6 +19,15 @@
 class ASockHandler
 {
     public:
+
+        class SSLException : public std::exception
+        {
+            public:
+                const char  *what(void) const throw(){
+                    return "SSL error";
+                }
+        };
+
         ASockHandler(void);
 
 		void            	addSocket(SockStream &sock);

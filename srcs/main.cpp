@@ -417,7 +417,7 @@ int		main(int ac, char **av)
 		server.setDebugLevel(false);
 		server.setMaxConnection(init.server_max_connections);
 		if (init.has_network_connection)
-			server.connectToNetwork(init.network_host, init.network_port, init.network_pass);
+			server.connectToNetwork(init.network_host, init.network_port, init.network_pass, (init.tls_port != 0));
 		else
 			Logger::info("No forward connection set: running server as root");
 		server.run();
