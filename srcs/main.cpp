@@ -201,6 +201,8 @@ void	displayHeadMessage(const struct ircInit & init, const std::stringstream & f
 	Logger::info("* Server:");
 	Logger::info("* - host:            " + init.server_host);
 	Logger::info("* - port:            " + ntos(init.server_port));
+	if (init.tls_port != 0)
+		Logger::info("* - tls port:        " + ntos(init.tls_port));
 	Logger::info("* - password:        " + init.server_pass);
 	Logger::info("*");
 
@@ -234,7 +236,7 @@ int		main(int ac, char **av)
 	init.tls_port		= 0;
 	init.logFileName	= "";
 
-	Logger::init(CORE);
+	Logger::init(INFO);
 
 	// get forward server arg
 	int	argn = 1;

@@ -71,8 +71,8 @@ class SockStream;
 # error No poll-system defined, compile with -D <POLL/KQUEUE/SELECT>
 #endif
 
-# define RECV_BUFFER_SZ	255
-# define SEND_BUFFER_SZ	255
+# define RECV_BUFFER_SZ	128
+# define SEND_BUFFER_SZ	128
 
 /** socket types **/
 typedef uint8_t	t_sock_type;
