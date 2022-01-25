@@ -63,10 +63,11 @@ class Logger
     public:
 		class	logFileException : std::exception
 		{
-			virtual const char *what(void ) const throw()
-			{
-				return "Unable to open logfile";
-			}
+			public:
+				virtual const char *what(void ) const throw()
+				{
+					return "Unable to open logfile";
+				}
 		};
 
 		static void			init( uint level, const std::string & filename = "");
@@ -86,7 +87,7 @@ class Logger
         static void			error( const std::string &message );
         static void			critical( const std::string &message );
 
-		static inline void	logToFile(const std::string & message);
+		static void	logToFile(const std::string & grade, const std::string & message);
     private:
 		static struct timeval	_initTime;
 		static uint				_logLevel;
