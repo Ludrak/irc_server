@@ -21,11 +21,6 @@ IRCServer::IRCServer(ushort port, const std::string & password, const std::strin
 	_debugLevel(0)
 {
 	this->_initCommands();
-	Logger::debug("IRCServer constructor");
-	Logger::info("IRC Server:");
-	Logger::info("- host     : " + ntos(host));
-	Logger::info("- port     : " + ntos(port));
-	Logger::info("- password : " + ntos(password));
 	this->setPassword(password);
 
 	if (this->listenOn(port, this->_protocol) == false)
@@ -736,7 +731,6 @@ bool								IRCServer::parsePrefix(NetworkEntity & executor, const std::string &
 		}
 		*emitter = this->_clients[firstName];
 		*username = uname;
-		// 		//TODO try with getting IP  from hostname (can receive z4r7p4.42lyon.fr and it's valid) (we should be able to do that)
 	}
 	/* simple prefix */
 	else

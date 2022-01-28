@@ -133,8 +133,6 @@ void							SockStream::initTLS(SSL_CTX *ctx) throw (SSLException)
 	}
 	Logger::core("SockStream: Initialising TLS");
 	this->_cSSL = SSL_new(ctx);
-//	SSL_set_connect_state(this->_cSSL);
-//TLS
 	SSL_get_read_ahead(this->_cSSL);
 
 	if (!this->_cSSL)
@@ -143,13 +141,12 @@ void							SockStream::initTLS(SSL_CTX *ctx) throw (SSLException)
 		ERR_print_errors_fp(stderr);
 		throw SSLException();
 	}
-	//SSL_set_fd(this->_cSSL, this->_socket);
 }
 
 int							SockStream::acceptSSL()
 {
+	SSL_set_accept_state(this->_cSSL);
 	SSL_set_fd(this->_cSSL, this->_socket);
-	//TLS
 	int ret = SSL_accept(this->_cSSL);
 	if (ret == 0)
 	{
@@ -164,13 +161,13 @@ int							SockStream::acceptSSL()
 		if (err == SSL_ERROR_WANT_READ)
 		{
 			/* Wait for data to be read */
-			Logger::warning("SockStream:  Wait for data to be read ");
+			Logger::core("SockStream:  Wait for data to be read ");
 			return 0;
 		}
 		else if (err == SSL_ERROR_WANT_WRITE)
 		{
 			/* Write data to continue */
-			Logger::warning("SockStream: write data to continue ");
+			Logger::core("SockStream: write data to continue ");
 			return 0;
 		}
 		else if (err == SSL_ERROR_SYSCALL || err == SSL_ERROR_SSL || err == SSL_ERROR_ZERO_RETURN)
@@ -184,20 +181,42 @@ int							SockStream::acceptSSL()
 	return 1;
 }
 
-void							SockStream::connectSSL()
+int							SockStream::connectSSL()
 {
 	SSL_set_connect_state(this->_cSSL);
 	SSL_set_fd(this->_cSSL, this->_socket);
-	int err = SSL_connect(this->_cSSL);
-	if (err <= 0)
+	int ret = SSL_connect(this->_cSSL);
+	if (ret == 0)
 	{
+		/* Hard error */
 		Logger::error("Cannot SSL_connect() for client: " + ntos(this->_socket) + "@" + this->_host);
 		ERR_print_errors_fp(stderr);
-		//Logger::error("Cannot SSL_connect() for client:" + std::string(ERR_error_string(ERR_get_error(), NULL)));
-		//this->_cSSL = NULL;
-		//this->_useTLS = false;
-
+		return -1;
 	}
+	else if (ret == -1)
+	{
+		int err = SSL_get_error(this->_cSSL, ret);
+		if (err == SSL_ERROR_WANT_READ)
+		{
+			/* Wait for data to be read */
+			Logger::core("SockStream:  Wait for data to be read ");
+			return 0;
+		}
+		else if (err == SSL_ERROR_WANT_WRITE)
+		{
+			/* Write data to continue */
+			Logger::core("SockStream: write data to continue ");
+			return 0;
+		}
+		else if (err == SSL_ERROR_SYSCALL || err == SSL_ERROR_SSL || err == SSL_ERROR_ZERO_RETURN)
+		{
+			/* Hard error */
+			Logger::error("Cannot SSL_connect() for client: " + ntos(this->_socket) + "@" + this->_host);
+			ERR_print_errors_fp(stderr);
+			return -1;
+		}
+	}
+	return 1;
 }
 
 void							SockStream::close( void )

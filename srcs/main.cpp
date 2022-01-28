@@ -168,7 +168,7 @@ int		printUsage(const std::string &exec_name)
 	"\033[1;33m**\033[0m                                   This info is sent to other servers in the \n" << 
 	"\033[1;33m**\033[0m                                   network via SERVER command.\n" << 
 	"\033[1;33m**\033[0m\n" << 
-	"\033[1;33m**\033[0m --logfile [<directory|filename>]  Record all logs into a file which path can be specified.\n" << 
+	"\033[1;33m**\033[0m --logfile 	                       Record all logs into a file in current working directory.\n" << 
 	"\033[1;33m**\033[0m\n" << 
 	"\033[1;33m**\033[0m --max-connections <nb>            Sets the maximum number of connections that the server\n" << 
 	"\033[1;33m**\033[0m                                   can handle. Default: 20\n" << 
@@ -201,6 +201,8 @@ void	displayHeadMessage(const struct ircInit & init, const std::stringstream & f
 	Logger::info("* Server:");
 	Logger::info("* - host:            " + init.server_host);
 	Logger::info("* - port:            " + ntos(init.server_port));
+	if (init.tls_port != 0)
+		Logger::info("* - tls port:        " + ntos(init.tls_port));
 	Logger::info("* - password:        " + init.server_pass);
 	Logger::info("*");
 
@@ -234,7 +236,7 @@ int		main(int ac, char **av)
 	init.tls_port		= 0;
 	init.logFileName	= "";
 
-	Logger::init(CORE);
+	Logger::init(INFO);
 
 	// get forward server arg
 	int	argn = 1;
@@ -353,21 +355,21 @@ int		main(int ac, char **av)
 			return (EXIT_FAILURE);
 
 		arg_code = getArg("--logfile", argn, ac, av, NULL, true, true);
-		if (arg_code == ARG_OK)
-		{
-			std::istringstream is(av[argn + 1]);
-			is >> init.logFileName;
-			if (Parser::isDirectory(init.logFileName.c_str()))
-			{
-				if (init.logFileName.at(init.logFileName.size() - 1) != '/')
-					init.logFileName += "/";
-				init.logFileName += Logger::timeToString(Logger::getInitialTimestamp());
-			}
-			init.logFileName += ".irclog";
-			argn += 2;
-			continue;
-		}
-		else if (arg_code == ARG_OPTIONAL)
+		// if (arg_code == ARG_OK)
+		// {
+		// 	std::istringstream is(av[argn + 1]);
+		// 	is >> init.logFileName;
+		// 	if (Parser::isDirectory(init.logFileName.c_str()))
+		// 	{
+		// 		if (init.logFileName.at(init.logFileName.size() - 1) != '/')
+		// 			init.logFileName += "/";
+		// 		init.logFileName += Logger::timeToString(Logger::getInitialTimestamp());
+		// 	}
+		// 	init.logFileName += ".irclog";
+		// 	argn += 2;
+		// 	continue;
+		// }
+		if (arg_code == ARG_OPTIONAL)
 		{
 			init.logFileName = Logger::timeToString(Logger::getInitialTimestamp()) + ".irclog";
 			argn += 1;
@@ -404,12 +406,12 @@ int		main(int ac, char **av)
 		return (EXIT_FAILURE);
 	}
 
-	Logger::initLogfile(init.logFileName);
-	std::stringstream formatedToken;
-	formatedToken << std::setfill('0') << std::setw(3) << init.server_token;
-	displayHeadMessage(init, formatedToken);
-
 	try {
+		Logger::initLogfile(init.logFileName);
+		std::stringstream formatedToken;
+		formatedToken << std::setfill('0') << std::setw(3) << init.server_token;
+		displayHeadMessage(init, formatedToken);
+
 		IRCServer server(init.server_port, init.server_pass, init.server_host, init.ssl_cert, init.ssl_key, init.tls_port);
 		server.setName(init.server_name);
 		server.setUID(formatedToken.str());
@@ -417,7 +419,7 @@ int		main(int ac, char **av)
 		server.setDebugLevel(false);
 		server.setMaxConnection(init.server_max_connections);
 		if (init.has_network_connection)
-			server.connectToNetwork(init.network_host, init.network_port, init.network_pass);
+			server.connectToNetwork(init.network_host, init.network_port, init.network_pass, (init.tls_port != 0));
 		else
 			Logger::info("No forward connection set: running server as root");
 		server.run();

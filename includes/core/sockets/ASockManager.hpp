@@ -17,6 +17,7 @@ class ASockManager : public ASockHandler
 		ASockManager(const std::string &ssl_cert_path="", const std::string &ssl_key_path="");
 
 		virtual void        run(void);
+		bool				isOnTLS( void ) const;
 		void                delSocket( const SockStream &sock);
 	protected:
 # ifdef POLL
@@ -25,11 +26,11 @@ class ASockManager : public ASockHandler
 
 		virtual t_pollevent _onPollEvent(int socket, int event) = 0;
 		void				shutdown( void );
-	
+
+		void                initSSLContext(int type, const std::string &ssl_cert_path, const std::string &ssl_key_path);
 	protected:
-		SSL_CTX			*_ssl_ctx;
-		// Tell if using tls when the manager create a new socket
-		//TODO put setter for _useTLS and call it in CommandConnect.cpp:67
+		SSL_CTX			*_ssl_serv_ctx;
+		SSL_CTX			*_ssl_client_ctx;
 		bool			_useTLS;
 		bool			_running;
 };

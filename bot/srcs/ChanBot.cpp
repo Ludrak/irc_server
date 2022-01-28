@@ -208,7 +208,7 @@ void			ChanBot::validNewChannel(std::string & message)
 		message = "JOIN " + message;
 		Package* package = new Package(this->_protocol, this->_protocol.format(message), this->_currentStream);
 		this->sendPackage(package, *this->_currentStream);
-		return Logger::error("validChan: Not pending");	
+		return ;	
 	}
 	this->_pendingChan.remove(message);
 	this->_channels.push_back(message);

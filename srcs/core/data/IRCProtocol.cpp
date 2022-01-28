@@ -18,7 +18,7 @@ size_t      IRCProtocol::checkFormat( const std::string &data ) const
 
 size_t      IRCProtocol::getMaximumPackageSize( void ) const
 {
-    return (255);
+    return (512);
 }
 
 std::string IRCProtocol::format( const std::string &data ) const

@@ -72,7 +72,7 @@ t_pollevent					AServer::_pollFromServer(int socket, int event)
 	}
 	Logger::core("AServer: socket <" + ntos(client_sock) + "> accepted");
 	
-	SockStream	*client_ss = new SockStream(client_sock, client_addr, *it->second->getProtocol(), this->_sockets[socket]->hasTLS(), this->_ssl_ctx);
+	SockStream	*client_ss = new SockStream(client_sock, client_addr, *it->second->getProtocol(), this->_sockets[socket]->hasTLS(), this->_ssl_serv_ctx);
 	int ret = 1;
 	if (client_ss->hasTLS())
 	{
@@ -82,13 +82,10 @@ t_pollevent					AServer::_pollFromServer(int socket, int event)
 			this->disconnect(*client_ss);
 			return POLL_NOACCEPT; 
 		}
-		//TLS
-		// else if (ret == 0)
-			// return POLL_NOACCEPT;
 	}
 	client_ss->setType(REMOTE_CLIENT);
 	this->addSocket(*client_ss);
-	if (ret != 0) //TLS
+	if (ret != -1) //TLS
 		this->_onClientJoin(*client_ss);
 #ifdef KQUEUE
 	struct kevent new_event;
@@ -142,16 +139,15 @@ t_pollevent					AServer::_pollInClients(SockStream & sock)
 	char	buffer[RECV_BUFFER_SZ + 1] = { 0 };
 	ssize_t	byte_size;
 	if (sock.hasTLS() && sock.getSSL())
-	{
 		byte_size = SSL_read(sock.getSSL(), buffer, RECV_BUFFER_SZ);
-	}
 	else
 		byte_size = recv(sock.getSocket(), buffer, RECV_BUFFER_SZ, MSG_DONTWAIT);
 	if (byte_size < 0)
 	{
 		if (sock.hasTLS() && sock.getSSL())
 			ERR_print_errors_fp(stderr);
-		Logger::error(std::string("AServer: recv() failed : ") + strerror(errno) + std::string(" on socket <" + ntos(sock.getSocket()) + ">. (has tls: " + ntos(sock.hasTLS()) + ", getSSl: " + ntos(sock.getSSL()) + ")"));
+		if (!sock.hasTLS() && errno != EAGAIN)
+			Logger::error(std::string("AServer: recv() failed : ") + strerror(errno) + std::string(" on socket <" + ntos(sock.getSocket()) + ">. (has tls: " + ntos(sock.hasTLS()) + ", getSSl: " + ntos(sock.getSSL()) + ")"));
 		if (errno == 0)
 			this->disconnect(sock);
 		return (POLL_ERROR);
@@ -290,9 +286,7 @@ bool						AServer::listenOn( ushort port, IProtocol &protocol , const bool useTL
 	}
 	if (useTLS)
 	{
-		new_sock->initTLS(this->_ssl_ctx);
-		SSL_set_connect_state (new_sock->getSSL());
-		//SSL_set_accept_state (new_sock->getSSL());
+		new_sock->initTLS(this->_ssl_serv_ctx);
 		SSL_set_fd(new_sock->getSSL(), new_sock->getSocket());
 	}
 	return (true);
