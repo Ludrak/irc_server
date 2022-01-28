@@ -1,5 +1,5 @@
 bircd
-bin
+bin/
 ft_irc
 ChanBot
 luka
@@ -9,6 +9,7 @@ inspircd
 certificates/*
 conf/cert.pem
 conf/key.pem
+log/
 *.irclog
 # nlecaill
 random
